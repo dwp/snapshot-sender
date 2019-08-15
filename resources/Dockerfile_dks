@@ -9,7 +9,6 @@ RUN yum -y upgrade
 RUN yum install -y epel-release
 RUN yum install -y java-1.8.0-openjdk wget jq
 ENV JAVA_HOME /etc/alternatives/jre
-ENV SPRING_CONFIG_LOCATION application-dks.properties
 
 WORKDIR /opt/data-key-service
 
@@ -18,7 +17,7 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-s
 
 RUN ls -la *.jar
 
-COPY application-dks.properties ./
+COPY application-dks-secure.properties ./
 COPY certs/dks/* ./
 
 ENTRYPOINT ["sh", "-c", "java -jar dks-latest.jar \"$@\"", "--"]

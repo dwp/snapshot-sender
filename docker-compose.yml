@@ -51,7 +51,7 @@ services:
       --data-key-service http://dks-standalone-http:8080/datakey
       --zookeeper-quorum hbase
       --dump-table-contents
-      --completed-flag data/ready
+      --completed-flag /opt/snapshot-sender/data/ready
       --remove-output-file data/ucdata-file-output.txt
       --data-table-name ucfs-data
       --topics-table-name ucfs-topics
@@ -74,8 +74,8 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=data/ready
-      --data.key.service.url=https://dks-standalone-https
+      --data.ready.flag.location=/opt/snapshot-sender/data/ready
+      --data.key.service.url=https://dks-standalone-https:8443
       --aws.region=eu-west-2
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
@@ -110,6 +110,7 @@ services:
       - shared-volume:/opt/snapshot-sender/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
+      - SPRING_CONFIG_LOCATION=application-dks-secure.properties
 
 volumes:
   shared-volume:
