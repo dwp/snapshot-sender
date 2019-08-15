@@ -1,15 +1,9 @@
-FROM centos
+FROM dwp-centos-with-java:latest
 
 EXPOSE 8080
 EXPOSE 8443
 
-RUN mkdir /opt/data-key-service
-
-RUN yum -y upgrade
-RUN yum install -y epel-release
-RUN yum install -y java-1.8.0-openjdk wget jq
-ENV JAVA_HOME /etc/alternatives/jre
-
+RUN mkdir -p /opt/data-key-service/data
 WORKDIR /opt/data-key-service
 
 RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \

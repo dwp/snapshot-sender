@@ -1,14 +1,9 @@
-FROM centos
+FROM dwp-centos-with-java:latest
 
-RUN mkdir /opt/data-key-service
-
-RUN yum -y upgrade
-RUN yum install -y epel-release
-RUN yum install -y java-1.8.0-openjdk wget jq
-ENV JAVA_HOME /etc/alternatives/jre
-ENV SPRING_CONFIG_LOCATION application-htme.properties
-
+RUN mkdir -p /opt/hbase-to-mongo-export/data
 WORKDIR /opt/hbase-to-mongo-export
+
+ENV SPRING_CONFIG_LOCATION application-htme.properties
 
 RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/hbase-to-mongo-export/releases/latest" \
     | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document htme-latest.jar

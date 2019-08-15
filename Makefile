@@ -25,14 +25,24 @@ add-containers-to-hosts: ## Update laptop hosts file with reference to container
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
-build-images: ## Build all ecosystem of images
+build-base-images:
+	@{ \
+		pushd resources; \
+		docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
+		docker build --tag dwp-pthon-preinstall:latest --file Dockerfile_python_preinstall . ; \
+		popd; \
+	}
+
+build-images: build-base-images ## Build all ecosystem of images
 	@{ \
 		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export; \
 	}
 
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export; \
+		docker-compose up -d hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https; \
+		echo "Waiting for data to arive in s3" && sleep 10; \
+		docker-compose up -d hbase-to-mongo-export; \
 	}
 
 up-all: build-images up

@@ -83,6 +83,18 @@ services:
       --s3.access.key=DummyKey
       --s3.secret.key=DummySecret
 
+  snapshot-sender:
+    image: snapshot-sender
+    ports:
+      - 8090:8080
+      - 8100:8443
+    build:
+      context: resources
+      dockerfile: Dockerfile_dks
+    container_name: snapshot-sender
+    volumes:
+      - shared-volume:/opt/snapshot-sender/data
+
   dks-standalone-http:
     image: dks-standalone-http
     ports:
