@@ -24,7 +24,7 @@ add-containers-to-hosts: ## Update laptop hosts file with reference to container
 	./resources/add-containers-to-hosts.sh;
 
 generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
-	resources/generate-developer-certs.sh
+	pushd resources && generate-developer-certs.sh && popd
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
