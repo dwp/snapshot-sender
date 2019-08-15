@@ -1,3 +1,15 @@
+### local ###
+src/main/python/environment/
+scripts/environment/
+__pycache__
+classes/
+data/
+ephemera/
+rad/
+*.jks
+*.key
+*.crt
+*.pem
 HELP.md
 .gradle
 build/
@@ -5,10 +17,6 @@ build/
 !**/src/main/**
 !**/src/test/**
 .DS_Store
-
-resources/certs/**/*.jks
-resources/certs/**/*.crt
-resources/certs/**/*.key
 
 ### STS ###
 .apt_generated

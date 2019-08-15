@@ -12,8 +12,8 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-s
 RUN ls -la *.jar
 
 COPY application-dks-secure.properties ./
-COPY certs/dks/* ./
+COPY dks*.jks dks*.crt ./
 
-RUN chmod a+rwx -R /opt/snapshot-sender/ /opt/data-key-service
+RUN chmod a+rwx -R /opt/data-key-service /opt/snapshot-sender/
 
 ENTRYPOINT ["sh", "-c", "java -jar dks-latest.jar \"$@\"", "--"]

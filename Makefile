@@ -23,6 +23,9 @@ dist: ## Assemble distribution files in build/dist
 add-containers-to-hosts: ## Update laptop hosts file with reference to containers
 	./resources/add-containers-to-hosts.sh;
 
+generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
+	resources/generate-developer-certs.sh
+
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
 build-base-images:

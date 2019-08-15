@@ -1,7 +1,5 @@
 FROM dwp-pthon-preinstall:latest
 
-RUN pip install awscli
-
 COPY s3dummy/*.sh ./
 
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}

@@ -11,7 +11,7 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/hbase-to-m
 RUN ls -la *.jar
 
 COPY application-htme.properties ./
-COPY certs/htme/* ./
+COPY htme*.jks htme*.crt ./
 
 RUN chmod a+rwx -R /opt/hbase-to-mongo-export/ /opt/snapshot-sender/
 
