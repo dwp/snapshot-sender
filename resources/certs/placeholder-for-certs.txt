@@ -1,0 +1,1 @@
+These folders are where you should generate your local dev certs.

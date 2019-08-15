@@ -4,6 +4,11 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**
 !**/src/test/**
+.DS_Store
+
+resources/certs/**/*.jks
+resources/certs/**/*.crt
+resources/certs/**/*.key
 
 ### STS ###
 .apt_generated
