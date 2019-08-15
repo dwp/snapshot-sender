@@ -3,7 +3,7 @@ FROM dwp-centos-with-java:latest
 EXPOSE 8080
 EXPOSE 8443
 
-RUN mkdir -p /opt/data-key-service/data
+RUN mkdir -p /opt/data-key-service/data /opt/snapshot-sender/data
 WORKDIR /opt/data-key-service
 
 RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
@@ -13,5 +13,7 @@ RUN ls -la *.jar
 
 COPY application-dks-secure.properties ./
 COPY certs/dks/* ./
+
+RUN cmod a+rwx -R /opt/snapshot-sender/ /opt/data-key-service
 
 ENTRYPOINT ["sh", "-c", "java -jar dks-latest.jar \"$@\"", "--"]

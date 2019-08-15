@@ -8,7 +8,7 @@ import os
 import time
 import uuid
 
-import happybase 
+import happybase
 import requests
 import thriftpy2
 
@@ -123,6 +123,7 @@ def main():
 
                 if args.completed_flag:
                     print("Creating directory: '{}'.".format(args.completed_flag))
+                    print("/opt/snapshot-sender {}", os.path.isdir(args.completed_flag))
                     os.makedirs(args.completed_flag)
 
         except (ConnectionError, thriftpy2.transport.TTransportException) as e:

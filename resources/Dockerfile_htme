@@ -1,6 +1,6 @@
 FROM dwp-centos-with-java:latest
 
-RUN mkdir -p /opt/hbase-to-mongo-export/data
+RUN mkdir -p /opt/hbase-to-mongo-export/data /opt/snapshot-sender/data
 WORKDIR /opt/hbase-to-mongo-export
 
 ENV SPRING_CONFIG_LOCATION application-htme.properties
@@ -12,5 +12,7 @@ RUN ls -la *.jar
 
 COPY application-htme.properties ./
 COPY certs/htme/* ./
+
+RUN chmod a+rwx -R /opt/hbase-to-mongo-export/ /opt/snapshot-sender/
 
 ENTRYPOINT ["sh", "-c", "java -jar htme-latest.jar \"$@\"", "--"]
