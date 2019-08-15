@@ -1,0 +1,115 @@
+version: '3'
+
+services:
+  hbase:
+    image: harisekhon/hbase:1.4
+    ports:
+      - 9090:9090
+      - 9095:9095
+      - 2181:2181
+      - 16201:16201
+    container_name: hbase
+
+  s3-dummy:
+    image: localstack/localstack:latest
+    ports:
+      - '4563-4584:4563-4584'
+      - '8055:8080'
+    container_name: s3-dummy
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - DATA_DIR=/opt/s3/data
+
+  s3-bucket-provision:
+    image: s3-bucket-provision
+    build:
+      context: resources
+      dockerfile: Dockerfile_s3_bucket_provision
+    container_name: s3-bucket-provision
+    depends_on:
+      - s3-dummy
+    environment:
+      - S3_SERVICE_ENDPOINT=http://s3-dummy:4572
+      - AWS_DEFAULT_REGION=eu-west-2
+      - AWS_ACCESS_KEY_ID=DummyKey
+      - AWS_SECRET_ACCESS_KEY=DummySecret
+      - S3_BUCKET=demobucket
+
+  hbase-populate:
+    image: hbase-populate
+    build:
+      context: resources
+      dockerfile: Dockerfile_populate_hbase
+    container_name: hbase-populate
+    depends_on:
+      - hbase
+      - dks-standalone-http
+    volumes:
+      - shared-volume:/opt/snapshot-sender/data
+    command: >-
+      --data-key-service http://dks-standalone-http:8080/datakey
+      --zookeeper-quorum hbase
+      --dump-table-contents
+      --completed-flag data/ready
+      --remove-output-file data/ucdata-file-output.txt
+      --data-table-name ucfs-data
+      --topics-table-name ucfs-topics
+      --test-configuration-file test-config.json
+
+  hbase-to-mongo-export:
+    image: hbase-to-mongo-export
+    build:
+      context: resources
+      dockerfile: Dockerfile_htme
+    container_name: hbase-to-mongo-export
+    depends_on:
+      - hbase
+      - dks-standalone-https
+      - s3-dummy
+    volumes:
+      - shared-volume:/opt/snapshot-sender/data
+    command: >-
+      --hbase.zookeeper.quorum=hbase
+      --data.table.name=ucfs-data
+      --column.family=topic
+      --topic.name=db.core.addressDeclaration
+      --data.ready.flag.location=data/ready
+      --data.key.service.url=https://dks-standalone-https
+      --aws.region=eu-west-2
+      --s3.bucket=demobucket
+      --s3.prefix.folder=test/output
+      --s3.service.endpoint=http://s3-dummy:4572
+      --s3.access.key=DummyKey
+      --s3.secret.key=DummySecret
+
+  dks-standalone-http:
+    image: dks-standalone-http
+    ports:
+      - 8090:8080
+      - 8100:8443
+    build:
+      context: resources
+      dockerfile: Dockerfile_dks
+    container_name: dks-standalone-http
+    volumes:
+      - shared-volume:/opt/snapshot-sender/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
+
+  dks-standalone-https:
+    image: dks-standalone-https
+    ports:
+      - 8091:8443
+      - 8101:8080
+    build:
+      context: resources
+      dockerfile: Dockerfile_dks
+    container_name: dks-standalone-https
+    volumes:
+      - shared-volume:/opt/snapshot-sender/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
+
+volumes:
+  shared-volume:
