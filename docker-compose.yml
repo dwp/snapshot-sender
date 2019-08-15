@@ -112,5 +112,23 @@ services:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-dks-secure.properties
 
+  nifi:
+    image: mocknifi
+    build:
+      context: resources
+      dockerfile: Dockerfile_mocknifi
+    ports:
+      - "5000:5000"
+    volumes:
+      - shared-volume:/data
+      - ./resources/certs/htme/keystore.jks:/ssl/keystore.jks
+      - ./resources/certs/htme/truststore.jks:/ssl/truststore.jks
+    environment:
+      KEYSTORE_PASSWORD: changeit
+      TRUSTSTORE_PASSWORD: changeit
+      TLS_KEY_PASSWORD: changeit
+      TLS_KEY_ID: cid
+      TLS_CERT_ID: cid
+
 volumes:
   shared-volume:
