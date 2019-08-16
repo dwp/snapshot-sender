@@ -1,0 +1,18 @@
+FROM dwp-centos-with-java:latest
+
+RUN mkdir -p /opt/hbase-to-mongo-export/data /opt/snapshot-sender/data
+WORKDIR /opt/hbase-to-mongo-export
+
+ENV SPRING_CONFIG_LOCATION application-htme.properties
+
+RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/hbase-to-mongo-export/releases/latest" \
+    | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document htme-latest.jar
+
+RUN ls -la *.jar
+
+COPY application-htme.properties ./
+COPY htme*.jks htme*.crt ./
+
+RUN chmod a+rwx -R /opt/hbase-to-mongo-export/ /opt/snapshot-sender/
+
+ENTRYPOINT ["sh", "-c", "java -jar htme-latest.jar \"$@\"", "--"]
