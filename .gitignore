@@ -18,6 +18,8 @@ build/
 !**/src/test/**
 .DS_Store
 
+.mypy_cache
+
 ### STS ###
 .apt_generated
 .classpath
