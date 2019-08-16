@@ -56,6 +56,7 @@ def create_ssl_context():
     key_password = environ.get("TLS_KEY_PASSWORD", "")
     key_id = environ.get("TLS_KEY_ID", "cid")
     cert_id = environ.get("TLS_CERT_ID", "cid")
+    ca_cert_id = environ.get("TLS_CA_CERT_ID", "cacid")
 
     print("Using key {} and cert {}".format(key_id, cert_id))
 
@@ -63,11 +64,12 @@ def create_ssl_context():
     ks = jks.KeyStore.load("/ssl/keystore.jks", ks_password)
     app_key = write_private_key(ks.private_keys.get(key_id))
 
-    # Write the cert
+    # Write the cert and CA
     ts = jks.KeyStore.load("/ssl/truststore.jks", ts_password)
     app_cert = write_cert(ts.certs.get(cert_id))
+    app_ca_cert = write_cert(ts.certs.get(ca_cert_id))
 
-    ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+    ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH, cafile=app_ca_cert)
     ssl_context.load_cert_chain(certfile=app_cert, keyfile=app_key, password=key_password)
     ssl_context.verify_mode = ssl.CERT_REQUIRED
     return ssl_context
