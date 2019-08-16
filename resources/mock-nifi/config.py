@@ -69,7 +69,8 @@ def create_ssl_context():
     app_cert = write_cert(ts.certs.get(cert_id))
     app_ca_cert = write_cert(ts.certs.get(ca_cert_id))
 
-    ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH, cafile=app_ca_cert)
+    ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain(certfile=app_cert, keyfile=app_key, password=key_password)
+    ssl_context.load_verify_locations(app_ca_cert)
     ssl_context.verify_mode = ssl.CERT_REQUIRED
     return ssl_context
