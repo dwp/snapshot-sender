@@ -1,8 +1,13 @@
 FROM dwp-pthon-preinstall:latest
 
-COPY populator/requirements.txt ./
+COPY populator/requirements.txt ./requirements.txt
 RUN pip3 install --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org -r ./requirements.txt
-COPY populator/*.py populator/*.json ./
+
+COPY populator/*.py ./
+COPY populator/*.json ./
+
+RUN ls -la ./
+
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR} ${INSTALL_DIR}/data
 RUN ls -l ${INSTALL_DIR}/data
