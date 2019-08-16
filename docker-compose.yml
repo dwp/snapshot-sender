@@ -140,7 +140,7 @@ services:
       TRUSTSTORE_PASSWORD: changeit
       TLS_KEY_PASSWORD: changeit
       TLS_KEY_ID: cid
-      TLS_CERT_ID: cid
+      TLS_CERT_ID: self
       TLS_CACERT_ID: snapshot-sender
 
 volumes:
