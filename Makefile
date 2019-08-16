@@ -1,3 +1,5 @@
+SHELL:=bash
+
 snapshot_sender_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-2
 aws_secret_access_key=DummyKey
@@ -24,7 +26,7 @@ add-containers-to-hosts: ## Update laptop hosts file with reference to container
 	./resources/add-containers-to-hosts.sh;
 
 generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
-	pushd resources && generate-developer-certs.sh && popd
+	pushd resources && ./generate-developer-certs.sh && popd
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 

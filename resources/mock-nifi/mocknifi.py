@@ -23,7 +23,7 @@ def post_collection():
     if not filename.endswith(".bz2"):
         return Response("Missing .bz2 extension", 400)
 
-    collection_dir = path.join("/data", collection)
+    collection_dir = path.join("/data/output", collection)
 
     if not path.exists(collection_dir):
         mkdir(collection_dir)
@@ -32,9 +32,11 @@ def post_collection():
     with open(file_path, "wb") as f:
         f.write(request.data)
 
-    return path.join(collection, filename)
+    return path.join("output", collection, filename)
 
 
 if __name__ == "__main__":
-    #app.run(host="0.0.0.0", ssl_context=create_ssl_context())
-    app.run(host="0.0.0.0")
+    if not path.exists("/data/output"):
+        mkdir("/data/output")
+
+    app.run(host="0.0.0.0", ssl_context=create_ssl_context())

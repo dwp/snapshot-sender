@@ -133,14 +133,15 @@ services:
       - "5000:5000"
     volumes:
       - shared-volume:/data
-      - ./resources/certs/htme/keystore.jks:/ssl/keystore.jks
-      - ./resources/certs/htme/truststore.jks:/ssl/truststore.jks
+      - ./resources/mock-nifi-keystore.jks:/ssl/keystore.jks
+      - ./resources/mock-nifi-truststore.jks:/ssl/truststore.jks
     environment:
       KEYSTORE_PASSWORD: changeit
       TRUSTSTORE_PASSWORD: changeit
       TLS_KEY_PASSWORD: changeit
-      TLS_KEY_ID: cid
-      TLS_CERT_ID: cid
+      TLS_KEY_ID: mock-nifi
+      TLS_CERT_ID: mock-nifi
+      TLS_CACERT_ID: snapshot-sender
 
 volumes:
   shared-volume:
