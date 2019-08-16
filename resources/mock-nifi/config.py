@@ -49,11 +49,11 @@ def create_ssl_context():
     from os import environ
 
     # Get the keystore and truststore passwords
-    ks_password = environ.get("KEYSTORE_PASSWORD", "")
-    ts_password = environ.get("TRUSTSTORE_PASSWORD", "")
+    ks_password = environ.get("KEYSTORE_PASSWORD", "changeit")
+    ts_password = environ.get("TRUSTSTORE_PASSWORD", "changeit")
 
     # Get the key and cert details
-    key_password = environ.get("TLS_KEY_PASSWORD", "")
+    key_password = environ.get("TLS_KEY_PASSWORD", "changeit")
     key_id = environ.get("TLS_KEY_ID", "cid")
     cert_id = environ.get("TLS_CERT_ID", "cid")
     ca_cert_id = environ.get("TLS_CA_CERT_ID", "cacid")
