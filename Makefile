@@ -28,7 +28,7 @@ generate-developer-certs:  ## Generate temporary local certs and stores for the 
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
-build-base-images:
+build-base-images: ## Build base images to avoid rebuilding frequently
 	@{ \
 		pushd resources; \
 		docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
