@@ -15,17 +15,24 @@ main() {
     extract_public_certificate snapshot-sender-keystore.jks snapshot-sender.crt
     make_truststore snapshot-sender-truststore.jks snapshot-sender.crt
 
+    make_keystore mock-nifi-keystore.jks mock-nifi
+    extract_public_certificate mock-nifi-keystore.jks mock-nifi.crt
+    make_truststore mock-nifi-truststore.jks mock-nifi.crt
+
     import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt hbase-to-mongo-export
     import_into_truststore dks-truststore.jks snapshot-sender.crt snapshot-sender
+
     import_into_truststore htme-truststore.jks dks-standalone-https.crt dks
-    import_into_truststore snapshot-sender.jks dks-standalone-https.crt dks
+
+    import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt mock-nifi
+    import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt snapshot-sender
 }
 
 make_keystore() {
     local keystore="${1:?Usage: $FUNCNAME keystore common-name}"
     local common_name="${2:?Usage: $FUNCNAME keystore common-name}"
 
-    [[ -f "$keystore" ]] && rm -v "$keystore"
+    [[ -f "${keystore}" ]] && rm -v "${keystore}"
 
     keytool -v \
             -genkeypair \
@@ -43,21 +50,21 @@ extract_public_certificate() {
     local keystore="${1:?Usage: $FUNCNAME keystore certificate}"
     local certificate="${2:?Usage: $FUNCNAME keystore certificate}"
 
-    [[ -f "$certificate" ]] && rm -v "$certificate"
+    [[ -f "${certificate}" ]] && rm -v "${certificate}"
 
     keytool -v \
             -exportcert \
             -keystore "$keystore" \
             -storepass $(password) \
             -alias cid \
-            -file "$certificate"
+            -file "${certificate}"
 }
 
 make_truststore() {
     local truststore="${1:?Usage: $FUNCNAME truststore certificate}"
     local certificate="${2:?Usage: $FUNCNAME truststore certificate}"
-    [[ -f $truststore ]] && rm -v "$truststore"
-    import_into_truststore $truststore $certificate self
+    [[ -f ${truststore} ]] && rm -v "${truststore}"
+    import_into_truststore ${truststore} ${certificate} self
 }
 
 import_into_truststore() {
@@ -69,9 +76,9 @@ import_into_truststore() {
             -noprompt \
             -v \
             -trustcacerts \
-            -alias "$alias" \
-            -file "$certificate" \
-            -keystore "$truststore" \
+            -alias "${alias}" \
+            -file "${certificate}" \
+            -keystore "${truststore}" \
             -storepass $(password)
 }
 
