@@ -112,11 +112,11 @@ services:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-dks-secure.properties
 
-  nifi:
-    image: mocknifi
+  mock-nifi:
+    image: mock-nifi
     build:
       context: resources
-      dockerfile: Dockerfile_mocknifi
+      dockerfile: Dockerfile_mock_nifi
     ports:
       - "5000:5000"
     volumes:

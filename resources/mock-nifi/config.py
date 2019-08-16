@@ -4,7 +4,6 @@ import os
 import ssl
 import textwrap
 
-from flask import Flask
 from tempfile import mkstemp
 
 
@@ -14,11 +13,8 @@ def to_bytes(s):
 
 def write_pem(f, der_bytes, pem_type):
     f.write(to_bytes("-----BEGIN %s-----\r\n" % pem_type))
-    print("-----BEGIN %s-----\r\n" % pem_type, end='')
     f.write(to_bytes("\r\n".join(textwrap.wrap(base64.b64encode(der_bytes).decode('ascii'), 64)) + "\r\n"))
-    print("\r\n".join(textwrap.wrap(base64.b64encode(der_bytes).decode('ascii'), 64)), end='')
     f.write(to_bytes("-----END %s-----\r\n" % pem_type))
-    print("-----END %s-----\r\n" % pem_type, end='')
 
 
 def write_private_key(key):
@@ -42,7 +38,7 @@ def write_cert(cert):
     if not cert:
         return
 
-    tf, fn = mkstemp(suffix=".key")
+    tf, fn = mkstemp(suffix=".crt")
     with os.fdopen(tf, "wb") as f:
         write_pem(f, cert.cert, "CERTIFICATE")
 
@@ -61,6 +57,8 @@ def create_ssl_context():
     key_id = environ.get("TLS_KEY_ID", "cid")
     cert_id = environ.get("TLS_CERT_ID", "cid")
 
+    print("Using key {} and cert {}".format(key_id, cert_id))
+
     # Write the private key
     ks = jks.KeyStore.load("/ssl/keystore.jks", ks_password)
     app_key = write_private_key(ks.private_keys.get(key_id))
@@ -73,15 +71,3 @@ def create_ssl_context():
     ssl_context.load_cert_chain(certfile=app_cert, keyfile=app_key, password=key_password)
     ssl_context.verify_mode = ssl.CERT_REQUIRED
     return ssl_context
-
-
-app = Flask("mocknifi")
-
-
-@app.route('/collection', methods=["POST"])
-def post_collection():
-    return "YEAH I'M IN"
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", ssl_context=create_ssl_context())
