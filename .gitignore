@@ -48,3 +48,4 @@ out/
 ### VS Code ###
 .vscode/
 venv/
+logs/
