@@ -62,11 +62,11 @@ def create_ssl_context():
     print("Using key {} and cert {}".format(key_id, cert_id))
 
     # Write the private key
-    ks = jks.KeyStore.load("ssl/keystore.jks", ks_password)
+    ks = jks.KeyStore.load("/ssl/keystore.jks", ks_password)
     app_key = write_private_key(ks.private_keys.get(key_id))
 
     # Write the cert and CA
-    ts = jks.KeyStore.load("ssl/truststore.jks", ts_password)
+    ts = jks.KeyStore.load("/ssl/truststore.jks", ts_password)
     app_cert = write_cert(ts.certs.get(cert_id))
     app_ca_cert = write_cert(ts.certs.get(ca_cert_id))
 
