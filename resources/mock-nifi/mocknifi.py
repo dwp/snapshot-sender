@@ -9,9 +9,6 @@ app = Flask("mocknifi")
 
 @app.route('/collection', methods=["POST"])
 def post_collection():
-    if request.content_type != "application/x-bzip2":
-        return Response("Invalid content type", 400)
-
     collection = request.headers.get("Collection")
     if not collection:
         return Response("Missing Collection header", 400)
@@ -20,10 +17,7 @@ def post_collection():
     if not filename:
         return Response("Missing Filename header", 400)
 
-    if not filename.endswith(".bz2"):
-        return Response("Missing .bz2 extension", 400)
-
-    collection_dir = path.join("output", collection)
+    collection_dir = path.join("/data/output", collection)
 
     if not path.exists(collection_dir):
         mkdir(collection_dir)
@@ -36,7 +30,6 @@ def post_collection():
 
 
 if __name__ == "__main__":
-    if not path.exists("output"):
-        mkdir("output")
-
+    if not path.exists("/data/output"):
+        mkdir("/data/output")
     app.run(host="0.0.0.0", ssl_context=create_ssl_context())
