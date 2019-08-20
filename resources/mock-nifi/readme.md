@@ -1,6 +1,6 @@
 * Requires pyjks, flask, pyopenssl
 * Expects to be run as a user with permission to create a folder at `/data/`
-* Expects there to be a selfs-signed cert available via a `truststore.jks` and `keystore.jks`, created by running `./generate-developer-certs.sh` and moving output to `/ssl/`
+* Expects there to be a selfs-signed cert available via a `truststore.jks` and `keystore.jks`, created by running `./generate-developer-certs.sh` from the `data-key-service` repo in `resources` and moving output to `/ssl/`
 * Run with:
   `export FLASK_APP=mocknifi.py`
   `flask run --cert=adhoc`
