@@ -1,7 +1,6 @@
-package dwp.snapshot.sender.configuration
+package app.configuration
 
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class ContextConfiguration {
-}
+class ContextConfiguration

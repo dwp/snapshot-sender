@@ -20,6 +20,8 @@ build/
 
 .mypy_cache
 
+.mypy_cache
+
 ### STS ###
 .apt_generated
 .classpath
@@ -45,3 +47,5 @@ out/
 
 ### VS Code ###
 .vscode/
+venv/
+logs/

@@ -18,6 +18,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-batch")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
+	implementation("org.apache.httpcomponents:httpclient:4.5.9")
+	implementation("com.google.code.gson:gson:2.8.5")
+
 	// sdk v1
 	implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
 	implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
