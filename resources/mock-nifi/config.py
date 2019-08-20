@@ -72,5 +72,6 @@ def create_ssl_context():
     ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain(certfile=app_cert, keyfile=app_key, password=key_password)
     ssl_context.load_verify_locations(app_ca_cert)
+
     ssl_context.verify_mode = ssl.CERT_REQUIRED
     return ssl_context
