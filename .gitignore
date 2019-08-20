@@ -49,3 +49,4 @@ out/
 .vscode/
 venv/
 logs/
+node_modules/
