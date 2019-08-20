@@ -8,4 +8,4 @@
 * To test:
   `curl -k -X POST --cert certificate.pem:changeit --key key.pem -H 'Collection: collection' -H 'Filename: filename' -H "Content-Type: text/plain" -d 'test message' https://localhost:5000/collection`
 * Whilst this is an insecure test, it is still using https and the certs, it's just insecure as the certs are self-signed
-* Will dump the message in `-d 'test message'` argument into a file at `/data/output/{collection}/{filename}` where collection and filename are the args to the curl
+* Will dump the message in `-d 'test message'` argument into a file at `/data/output/{collection}/{filename}` where collection and filename are the args to the curl.
