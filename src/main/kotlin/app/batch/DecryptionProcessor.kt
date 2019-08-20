@@ -1,10 +1,12 @@
 package app.batch
 
 import app.domain.EncryptedStream
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import java.io.InputStream
 import java.security.Key
+import java.security.Security
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
@@ -13,6 +15,10 @@ import javax.crypto.spec.SecretKeySpec
 
 @Component
 class DecryptionProcessor: ItemProcessor<EncryptedStream, InputStream> {
+
+    init {
+        Security.addProvider(BouncyCastleProvider())
+    }
 
     override fun process(item: EncryptedStream): InputStream? {
         val dataKey = item.encryptionMetadata.plaintext
