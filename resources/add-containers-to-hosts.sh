@@ -70,3 +70,28 @@ else
         docker exec hbase cat /etc/hosts
     ) >&2
 fi
+echo "...hosts updated for hbase container '${dks_http_name}'"
+
+mock_nifi_name=$(docker exec mock-nifi cat /etc/hosts \
+                 | egrep -v '(localhost|ip6)' | tail -n1)
+
+echo "mock nifi container is '${mock_nifi_name}'"
+
+if [[ -n "${mock_nifi_name}" ]]; then
+
+    temp_file=$(mktemp)
+    (
+        cat /etc/hosts | grep -v 'added by mock-nifi-to-snapshot-sender.$'
+        echo ${mock_nifi_name} local-dks-http \# added by mock-nifi-to-snapshot-sender.
+    ) > $temp_file
+
+    sudo mv $temp_file /etc/hosts
+    sudo chmod 644 /etc/hosts
+    cat /etc/hosts
+else
+    (
+        echo could not get host name from hosts file:
+        docker exec mock-nifi cat /etc/hosts
+    ) >&2
+fi
+echo "...hosts updated for mock nifi container '${mock_nifi_name}'"

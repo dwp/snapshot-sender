@@ -28,8 +28,10 @@ add-containers-to-hosts: ## Update laptop hosts file with reference to container
 generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
 	pushd resources && ./generate-developer-certs.sh && popd
 
+.PHONY: build-all
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
+.PHONY: build-base-images
 build-base-images: ## Build base images to avoid rebuilding frequently
 	@{ \
 		pushd resources; \
@@ -38,26 +40,49 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 		popd; \
 	}
 
+.PHONY: build-images
 build-images: build-base-images ## Build all ecosystem of images
 	@{ \
-		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export; \
+		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https snapshot-sender hbase-to-mongo-export mock-nifi snapshot-sender-itest; \
 	}
 
+.PHONY: up
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https; \
+		docker-compose up -d hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https mock-nifi; \
 		echo "Waiting for data to arive in s3" && sleep 10; \
-		docker-compose up -d hbase-to-mongo-export; \
+		docker-compose up -d hbase-to-mongo-export snapshot-sender; \
 	}
 
+.PHONY: up-all
 up-all: build-images up
 
+.PHONY: hbase-shell
 hbase-shell: ## Open an Hbase shell onto the running hbase container
 	@{ \
 		docker exec -it hbase hbase shell; \
 	}
 
+.PHONY: destroy
 destroy: ## Bring down the hbase and other services then delete all volumes
 	docker-compose down
 	docker network prune -f
 	docker volume prune -f
+
+.PHONY: integration-all
+integration-all: generate-developer-certs add-containers-to-hosts build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
+
+.PHONY: integration-tests
+integration-tests: ## (Re-)Run the integration tests in a Docker container
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
+		echo "Waiting for exporters"; \
+		sleep 5; \
+		docker-compose up snapshot-sender-itest; \

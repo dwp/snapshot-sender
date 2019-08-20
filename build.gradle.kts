@@ -32,3 +32,22 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 }
+
+sourceSets {
+    create("integration") {
+        java.srcDir(file("src/integration/groovy"))
+        java.srcDir(file("src/integration/kotlin"))
+        compileClasspath += sourceSets.getByName("main").output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+tasks.register<Test>("integration") {
+    description = "Runs the integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets["integration"].output.classesDirs
+    classpath = sourceSets["integration"].runtimeClasspath
+    testLogging {
+        events = setOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
+    }
+}

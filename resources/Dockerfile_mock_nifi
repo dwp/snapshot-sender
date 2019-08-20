@@ -12,4 +12,7 @@ RUN pip3 install -r requirements.txt
 
 COPY mock-nifi/* ./
 
+COPY mock-nifi-keystore.jks /ssl/keystore.jks
+COPY mock-nifi-truststore.crt /ssl/truststore.jks
+
 CMD ["python3", "mocknifi.py"]
