@@ -13,7 +13,8 @@ def to_bytes(s):
 
 def write_pem(f, der_bytes, pem_type):
     f.write(to_bytes("-----BEGIN %s-----\r\n" % pem_type))
-    f.write(to_bytes("\r\n".join(textwrap.wrap(base64.b64encode(der_bytes).decode('ascii'), 64)) + "\r\n"))
+    f.write(to_bytes("\r\n".join(textwrap.wrap(
+        base64.b64encode(der_bytes).decode('ascii'), 64)) + "\r\n"))
     f.write(to_bytes("-----END %s-----\r\n" % pem_type))
 
 
@@ -70,7 +71,8 @@ def create_ssl_context():
     app_ca_cert = write_cert(ts.certs.get(ca_cert_id))
 
     ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
-    ssl_context.load_cert_chain(certfile=app_cert, keyfile=app_key, password=key_password)
+    ssl_context.load_cert_chain(
+        certfile=app_cert, keyfile=app_key, password=key_password)
     ssl_context.load_verify_locations(app_ca_cert)
 
     ssl_context.verify_mode = ssl.CERT_REQUIRED
