@@ -36,6 +36,11 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
         }
         return null
     }
+
+    fun reset (){
+        iterator = null
+    }
+
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {

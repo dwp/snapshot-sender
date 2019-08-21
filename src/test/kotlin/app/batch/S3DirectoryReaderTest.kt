@@ -8,13 +8,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
+import org.mockito.*
 import org.mockito.BDDMockito.given
-import org.mockito.InjectMocks
-import org.mockito.Mock
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
@@ -49,7 +47,7 @@ class S3DirectoryReaderTest {
     @Autowired
     private lateinit var s3DirectorReader: S3DirectoryReader
 
-    @Autowired
+    @MockBean
     private lateinit var s3Client: AmazonS3
 
     @Before
@@ -68,6 +66,7 @@ class S3DirectoryReaderTest {
 
         objectMetadata = ObjectMetadata()
         objectMetadata.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
+        s3DirectorReader.reset()
         Mockito.reset(s3Client)
 
     }
