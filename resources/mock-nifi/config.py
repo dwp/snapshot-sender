@@ -3,6 +3,7 @@ import jks
 import os
 import ssl
 import textwrap
+import sys
 
 from tempfile import mkstemp
 
@@ -23,6 +24,8 @@ def write_private_key(key):
         return
 
     tf, fn = mkstemp(suffix=".key")
+    print(f"fn: {fn}", file=sys.stdout)
+    sys.stdout.flush()
     with os.fdopen(tf, "wb") as f:
         if key.algorithm_oid == jks.util.RSA_ENCRYPTION_OID:
             write_pem(f, key.pkey, "RSA PRIVATE KEY")
@@ -48,7 +51,6 @@ def write_cert(cert):
 
 def create_ssl_context():
     from os import environ
-
     # Get the keystore and truststore passwords
     ks_password = environ.get("KEYSTORE_PASSWORD", "changeit")
     ts_password = environ.get("TRUSTSTORE_PASSWORD", "changeit")
@@ -59,7 +61,7 @@ def create_ssl_context():
     cert_id = environ.get("TLS_CERT_ID", "cid")
     ca_cert_id = environ.get("TLS_CA_CERT_ID", "cacid")
 
-    print("Using key {} and cert {}".format(key_id, cert_id))
+    print("Using key {} and cert {}".format(key_id, cert_id), file=sys.stderr)
 
     # Write the private key
     ks = jks.KeyStore.load("/ssl/keystore.jks", ks_password)
@@ -72,8 +74,8 @@ def create_ssl_context():
 
     ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain(
-        certfile=app_cert, keyfile=app_key, password=key_password)
-    ssl_context.load_verify_locations(app_ca_cert)
-
+        "/ssl/certificate-trim.pem", "/ssl/key-trim.pem", password=key_password)
+    #ssl_context.load_verify_locations(app_ca_cert)
+    #exit(1)
     ssl_context.verify_mode = ssl.CERT_REQUIRED
     return ssl_context
