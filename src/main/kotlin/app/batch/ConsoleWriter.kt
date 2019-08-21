@@ -1,18 +1,18 @@
 package app.batch
 
+import app.domain.DecryptedStream
 import org.springframework.batch.item.ItemWriter
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
-import java.io.InputStream
 import java.io.InputStreamReader
 
 @Component
 @Profile("consoleWriter")
-class ConsoleWriter: ItemWriter<InputStream> {
-    override fun write(items: MutableList<out InputStream>) {
+class ConsoleWriter: ItemWriter<DecryptedStream> {
+    override fun write(items: MutableList<out DecryptedStream>) {
         items.forEach { item ->
-            BufferedReader(InputStreamReader(item)).forEachLine {
+            BufferedReader(InputStreamReader(item.inputStream)).forEachLine {
                 println(it)
             }
             println()
