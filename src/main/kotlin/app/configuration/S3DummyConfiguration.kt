@@ -1,4 +1,4 @@
-package dwp.snapshot.sender.configuration
+package app.configuration
 
 
 import com.amazonaws.ClientConfiguration

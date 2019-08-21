@@ -1,4 +1,4 @@
-package dwp.snapshot.sender.configuration
+package app.configuration
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions

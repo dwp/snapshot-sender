@@ -20,22 +20,28 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
 
     @Autowired
     private lateinit var s3Client: AmazonS3
-    private var  objectSummaries : List<S3ObjectSummary>? = null
+    private var iterator : ListIterator<S3ObjectSummary>? = null
+    private val IV = "iv"
+    private val DATAENCRYPTIONKEYID = "dataKeyencryptionKeyid"
+    private val CIPHERTEXT = "ciphertext"
 
     override fun read(): EncryptedStream? {
-       return  getS3ObjectSummaries(s3Client,s3BucketName)?.listIterator()?.next()?.let { it ->
+        val it = getS3ObjectSummaries(s3Client,s3BucketName)
+        val hasNext = it?.hasNext()
+        if (hasNext)
+        return  it?.next()?.let { it ->
             val inputStream = getS3ObjectInputStream(it, s3Client, s3BucketName)
             val metadata = getS3ObjectMetadata(it, s3Client, s3BucketName)
             return encryptedStream(metadata, inputStream)
         }
-
+        return null
     }
-
-    private fun getS3ObjectSummaries(s3Client: AmazonS3, bucketName: String): List<S3ObjectSummary> {
-        if (null == objectSummaries) {
-            objectSummaries =  s3Client.listObjectsV2(bucketName).objectSummaries
+    @Synchronized
+    private fun getS3ObjectSummaries(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
+        if (null == iterator) {
+            iterator =  s3Client.listObjectsV2(bucketName).objectSummaries.listIterator()
         }
-        return objectSummaries!!
+        return iterator!!
     }
 
     private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
@@ -48,9 +54,9 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
 
     private fun encryptedStream(metadata: Map<String, String>, inputStream: S3ObjectInputStream): EncryptedStream {
         try {
-            val iv = metadata.get("iv")!!
-            val dataKeyEncryptionKey = metadata.get("dataKeyEncryptionKey")!!
-            val ciphertext = metadata.get("ciphertext")!!
+            val iv = metadata.get(IV)!!
+            val dataKeyEncryptionKey = metadata.get(DATAENCRYPTIONKEYID)!!
+            val ciphertext = metadata.get(CIPHERTEXT)!!
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, ciphertext, "")
             return EncryptedStream(inputStream, encryptionMetadata)
         } catch (e: Exception) {
