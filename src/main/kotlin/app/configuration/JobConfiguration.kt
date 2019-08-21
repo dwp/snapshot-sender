@@ -1,7 +1,9 @@
 package app.configuration
 
+import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.exceptions.DataKeyDecryptionException
+import app.exceptions.WriterException
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -15,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import java.io.InputStream
 
 @Configuration
 @EnableBatchProcessing
@@ -33,17 +34,18 @@ class JobConfiguration {
     @Bean
     fun step() =
             stepBuilderFactory.get("step")
-                    .chunk<EncryptedStream, InputStream>(10)
+                    .chunk<EncryptedStream, DecryptedStream>(10)
                     .reader(itemReader)
                     .faultTolerant()
                     .skip(DataKeyDecryptionException::class.java)
+                    .skip(WriterException::class.java)
                     .skipLimit(Integer.MAX_VALUE)
                     .processor(itemProcessor())
                     .writer(itemWriter)
                     .build()
 
-    fun itemProcessor(): ItemProcessor<EncryptedStream, InputStream> =
-            CompositeItemProcessor<EncryptedStream, InputStream>().apply {
+    fun itemProcessor(): ItemProcessor<EncryptedStream, DecryptedStream> =
+            CompositeItemProcessor<EncryptedStream, DecryptedStream>().apply {
                 setDelegates(listOf(datakeyProcessor, decryptionProcessor))
             }
 
@@ -54,10 +56,10 @@ class JobConfiguration {
     lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
-    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, InputStream>
+    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
 
     @Autowired
-    lateinit var itemWriter: ItemWriter<InputStream>
+    lateinit var itemWriter: ItemWriter<DecryptedStream>
 
     @Autowired
     lateinit var jobBuilderFactory: JobBuilderFactory

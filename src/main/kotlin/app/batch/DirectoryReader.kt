@@ -39,7 +39,7 @@ class DirectoryReader: ItemReader<EncryptedStream> {
                 }
             }
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, ciphertext, "")
-            return EncryptedStream(FileInputStream(encryptedFile), encryptionMetadata)
+            return EncryptedStream(FileInputStream(encryptedFile), encryptedFile.name, encryptionMetadata)
         }
         else {
             return null
