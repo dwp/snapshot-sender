@@ -32,7 +32,7 @@ class S3DirectoryReaderTest {
     private val BUCKET_NAME1 = "bucket1"
     private val KEY1 = "key1"
     private val IV = "iv"
-    private val DATAENCRYPTION_KEY = "dataKeyEncryptionKey"
+    private val DATAENCRYPTION_KEY = "dataKeyencryptionKeyid"
     private val CIPHER_TEXT = "ciphertext"
     private val OBJECT_CONTENT = "SAMPLE"
 
