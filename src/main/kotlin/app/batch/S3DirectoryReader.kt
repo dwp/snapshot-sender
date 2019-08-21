@@ -29,9 +29,9 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
         val it = getS3ObjectSummaries(s3Client,s3BucketName)
         val hasNext = it?.hasNext()
         if (hasNext)
-        return  it?.next()?.let { it ->
-            val inputStream = getS3ObjectInputStream(it, s3Client, s3BucketName)
-            val metadata = getS3ObjectMetadata(it, s3Client, s3BucketName)
+        return  it?.next()?.let { ti ->
+            val inputStream = getS3ObjectInputStream(ti, s3Client, s3BucketName)
+            val metadata = getS3ObjectMetadata(ti, s3Client, s3BucketName)
             return encryptedStream(metadata, inputStream)
         }
         return null
