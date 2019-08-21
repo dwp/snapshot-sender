@@ -75,6 +75,7 @@ class S3DirectoryReaderTest {
             }
         }
         assertTrue(OBJECT_CONTENT.equals(textBuilder.toString().trim()))
+        assertTrue(KEY1.equals(encryptedStream?.fileName))
 
     }
 

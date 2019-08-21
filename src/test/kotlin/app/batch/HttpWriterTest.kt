@@ -22,7 +22,7 @@ class HttpWriterTest {
     @Test
     fun testOk() {
         logger.info("httpWriter: '$httpWriter'.")
-        val byteArray = ByteArray()
+        //val byteArray = ByteArray()
 //        httpWriter.write()
     }
 
