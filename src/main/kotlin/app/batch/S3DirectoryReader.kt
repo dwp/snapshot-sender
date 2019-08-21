@@ -26,7 +26,7 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
     private val CIPHERTEXT = "ciphertext"
 
     override fun read(): EncryptedStream? {
-        val it = getS3ObjectSummaries(s3Client,s3BucketName)
+        val it = getS3ObjectSummariesIterator(s3Client,s3BucketName)
         val hasNext = it?.hasNext()
         if (hasNext)
         return  it?.next()?.let { ti ->
@@ -37,7 +37,7 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
         return null
     }
     @Synchronized
-    private fun getS3ObjectSummaries(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
+    private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
             iterator =  s3Client.listObjectsV2(bucketName).objectSummaries.listIterator()
         }

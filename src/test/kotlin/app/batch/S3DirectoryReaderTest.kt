@@ -1,13 +1,18 @@
 package app.batch
 
+import app.exceptions.DataKeyDecryptionException
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.*
 import org.apache.http.client.methods.HttpGet
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -36,21 +41,39 @@ class S3DirectoryReaderTest {
     private val CIPHER_TEXT = "ciphertext"
     private val OBJECT_CONTENT = "SAMPLE"
 
-    @Test
-    fun testRead() {
-        var listObjectsV2Result: ListObjectsV2Result= ListObjectsV2Result()
-        var s3ObjectSummary1 : S3ObjectSummary  = S3ObjectSummary()
+    private lateinit var listObjectsV2Result:ListObjectsV2Result
+    private lateinit var s3ObjectSummary1: S3ObjectSummary;
+    private lateinit var s3Object:S3Object;
+    private lateinit var objectMetadata: ObjectMetadata;
+
+    @Autowired
+    private lateinit var s3DirectorReader: S3DirectoryReader
+
+    @Autowired
+    private lateinit var s3Client: AmazonS3
+
+    @Before
+    fun prepare() {
+
+        listObjectsV2Result = ListObjectsV2Result()
+        s3ObjectSummary1 = S3ObjectSummary()
         s3ObjectSummary1.bucketName = BUCKET_NAME1
         s3ObjectSummary1.key = KEY1
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
 
-        val s3Object = S3Object()
+        s3Object = S3Object()
         s3Object.bucketName = BUCKET_NAME1
         s3Object.key = KEY1
         s3Object.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT.toByteArray()),HttpGet())
 
-        val objectMetadata = ObjectMetadata()
+        objectMetadata = ObjectMetadata()
         objectMetadata.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
+        Mockito.reset(s3Client)
+
+    }
+
+    @Test
+    fun testRead() {
 
         given(s3Client.listObjectsV2(ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
         given(s3Client.getObject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(s3Object)
@@ -79,9 +102,14 @@ class S3DirectoryReaderTest {
 
     }
 
-    @Autowired
-    private lateinit var s3DirectorReader: S3DirectoryReader
 
-    @Autowired
-    private lateinit var s3Client: AmazonS3
+    @Test(expected = DataKeyDecryptionException::class)
+    fun testException() {
+
+        given(s3Client.listObjectsV2(ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
+        given(s3Client.getObject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(s3Object)
+        given(s3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(ObjectMetadata())
+
+        s3DirectorReader.read()
+    }
 }
