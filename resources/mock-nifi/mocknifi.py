@@ -30,6 +30,6 @@ def post_collection():
 
 
 if __name__ == "__main__":
-    if not path.exists("/data/output"):
-        mkdir("/data/output")
-    app.run(host="0.0.0.0", ssl_context=create_ssl_context())
+   if not path.exists("/data/output"):
+       mkdir("/data/output")
+   app.run(host="0.0.0.0", ssl_context=create_ssl_context())
