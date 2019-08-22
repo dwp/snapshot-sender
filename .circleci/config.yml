@@ -71,7 +71,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install openjdk-8-jdk
 
-            export HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=')
             export DATA_KEY_SERVICE_URL=http://localhost:8090
             export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
             export S3_BUCKET=dummy-bucket

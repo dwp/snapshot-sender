@@ -75,14 +75,6 @@ integration-all: generate-developer-certs build-all up add-containers-to-hosts i
 .PHONY: integration-tests
 integration-tests: ## (Re-)Run the integration tests in a Docker container
 	@{ \
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
-		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
-		export S3_BUCKET=$(s3_bucket); \
-		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		echo "Waiting for exporters"; \
 		sleep 5; \
 		docker-compose up snapshot-sender-itest; \
