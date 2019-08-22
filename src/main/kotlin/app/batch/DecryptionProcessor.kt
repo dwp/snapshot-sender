@@ -28,7 +28,9 @@ class DecryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream> {
         val cipher = Cipher.getInstance(cipherAlgorithm, "BC").apply {
             init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(iv)))
         }
-        return DecryptedStream(CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher), item.fileName)
+
+        return DecryptedStream(CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher),
+                item.fileName.replace(Regex("""\.enc$"""), ""))
     }
 
     private val cipherAlgorithm = "AES/CTR/NoPadding"
