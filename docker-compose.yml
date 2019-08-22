@@ -142,9 +142,10 @@ services:
       context: resources
       dockerfile: Dockerfile_mock_nifi
     ports:
-      - "5000:5000"
+      - "5443:5443"
     volumes:
-      - shared-volume:/data
+      - shared-volume:/opt/snapshot-sender/data
+    container_name: mock-nifi
     environment:
       KEYSTORE_PASSWORD: changeit
       TRUSTSTORE_PASSWORD: changeit

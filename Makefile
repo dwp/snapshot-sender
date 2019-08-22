@@ -50,7 +50,7 @@ build-images: build-base-images ## Build all ecosystem of images
 up: ## Run the ecosystem of containers
 	@{ \
 		docker-compose up -d hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https mock-nifi; \
-		echo "Waiting for data to arive in s3" && sleep 10; \
+		echo "Waiting for data to arrive in s3" && sleep 10; \
 		docker-compose up -d hbase-to-mongo-export snapshot-sender; \
 	}
 
@@ -70,7 +70,7 @@ destroy: ## Bring down the hbase and other services then delete all volumes
 	docker volume prune -f
 
 .PHONY: integration-all
-integration-all: generate-developer-certs add-containers-to-hosts build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
+integration-all: generate-developer-certs build-all up add-containers-to-hosts integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
 
 .PHONY: integration-tests
 integration-tests: ## (Re-)Run the integration tests in a Docker container
@@ -86,3 +86,4 @@ integration-tests: ## (Re-)Run the integration tests in a Docker container
 		echo "Waiting for exporters"; \
 		sleep 5; \
 		docker-compose up snapshot-sender-itest; \
+	}

@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 
 plugins {
 	id("org.springframework.boot") version "2.1.7.RELEASE"

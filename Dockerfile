@@ -6,7 +6,7 @@ WORKDIR /opt/snapshot-sender
 COPY build/libs/snapshot-sender-0.0.1.jar ./snapshot-sender-latest.jar
 RUN ls -la *.jar
 
-COPY resources/sender*.jks ./
-COPY resources/sender*.crt ./
+COPY resources/snapshot-sender*.jks ./
+COPY resources/snapshot-sender*.crt ./
 
 ENTRYPOINT ["sh", "-c", "java -jar snapshot-sender-latest.jar \"$@\"", "--"]

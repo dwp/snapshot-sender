@@ -82,7 +82,7 @@ if [[ -n "${mock_nifi_name}" ]]; then
     temp_file=$(mktemp)
     (
         cat /etc/hosts | grep -v 'added by mock-nifi-to-snapshot-sender.$'
-        echo ${mock_nifi_name} local-dks-http \# added by mock-nifi-to-snapshot-sender.
+        echo ${mock_nifi_name} local-mock-nifi \# added by mock-nifi-to-snapshot-sender.
     ) > $temp_file
 
     sudo mv $temp_file /etc/hosts
