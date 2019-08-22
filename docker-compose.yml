@@ -144,7 +144,7 @@ services:
     ports:
       - "5443:5443"
     volumes:
-      - shared-volume:/opt/snapshot-sender/data
+      - shared-volume:/data/output
     container_name: mock-nifi
     environment:
       KEYSTORE_PASSWORD: changeit
@@ -163,13 +163,12 @@ services:
     depends_on:
       - hbase
       - snapshot-sender
+      - mock-nifi
     volumes:
-      - shared-volume:/opt/snapshot-sender/data
-    command: "integration"
-    environment:
-      - FILE_NAME=/opt/snapshot-sender/data/ucdata-file-output.txt
-      - EXPECTED_TIMESTAMP=10
-      - EXPECTED_LINE_COUNT=7
-
+      - shared-volume:/data/output:ro
+    command: "-file /data/output/db.core.addressDeclaration-000001.txt.bz2 \
+              -timestamp 10 \
+              -linecount 7"
+              
 volumes:
   shared-volume:

@@ -2,15 +2,17 @@ import bz2
 import json
 import argparse
 
-# Defaults and test assertion values
-total_jsond_lines = 0
-expected_value_of_timestamp = 10
-expected_number_of_lines = 7
-
 # Obtain filename from command line argument -file
 parser = argparse.ArgumentParser()
 parser.add_argument('-file', type=str, required=True)
+parser.add_argument('-timestamp', type=int, required=True)
+parser.add_argument('-linecount', type=int, required=True)
 args = parser.parse_args()
+
+# Defaults and test assertion values
+total_jsond_lines = 0
+expected_value_of_timestamp = args.timestamp
+expected_number_of_lines = args.linecount
 
 # Unzip input_file
 input_file = bz2.BZ2File(args.file, 'rb')
