@@ -2,6 +2,7 @@ package app.batch
 
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
+import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -18,13 +19,14 @@ import org.springframework.stereotype.Component
 class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter<DecryptedStream> {
 
     override fun write(items: MutableList<out DecryptedStream>) {
-        val filenameRe = Regex("""^\w+.\w+\.(\w+)""")
+        val filenameRe = Regex("""^\w+\.\w+\.(\w+)""")
         items.forEach { item ->
             val match = filenameRe.find(item.filename)
             if (match != null) {
                 val collection = match?.groupValues[1]
                 logger.info("filename: '${item.filename}'.")
                 logger.info("collection: '${collection}'.")
+                logger.info("httpCLientProvider: '${httpClientProvider}'.")
                 httpClientProvider.client().use {
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
@@ -47,7 +49,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
                 }
             }
             else {
-                throw WriterException("""Filename not in expected format, 
+                throw MetadataException("""Filename not in expected format, 
                     |cannot parse collection name: 
                     |'${item}' does not match '$filenameRe'.""".trimMargin())
             }

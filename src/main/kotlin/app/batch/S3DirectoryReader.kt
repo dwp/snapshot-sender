@@ -57,13 +57,15 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
        return s3Client.getObjectMetadata(bucketName, os.key).userMetadata
     }
 
-    private fun encryptedStream(metadata: Map<String, String>,filepath:String, inputStream: S3ObjectInputStream): EncryptedStream {
+    private fun encryptedStream(metadata: Map<String, String>, filePath:String, inputStream: S3ObjectInputStream): EncryptedStream {
         try {
             val iv = metadata.get(IV)!!
             val dataKeyEncryptionKey = metadata.get(DATAENCRYPTIONKEYID)!!
             val ciphertext = metadata.get(CIPHERTEXT)!!
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, ciphertext, "")
-            return EncryptedStream(inputStream, filepath,encryptionMetadata)
+            val fileSplitArr = filePath.split("/")
+            val fileName = fileSplitArr[fileSplitArr.size -1]
+            return EncryptedStream(inputStream, fileName,encryptionMetadata)
         } catch (e: Exception) {
             throw DataKeyDecryptionException("Couldn't get the metadata")
         }
