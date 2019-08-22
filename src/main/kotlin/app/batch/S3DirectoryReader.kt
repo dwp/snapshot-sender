@@ -22,8 +22,8 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
     private lateinit var s3Client: AmazonS3
     private var iterator : ListIterator<S3ObjectSummary>? = null
     private val IV = "iv"
-    private val DATAENCRYPTIONKEYID = "dataKeyencryptionKeyid"
-    private val CIPHERTEXT = "ciphertext"
+    private val DATAENCRYPTIONKEYID = "dataKeyEncryptionKeyId"
+    private val CIPHERTEXT = "cipherText"
 
     override fun read(): EncryptedStream? {
         val it = getS3ObjectSummariesIterator(s3Client,s3BucketName)

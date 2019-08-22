@@ -35,8 +35,8 @@ class S3DirectoryReaderTest {
     private val BUCKET_NAME1 = "bucket1"
     private val KEY1 = "key1"
     private val IV = "iv"
-    private val DATAENCRYPTION_KEY = "dataKeyencryptionKeyid"
-    private val CIPHER_TEXT = "ciphertext"
+    private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
+    private val CIPHER_TEXT = "cipherText"
     private val OBJECT_CONTENT = "SAMPLE"
 
     private lateinit var listObjectsV2Result:ListObjectsV2Result
