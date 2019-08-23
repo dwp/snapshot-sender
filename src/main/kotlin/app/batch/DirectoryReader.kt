@@ -14,6 +14,7 @@ import java.io.FileInputStream
 @Component
 @Profile("directoryReader")
 class DirectoryReader: ItemReader<EncryptedStream> {
+
     override fun read(): EncryptedStream? {
         if (fileIndex < files().size) {
             val encryptedFile = files()[fileIndex++]
@@ -38,7 +39,7 @@ class DirectoryReader: ItemReader<EncryptedStream> {
                 }
             }
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, ciphertext, "")
-            return EncryptedStream(FileInputStream(encryptedFile), encryptionMetadata)
+            return EncryptedStream(FileInputStream(encryptedFile), encryptedFile.name, encryptionMetadata)
         }
         else {
             return null
