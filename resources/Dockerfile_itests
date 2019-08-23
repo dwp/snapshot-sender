@@ -1,8 +1,0 @@
-FROM python:3.7-slim
-
-RUN mkdir -p /opt/test /data/output
-WORKDIR /opt/test
-
-COPY integration_test.py ./
-
-CMD ["python3", "integration_test.py"]

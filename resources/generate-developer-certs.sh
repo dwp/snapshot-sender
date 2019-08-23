@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#!/bin/bash
-
 main() {
     make_keystore dks-keystore.jks dks-standalone-https
     extract_public_certificate dks-keystore.jks dks-standalone-https.crt
@@ -19,13 +17,24 @@ main() {
     extract_public_certificate mock-nifi-keystore.jks mock-nifi.crt
     make_truststore mock-nifi-truststore.jks mock-nifi.crt
 
-    import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt hbase-to-mongo-export
-    import_into_truststore dks-truststore.jks snapshot-sender.crt snapshot-sender
+    import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt \
+                           hbase-to-mongo-export
 
-    import_into_truststore htme-truststore.jks dks-standalone-https.crt dks
+    import_into_truststore dks-truststore.jks snapshot-sender.crt \
+                           snapshot-sender
 
-    import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt mock-nifi
-    import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt snapshot-sender
+    import_into_truststore htme-truststore.jks dks-standalone-https.crt \
+                           dks-standalone-https
+
+    import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt \
+                           mock-nifi
+
+    import_into_truststore snapshot-sender-truststore.jks \
+                           dks-standalone-https.crt \
+                           dks-standalone-https
+
+    import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt \
+                           snapshot-sender
 }
 
 make_keystore() {

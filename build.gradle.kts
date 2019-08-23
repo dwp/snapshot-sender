@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 
 plugins {
@@ -17,7 +16,6 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.springframework.boot:spring-boot-starter-batch")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -41,21 +39,3 @@ tasks.withType<KotlinCompile> {
 	}
 }
 
-sourceSets {
-    create("integration") {
-        java.srcDir(file("src/integration/groovy"))
-        java.srcDir(file("src/integration/kotlin"))
-        compileClasspath += sourceSets.getByName("main").output + configurations.testRuntimeClasspath
-        runtimeClasspath += output + compileClasspath
-    }
-}
-
-tasks.register<Test>("integration") {
-    description = "Runs the integration tests."
-    group = "verification"
-    testClassesDirs = sourceSets["integration"].output.classesDirs
-    classpath = sourceSets["integration"].runtimeClasspath
-    testLogging {
-        events = setOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
-    }
-}

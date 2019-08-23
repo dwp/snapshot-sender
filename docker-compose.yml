@@ -91,19 +91,24 @@ services:
 
   snapshot-sender:
     image: snapshot-sender
-    ports:
-      - 8070:8080
-      - 8170:8443
     build:
       context: .
     container_name: snapshot-sender
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
+    # volumes:
+    #   - shared-volume:/opt/snapshot-sender/data
     command: >-
-      --identity.keystore=snapshot-sender-keystore.jks
-      --identity.store.password=changeit
+      --aws.region=eu-west-2
+      --data.key.service.url=https://dks-standalone-https:8443
       --identity.key.password=changeit
+      --identity.keystore=snapshot-sender-keystore.jks
       --identity.store.alias=cid
+      --identity.store.password=changeit
+      --nifi.url=https://mock-nifi:5443
+      --s3.access.key=DummyKey
+      --s3.bucket=demobucket
+      --s3.secret.key=DummyKey
+      --s3.service.endpoint=http://s3-dummy:4572
+      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3DirectoryReader,dummyS3Client
       --trust.keystore=snapshot-sender-truststore.jks
       --trust.store.password=changeit
 
@@ -116,8 +121,8 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-http
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
+    # volumes:
+    #   - shared-volume:/opt/snapshot-sender/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
@@ -130,8 +135,8 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-https
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
+    # volumes:
+    #   - shared-volume:/opt/snapshot-sender/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-dks-secure.properties
@@ -157,18 +162,17 @@ services:
   snapshot-sender-itest:
     image: snapshot-sender-itest
     build:
-      context: .
-      dockerfile: Dockerfile_itests
-    container_name: snapshot-sender-itests
+      context: resources
+      dockerfile: Dockerfile_itest
+    container_name: snapshot-sender-itest
     depends_on:
       - hbase
-      - snapshot-sender
       - mock-nifi
     volumes:
       - shared-volume:/data/output:ro
     command: "-file /data/output/db.core.addressDeclaration-000001.txt.bz2 \
               -timestamp 10 \
               -linecount 7"
-              
+
 volumes:
   shared-volume:
