@@ -2,7 +2,6 @@ import bz2
 import json
 import argparse
 
-print("WOOOOOOOOOOOOOOOOOOOOOO")
 # Obtain filename from command line argument -file
 parser = argparse.ArgumentParser()
 parser.add_argument('-file', type=str, required=True)
@@ -26,11 +25,10 @@ finally:
 
 # For each line in the loaded_data, check it for expected_value_of_timestamp
 for line in loaded_data:
+    print("Checking {}".format(line))
     total_jsond_lines += 1
     jsond_line = json.loads(line)
     assert jsond_line["timestamp"] == expected_value_of_timestamp
 
 # Check total number of lines for
 assert total_jsond_lines == expected_number_of_lines
-
-print("Fuck yeah")

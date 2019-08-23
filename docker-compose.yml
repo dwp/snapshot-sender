@@ -94,8 +94,6 @@ services:
     build:
       context: .
     container_name: snapshot-sender
-    # volumes:
-    #   - shared-volume:/opt/snapshot-sender/data
     command: >-
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
@@ -121,8 +119,6 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-http
-    # volumes:
-    #   - shared-volume:/opt/snapshot-sender/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
@@ -135,8 +131,6 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-https
-    # volumes:
-    #   - shared-volume:/opt/snapshot-sender/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-dks-secure.properties
@@ -165,12 +159,9 @@ services:
       context: resources
       dockerfile: Dockerfile_itest
     container_name: snapshot-sender-itest
-    depends_on:
-      - hbase
-      - mock-nifi
     volumes:
       - shared-volume:/data/output:ro
-    command: "-file /data/output/db.core.addressDeclaration-000001.txt.bz2 \
+    command: "-file /data/output/addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
               -timestamp 10 \
               -linecount 7"
 
