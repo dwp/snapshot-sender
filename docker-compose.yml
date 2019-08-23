@@ -103,7 +103,7 @@ services:
       --identity.keystore=snapshot-sender-keystore.jks
       --identity.store.alias=cid
       --identity.store.password=changeit
-      --nifi.url=https://mock-nifi:5443
+      --nifi.url=https://mock-nifi:5443/collection
       --s3.access.key=DummyKey
       --s3.bucket=demobucket
       --s3.secret.key=DummyKey

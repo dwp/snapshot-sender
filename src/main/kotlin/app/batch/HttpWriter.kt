@@ -42,6 +42,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
                                 logger.info("Successfully posted '${item.filename}', response '${response.statusLine.statusCode}'.")
                             }
                             else -> {
+                                logger.error("""Failed to process '${item.filename}',
+                                    |response '${response.statusLine.statusCode}'.""".trimMargin())
                                 throw WriterException("""
                                 Failed to write '${item.filename}', post returned status code ${response.statusLine.statusCode}.
                             """.trimIndent())
