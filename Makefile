@@ -36,7 +36,7 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 	@{ \
 		pushd resources; \
 		docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
-		docker build --tag dwp-pthon-preinstall:latest --file Dockerfile_python_preinstall . ; \
+		docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall . ; \
 		popd; \
 	}
 

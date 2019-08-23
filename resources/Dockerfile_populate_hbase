@@ -1,4 +1,4 @@
-FROM dwp-pthon-preinstall:latest
+FROM dwp-python-preinstall:latest
 
 COPY populator/requirements.txt ./requirements.txt
 RUN pip3 install --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org -r ./requirements.txt
