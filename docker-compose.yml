@@ -94,6 +94,9 @@ services:
     build:
       context: .
     container_name: snapshot-sender
+    depends_on:
+      - dks-standalone-https
+      - mock-nifi
     command: >-
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
