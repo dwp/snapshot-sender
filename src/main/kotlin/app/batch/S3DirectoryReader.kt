@@ -26,15 +26,18 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
     private val CIPHERTEXT = "cipherText"
 
     override fun read(): EncryptedStream? {
-        val it = getS3ObjectSummariesIterator(s3Client,s3BucketName)
-        val hasNext = it?.hasNext()
-        if (hasNext)
-        return  it?.next()?.let { ti ->
-            val inputStream = getS3ObjectInputStream(ti, s3Client, s3BucketName)
-            val metadata = getS3ObjectMetadata(ti, s3Client, s3BucketName)
-            return encryptedStream(metadata, ti.key, inputStream)
+        val iterator = getS3ObjectSummariesIterator(s3Client,s3BucketName)
+        return if (iterator.hasNext()) {
+            iterator.next().let {
+                val inputStream = getS3ObjectInputStream(it, s3Client, s3BucketName)
+                val metadata = getS3ObjectMetadata(it, s3Client, s3BucketName)
+                logger.info("Returning '$metadata'.")
+                return encryptedStream(metadata, it.key, inputStream)
+            }
         }
-        return null
+        else {
+            null
+        }
     }
 
     fun reset (){

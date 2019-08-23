@@ -1,15 +1,17 @@
-FROM python:3.7-slim
+FROM dwp-centos-with-java:latest
+ENV SPRING_CONFIG_LOCATION /opt/mock-nifi/application-mock-nifi.properties
 
-RUN apt-get update && apt-get install -y gcc python3-dev
+EXPOSE 5443
 
-RUN mkdir /ssl /data
+RUN mkdir -p /opt/mock-nifi/data /opt/snapshot-sender/data
+WORKDIR /opt/mock-nifi
 
-WORKDIR /app
+RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/mock-nifi/releases/latest" \
+    | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document mock-nifi-latest.jar
 
-COPY mock-nifi/requirements.txt .
+RUN ls -la *.jar
 
-RUN pip3 install -r requirements.txt
+COPY application-mock-nifi.properties ./
+COPY mock-nifi*.jks mock-nifi*.crt ./
 
-COPY mock-nifi/* ./
-
-CMD ["python3", "mocknifi.py"]
+ENTRYPOINT ["sh", "-c", "java -jar mock-nifi-latest.jar \"$@\"", "--"]

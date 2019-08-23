@@ -1,4 +1,4 @@
-FROM dwp-pthon-preinstall:latest
+FROM dwp-python-preinstall:latest
 
 COPY s3dummy/*.sh ./
 

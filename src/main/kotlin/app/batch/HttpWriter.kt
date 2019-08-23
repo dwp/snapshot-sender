@@ -19,14 +19,16 @@ import org.springframework.stereotype.Component
 class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter<DecryptedStream> {
 
     override fun write(items: MutableList<out DecryptedStream>) {
+        logger.info("Writing: '${items.size}' items.")
         val filenameRe = Regex("""^\w+\.\w+\.(\w+)""")
         items.forEach { item ->
+            logger.info("Writing: '$item'.")
             val match = filenameRe.find(item.filename)
             if (match != null) {
-                val collection = match?.groupValues[1]
+                val collection = match.groupValues[1]
                 logger.info("filename: '${item.filename}'.")
                 logger.info("collection: '${collection}'.")
-                logger.info("httpCLientProvider: '${httpClientProvider}'.")
+                logger.info("httpClientProvider: '${httpClientProvider}'.")
                 httpClientProvider.client().use {
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
@@ -40,6 +42,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
                                 logger.info("Successfully posted '${item.filename}', response '${response.statusLine.statusCode}'.")
                             }
                             else -> {
+                                logger.error("""Failed to process '${item.filename}',
+                                    |response '${response.statusLine.statusCode}'.""".trimMargin())
                                 throw WriterException("""
                                 Failed to write '${item.filename}', post returned status code ${response.statusLine.statusCode}.
                             """.trimIndent())
