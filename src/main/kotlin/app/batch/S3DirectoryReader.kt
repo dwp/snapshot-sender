@@ -20,13 +20,13 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
 
     @Autowired
     private lateinit var s3Client: AmazonS3
-    private var iterator : ListIterator<S3ObjectSummary>? = null
+    private var iterator: ListIterator<S3ObjectSummary>? = null
     private val IV = "iv"
     private val DATAENCRYPTIONKEYID = "dataKeyEncryptionKeyId"
     private val CIPHERTEXT = "cipherText"
 
     override fun read(): EncryptedStream? {
-        val iterator = getS3ObjectSummariesIterator(s3Client,s3BucketName)
+        val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
         return if (iterator.hasNext()) {
             iterator.next().let {
                 val inputStream = getS3ObjectInputStream(it, s3Client, s3BucketName)
@@ -34,20 +34,19 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
                 logger.info("Returning '$metadata'.")
                 return encryptedStream(metadata, it.key, inputStream)
             }
-        }
-        else {
+        } else {
             null
         }
     }
 
-    fun reset (){
+    fun reset() {
         iterator = null
     }
 
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            iterator =  s3Client.listObjectsV2(bucketName).objectSummaries.listIterator()
+            iterator = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries.listIterator()
         }
         return iterator!!
     }
@@ -57,18 +56,18 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
     }
 
     private fun getS3ObjectMetadata(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): Map<String, String> {
-       return s3Client.getObjectMetadata(bucketName, os.key).userMetadata
+        return s3Client.getObjectMetadata(bucketName, os.key).userMetadata
     }
 
-    private fun encryptedStream(metadata: Map<String, String>, filePath:String, inputStream: S3ObjectInputStream): EncryptedStream {
+    private fun encryptedStream(metadata: Map<String, String>, filePath: String, inputStream: S3ObjectInputStream): EncryptedStream {
         try {
             val iv = metadata.get(IV)!!
             val dataKeyEncryptionKey = metadata.get(DATAENCRYPTIONKEYID)!!
             val ciphertext = metadata.get(CIPHERTEXT)!!
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, ciphertext, "")
             val fileSplitArr = filePath.split("/")
-            val fileName = fileSplitArr[fileSplitArr.size -1]
-            return EncryptedStream(inputStream, fileName,encryptionMetadata)
+            val fileName = fileSplitArr[fileSplitArr.size - 1]
+            return EncryptedStream(inputStream, fileName, encryptionMetadata)
         } catch (e: Exception) {
             throw DataKeyDecryptionException("Couldn't get the metadata")
         }
@@ -76,6 +75,9 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
 
     @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String
+
+    @Value("\${s3.prefix.folder}")
+    private lateinit var s3PrefixFolder: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryReader::class.toString())
