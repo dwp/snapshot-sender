@@ -47,7 +47,7 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            iterator =  s3Client.listObjectsV2(bucketName).objectSummaries.listIterator()
+            iterator =  s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries.listIterator()
         }
         return iterator!!
     }
@@ -76,6 +76,9 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
 
     @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String
+
+    @Value("\${s3.prefix.folder}")
+    private lateinit var s3PrefixFolder: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryReader::class.toString())

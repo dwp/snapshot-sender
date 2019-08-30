@@ -28,11 +28,14 @@ import java.nio.charset.StandardCharsets
 @SpringBootTest
 @TestPropertySource(properties = [
     "data.key.service.url=dummy.com:8090",
-    "s3.bucket=bucket1"
+    "s3.bucket=bucket1",
+    "s3.prefix.folder=test/output/"
+
 ])
 class S3DirectoryReaderTest {
 
     private val BUCKET_NAME1 = "bucket1"
+    private val S3_PREFIX_FOLDER = "test/output/"
     private val KEY1 = "key1"
     private val IV = "iv"
     private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
@@ -54,6 +57,7 @@ class S3DirectoryReaderTest {
     fun prepare() {
 
         listObjectsV2Result = ListObjectsV2Result()
+        listObjectsV2Result.prefix = S3_PREFIX_FOLDER
         s3ObjectSummary1 = S3ObjectSummary()
         s3ObjectSummary1.bucketName = BUCKET_NAME1
         s3ObjectSummary1.key = KEY1
@@ -74,7 +78,7 @@ class S3DirectoryReaderTest {
     @Test
     fun testRead() {
 
-        given(s3Client.listObjectsV2(ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
+        given(s3Client.listObjectsV2(ArgumentMatchers.anyString(),ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
         given(s3Client.getObject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(s3Object)
         given(s3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(objectMetadata)
         val encryptedStream = s3DirectorReader.read()
@@ -105,7 +109,7 @@ class S3DirectoryReaderTest {
     @Test(expected = DataKeyDecryptionException::class)
     fun testException() {
 
-        given(s3Client.listObjectsV2(ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
+        given(s3Client.listObjectsV2(ArgumentMatchers.anyString(),ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
         given(s3Client.getObject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(s3Object)
         given(s3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(ObjectMetadata())
 
