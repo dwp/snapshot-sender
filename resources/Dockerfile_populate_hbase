@@ -11,5 +11,5 @@ RUN ls -la ./
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR} ${INSTALL_DIR}/data
 RUN ls -l ${INSTALL_DIR}/data
-USER $SERVICE_USER
+
 ENTRYPOINT ["./populate_hbase.py"]
