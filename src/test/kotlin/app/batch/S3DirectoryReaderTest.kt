@@ -42,9 +42,9 @@ class S3DirectoryReaderTest {
     private val CIPHER_TEXT = "cipherText"
     private val OBJECT_CONTENT = "SAMPLE"
 
-    private lateinit var listObjectsV2Result: ListObjectsV2Result
+    private lateinit var listObjectsV2Result:ListObjectsV2Result
     private lateinit var s3ObjectSummary1: S3ObjectSummary;
-    private lateinit var s3Object: S3Object;
+    private lateinit var s3Object:S3Object;
     private lateinit var objectMetadata: ObjectMetadata;
 
     @Autowired
@@ -66,7 +66,7 @@ class S3DirectoryReaderTest {
         s3Object = S3Object()
         s3Object.bucketName = BUCKET_NAME1
         s3Object.key = KEY1
-        s3Object.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT.toByteArray()), HttpGet())
+        s3Object.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT.toByteArray()),HttpGet())
 
         objectMetadata = ObjectMetadata()
         objectMetadata.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
@@ -78,12 +78,12 @@ class S3DirectoryReaderTest {
     @Test
     fun testRead() {
 
-        given(s3Client.listObjectsV2(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
+        given(s3Client.listObjectsV2(ArgumentMatchers.anyString(),ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
         given(s3Client.getObject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(s3Object)
         given(s3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(objectMetadata)
         val encryptedStream = s3DirectorReader.read()
-        val actualStream = encryptedStream?.inputStream
-        val actualMetadata = encryptedStream?.encryptionMetadata
+        val actualStream  = encryptedStream?.inputStream
+        val actualMetadata  = encryptedStream?.encryptionMetadata
 
         //compare the expected and actual metadata
         assertTrue(objectMetadata.userMetadata.get(IV).equals(actualMetadata?.initializationVector))
@@ -95,7 +95,7 @@ class S3DirectoryReaderTest {
             var c = 0
             while (c != -1) {
                 c = reader.read()
-                if (c != -1) {
+                if(c != -1) {
                     textBuilder.append(c.toChar())
                 }
             }
@@ -109,7 +109,7 @@ class S3DirectoryReaderTest {
     @Test(expected = DataKeyDecryptionException::class)
     fun testException() {
 
-        given(s3Client.listObjectsV2(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
+        given(s3Client.listObjectsV2(ArgumentMatchers.anyString(),ArgumentMatchers.anyString())).willReturn(listObjectsV2Result)
         given(s3Client.getObject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(s3Object)
         given(s3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(ObjectMetadata())
 
