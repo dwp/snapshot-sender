@@ -29,13 +29,13 @@ import java.nio.charset.StandardCharsets
 @TestPropertySource(properties = [
     "data.key.service.url=dummy.com:8090",
     "s3.bucket=bucket1",
-    "s3.prefix.folder=test/output"
+    "s3.prefix.folder=test/output/"
 
 ])
 class S3DirectoryReaderTest {
 
     private val BUCKET_NAME1 = "bucket1"
-    private val S3_PREFIX_FOLDER = "test/output"
+    private val S3_PREFIX_FOLDER = "test/output/"
     private val KEY1 = "key1"
     private val IV = "iv"
     private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
