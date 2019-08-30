@@ -50,11 +50,11 @@ build-images: build-base-images ## Build all ecosystem of images
 up: ## Run the ecosystem of containers
 	@{ \
 		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
-		echo "Waiting for services" && sleep 10; \
+		echo "Waiting for services" && sleep 20; \
 		docker-compose up -d hbase-populate s3-bucket-provision; \
-		echo "Waiting for pre-population." && sleep 10; \
+		echo "Waiting for pre-population." && sleep 20; \
 		docker-compose up -d hbase-to-mongo-export; \
-		echo "Waiting for export." && sleep 10; \
+		echo "Waiting for export." && sleep 30; \
 		docker-compose up -d snapshot-sender; \
 	}
 
@@ -80,6 +80,6 @@ integration-all: generate-developer-certs build-all up integration-tests ## Gene
 integration-tests: ## (Re-)Run the integration tests in a Docker container
 	@{ \
 		echo "Waiting for snapshot-sender"; \
-		sleep 5; \
+		sleep 30; \
 		docker-compose up snapshot-sender-itest; \
 	}
