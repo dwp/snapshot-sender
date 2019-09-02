@@ -20,7 +20,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
 
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing: '${items.size}' items.")
-        val filenameRe = Regex("""^\w+\.\w+\.(\w+)""")
+        val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
         items.forEach { item ->
             logger.info("Writing: '$item'.")
             val match = filenameRe.find(item.filename)
