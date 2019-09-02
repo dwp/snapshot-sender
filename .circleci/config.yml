@@ -9,11 +9,6 @@ jobs:
       # specify the version you desire here
       - image: circleci/openjdk:8-jdk
 
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    # - image: circleci/postgres:9.4
-
     working_directory: ~/repo
 
     environment:
@@ -40,6 +35,7 @@ jobs:
             sed -i s/version=.*/version=$VERSION/ gradle.properties
             gradle build
 
+
       - save_cache:
           paths:
             - ~/.gradle
@@ -55,6 +51,45 @@ jobs:
           root: artifacts
           paths:
             - snapshot-sender-*.jar
+
+  integration-test:
+    docker:
+      - image: circleci/python:3.7.3
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run:
+          name: "Run the integration test"
+          command: |
+            sudo pip3 install docker-compose
+            sudo apt-get update
+            sudo apt-get install openjdk-8-jdk
+
+            export DATA_KEY_SERVICE_URL=http://localhost:8090
+            export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
+            export S3_BUCKET=dummy-bucket
+            export S3_PREFIX_FOLDER=dummy-folder
+            export AWS_DEFAULT_REGION=dummy-region
+            export AWS_ACCESS_KEY_ID=dummy-key
+            export AWS_SECRET_ACCESS_KEY=dummy-secret
+
+            cd resources
+            ./generate-developer-certs.sh
+            docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
+            docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall . ; \
+            cd -
+            ./gradlew build
+            docker-compose build hbase hbase-populate snapshot-sender snapshot-sender-itest dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi s3-dummy s3-bucket-provision
+            docker-compose up -d hbase dks-standalone-http dks-standalone-https mock-nifi s3-dummy
+            sleep 60
+            docker-compose up s3-bucket-provision
+            docker-compose up hbase-populate
+            docker-compose up hbase-to-mongo-export
+            docker-compose up snapshot-sender
+            docker-compose up snapshot-sender-itest
+            docker ps -a
 
   publish-github-release:
     docker:
@@ -83,6 +118,9 @@ workflows:
   build-and-deploy:
     jobs:
       - build
+      - integration-test:
+          requires:
+            - build
       - publish-github-release:
           requires:
             - build

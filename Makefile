@@ -28,36 +28,58 @@ add-containers-to-hosts: ## Update laptop hosts file with reference to container
 generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
 	pushd resources && ./generate-developer-certs.sh && popd
 
+.PHONY: build-all
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
+.PHONY: build-base-images
 build-base-images: ## Build base images to avoid rebuilding frequently
 	@{ \
 		pushd resources; \
 		docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
-		docker build --tag dwp-pthon-preinstall:latest --file Dockerfile_python_preinstall . ; \
+		docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall . ; \
 		popd; \
 	}
 
+.PHONY: build-images
 build-images: build-base-images ## Build all ecosystem of images
 	@{ \
-		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export; \
+		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https snapshot-sender hbase-to-mongo-export mock-nifi snapshot-sender-itest; \
 	}
 
+.PHONY: up
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https; \
-		echo "Waiting for data to arive in s3" && sleep 10; \
+		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
+		echo "Waiting for services" && sleep 20; \
+		docker-compose up -d hbase-populate s3-bucket-provision; \
+		echo "Waiting for pre-population." && sleep 20; \
 		docker-compose up -d hbase-to-mongo-export; \
+		echo "Waiting for export." && sleep 30; \
+		docker-compose up -d snapshot-sender; \
 	}
 
+.PHONY: up-all
 up-all: build-images up
 
+.PHONY: hbase-shell
 hbase-shell: ## Open an Hbase shell onto the running hbase container
 	@{ \
 		docker exec -it hbase hbase shell; \
 	}
 
+.PHONY: destroy
 destroy: ## Bring down the hbase and other services then delete all volumes
 	docker-compose down
 	docker network prune -f
 	docker volume prune -f
+
+.PHONY: integration-all
+integration-all: generate-developer-certs build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
+
+.PHONY: integration-tests
+integration-tests: ## (Re-)Run the integration tests in a Docker container
+	@{ \
+		echo "Waiting for snapshot-sender"; \
+		sleep 30; \
+		docker-compose up snapshot-sender-itest; \
+	}
