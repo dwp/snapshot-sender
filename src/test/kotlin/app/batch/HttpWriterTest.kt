@@ -46,6 +46,36 @@ class HttpWriterTest {
         httpWriter.write(mutableListOf(decryptedStream));
     }
 
+    @Test
+    fun testAlternateFilenamePattern() {
+        val byteArray = "hello, world".toByteArray()
+        val filename = "db.core-with-hyphen.addressDeclaration.txt"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
+        val httpClient = Mockito.mock(CloseableHttpClient::class.java)
+        given(httpClientProvider.client()).willReturn(httpClient)
+        val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
+        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        val statusLine = Mockito.mock(StatusLine::class.java)
+        given(statusLine.statusCode).willReturn(200)
+        given(httpResponse.statusLine).willReturn((statusLine))
+        httpWriter.write(mutableListOf(decryptedStream));
+    }
+
+    @Test
+    fun testAnotherAlternateFilenamePattern() {
+        val byteArray = "hello, world".toByteArray()
+        val filename = "db.core-with-hyphen.address-declaration-has-hyphen.txt"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
+        val httpClient = Mockito.mock(CloseableHttpClient::class.java)
+        given(httpClientProvider.client()).willReturn(httpClient)
+        val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
+        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        val statusLine = Mockito.mock(StatusLine::class.java)
+        given(statusLine.statusCode).willReturn(200)
+        given(httpResponse.statusLine).willReturn((statusLine))
+        httpWriter.write(mutableListOf(decryptedStream));
+    }
+
     @Test(expected = WriterException::class)
     fun testNotOk() {
         val byteArray = "hello, world".toByteArray()
