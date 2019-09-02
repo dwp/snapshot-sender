@@ -44,6 +44,8 @@ class HttpWriterTest {
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream));
+        Mockito.verify(httpClient, Mockito.times(1))
+                .execute(ArgumentMatchers.any(HttpPost::class.java))
     }
 
     @Test
@@ -59,6 +61,8 @@ class HttpWriterTest {
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream));
+        Mockito.verify(httpClient, Mockito.times(1))
+                .execute(ArgumentMatchers.any(HttpPost::class.java))
     }
 
     @Test
@@ -74,6 +78,9 @@ class HttpWriterTest {
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream));
+        Mockito.verify(httpClient, Mockito.times(1))
+                .execute(ArgumentMatchers.any(HttpPost::class.java))
+
     }
 
     @Test(expected = WriterException::class)
