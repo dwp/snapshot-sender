@@ -31,7 +31,7 @@ class SecureHttpClientProvider: HttpClientProvider {
 
     private fun connectionFactory() = SSLConnectionSocketFactory(
             sslContext(),
-            arrayOf("TLSv1"),
+            arrayOf("TLSv1.2"),
             null,
             SSLConnectionSocketFactory.getDefaultHostnameVerifier())
 
