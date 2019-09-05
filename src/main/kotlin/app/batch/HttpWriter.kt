@@ -31,8 +31,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
                 httpClientProvider.client().use {
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
-                        setHeader("Filename", item.filename)
-                        setHeader("Collection", collection)
+                        setHeader("filename", item.filename)
+                        setHeader("collection", collection)
                     }
 
                     it.execute(post).use {response ->

@@ -12,6 +12,6 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/mock-nifi/
 RUN ls -la *.jar
 
 COPY application-mock-nifi.properties ./
-COPY mock-nifi*.jks mock-nifi*.crt ./
+COPY mock-nifi*.jks ./
 
 ENTRYPOINT ["sh", "-c", "java -jar mock-nifi-latest.jar \"$@\"", "--"]

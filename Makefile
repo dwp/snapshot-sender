@@ -52,9 +52,7 @@ up: ## Run the ecosystem of containers
 		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
 		echo "Waiting for services" && sleep 20; \
 		docker-compose up hbase-populate s3-bucket-provision; \
-		echo "Waiting for pre-population." ; \
 		docker-compose up hbase-to-mongo-export; \
-		echo "Waiting for export." ; \
 		docker-compose up snapshot-sender; \
 	}
 
