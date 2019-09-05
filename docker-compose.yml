@@ -70,6 +70,7 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng,secureHttpClient
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
@@ -98,6 +99,7 @@ services:
       - dks-standalone-https
       - mock-nifi
     command: >-
+      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3DirectoryReader,dummyS3Client
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
       --identity.key.password=changeit
@@ -110,7 +112,6 @@ services:
       --s3.prefix.folder=test/output/
       --s3.secret.key=DummyKey
       --s3.service.endpoint=http://s3-dummy:4572
-      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3DirectoryReader,dummyS3Client
       --trust.keystore=snapshot-sender-truststore.jks
       --trust.store.password=changeit
 
