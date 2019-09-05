@@ -27,7 +27,7 @@ import java.io.ByteArrayInputStream
 @SpringBootTest
 @TestPropertySource(properties = [
     "data.key.service.url=datakey.service:8090",
-    "nifi.url=nifi:8091"
+    "nifi.url=nifi:8091/dummy"
 ])
 class HttpWriterTest {
 
