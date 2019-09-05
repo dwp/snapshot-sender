@@ -51,11 +51,9 @@ up: ## Run the ecosystem of containers
 	@{ \
 		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
 		echo "Waiting for services" && sleep 20; \
-		docker-compose up -d hbase-populate s3-bucket-provision; \
-		echo "Waiting for pre-population." && sleep 20; \
-		docker-compose up -d hbase-to-mongo-export; \
-		echo "Waiting for export." && sleep 30; \
-		docker-compose up -d snapshot-sender; \
+		docker-compose up hbase-populate s3-bucket-provision; \
+		docker-compose up hbase-to-mongo-export; \
+		docker-compose up snapshot-sender; \
 	}
 
 .PHONY: up-all
@@ -79,7 +77,5 @@ integration-all: generate-developer-certs build-all up integration-tests ## Gene
 .PHONY: integration-tests
 integration-tests: ## (Re-)Run the integration tests in a Docker container
 	@{ \
-		echo "Waiting for snapshot-sender"; \
-		sleep 30; \
 		docker-compose up snapshot-sender-itest; \
 	}

@@ -70,7 +70,6 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng,secureHttpClient
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
@@ -83,12 +82,6 @@ services:
       --s3.service.endpoint=http://s3-dummy:4572
       --s3.access.key=DummyKey
       --s3.secret.key=DummySecret
-      --identity.keystore=htme-keystore.jks
-      --identity.store.password=changeit
-      --identity.key.password=changeit
-      --identity.store.alias=cid
-      --trust.keystore=htme-truststore.jks
-      --trust.store.password=changeit
 
   snapshot-sender:
     image: snapshot-sender
@@ -102,16 +95,16 @@ services:
       --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3DirectoryReader,dummyS3Client
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
-      --identity.key.password=changeit
-      --identity.keystore=snapshot-sender-keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
       --nifi.url=https://mock-nifi:5443/collections
       --s3.access.key=DummyKey
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output/
       --s3.secret.key=DummyKey
       --s3.service.endpoint=http://s3-dummy:4572
+      --identity.key.password=changeit
+      --identity.keystore=snapshot-sender-keystore.jks
+      --identity.store.alias=cid
+      --identity.store.password=changeit
       --trust.keystore=snapshot-sender-truststore.jks
       --trust.store.password=changeit
 
