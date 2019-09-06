@@ -17,7 +17,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build-jar: ## Build the jar file
-	./gradlew build
+	./gradlew clean build
 
 dist: ## Assemble distribution files in build/dist
 	./gradlew assembleDist
@@ -43,7 +43,8 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 .PHONY: build-images
 build-images: build-base-images ## Build all ecosystem of images
 	@{ \
-		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https snapshot-sender hbase-to-mongo-export mock-nifi snapshot-sender-itest; \
+		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi snapshot-sender-itest; \
+		docker-compose build --no-cache snapshot-sender; \
 	}
 
 .PHONY: up

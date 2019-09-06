@@ -34,7 +34,7 @@ class HttpWriterTest {
     @Test
     fun testOk() {
         val byteArray = "hello, world".toByteArray()
-        val filename = "db.core.addressDeclaration.txt"
+        val filename = "db.core.addressDeclaration-000001.txt.bz2.enc"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -51,7 +51,7 @@ class HttpWriterTest {
     @Test
     fun testAlternateFilenamePattern() {
         val byteArray = "hello, world".toByteArray()
-        val filename = "db.core-with-hyphen.addressDeclaration.txt"
+        val filename = "db.core-with-hyphen.addressDeclaration-000001.txt.bz2.enc"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -68,7 +68,7 @@ class HttpWriterTest {
     @Test
     fun testAnotherAlternateFilenamePattern() {
         val byteArray = "hello, world".toByteArray()
-        val filename = "db.core-with-hyphen.address-declaration-has-hyphen.txt"
+        val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.bz2.enc"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -86,7 +86,7 @@ class HttpWriterTest {
     @Test(expected = WriterException::class)
     fun testNotOk() {
         val byteArray = "hello, world".toByteArray()
-        val filename = "db.core.addressDeclaration.txt"
+        val filename = "db.core.addressDeclaration-000001.txt.bx2.enc"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -103,7 +103,7 @@ class HttpWriterTest {
         logger.info("httpWriter: '$httpWriter'.")
         logger.info("httpClientProvider: '$httpClientProvider'.")
         val byteArray = "hello, world".toByteArray()
-        val filename = "dbcoreaddressDeclaration.txt"
+        val filename = "dbcoreaddressDeclaration-000001.txt"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
         httpWriter.write(mutableListOf(decryptedStream));
     }

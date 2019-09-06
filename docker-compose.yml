@@ -159,7 +159,7 @@ services:
     container_name: snapshot-sender-itest
     volumes:
       - shared-volume:/data/output:ro
-    command: "-file /data/output/addressDeclaration-000001/db.core.addressDeclaration-000001.txt.bz2 \
+    command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
               -timestamp 10 \
               -linecount 7"
 

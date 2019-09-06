@@ -18,21 +18,23 @@ import org.springframework.stereotype.Component
 @Profile("httpWriter")
 class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter<DecryptedStream> {
 
+    val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
+
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing: '${items.size}' items.")
-        val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
         items.forEach { item ->
-            logger.info("Writing: '$item'.")
+            logger.info("Checking: '$item'.")
             val match = filenameRe.find(item.filename)
             if (match != null) {
-                val collection = match.groupValues[1].replace(Regex("""-\\d+$"""), "")
-                logger.info("filename: '${item.filename}'.")
-                logger.info("collection: '${collection}'.")
+                logger.info("Writing: '$item'.")
+                val lastDashIndex = item.filename.lastIndexOf("-")
+                val fullCollection = item.filename.substring(0 until (lastDashIndex))
+                logger.info("Found collection: '${fullCollection}' from filename '${item.filename}'.")
                 httpClientProvider.client().use {
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
                         setHeader("filename", item.filename)
-                        setHeader("collection", collection)
+                        setHeader("collection", fullCollection)
                     }
 
                     it.execute(post).use {response ->
@@ -52,6 +54,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
                 }
             }
             else {
+                logger.error("Rejecting: '$item'.")
                 throw MetadataException("""Filename not in expected format, 
                     |cannot parse collection name: 
                     |'${item}' does not match '$filenameRe'.""".trimMargin())
