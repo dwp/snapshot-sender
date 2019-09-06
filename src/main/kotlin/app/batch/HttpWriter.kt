@@ -25,10 +25,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
             logger.info("Writing: '$item'.")
             val match = filenameRe.find(item.filename)
             if (match != null) {
-                val collection = match.groupValues[1]
+                val collection = match.groupValues[1].replace(Regex("""-\\d+$"""), "")
                 logger.info("filename: '${item.filename}'.")
                 logger.info("collection: '${collection}'.")
-                logger.info("httpClientProvider: '${httpClientProvider}'.")
                 httpClientProvider.client().use {
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
