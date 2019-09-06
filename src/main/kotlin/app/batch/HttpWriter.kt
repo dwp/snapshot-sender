@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
 @Profile("httpWriter")
 class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter<DecryptedStream> {
 
-    val filenameRe = Regex("""^(\w+)\.(?:\w|-)+\.((?:\w|-)+)""")
+    val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
 
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing: '${items.size}' items.")
@@ -27,10 +27,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter
             val match = filenameRe.find(item.filename)
             if (match != null) {
                 logger.info("Writing: '$item'.")
-                //Convert filename "db.core.addressDeclaration-000001.txt.bz2" to "db.core.addressDeclaration"
-                val partialCollection = match.groupValues[2].replace(Regex("""-\\d+$"""), "")
-                val fullCollection = match.groupValues[0] + "." + match.groupValues[1] + "." + partialCollection
-                logger.info("Found collection: '${fullCollection}' from filename '${item.filename}'..")
+                val lastDashIndex = item.filename.lastIndexOf("-")
+                val fullCollection = item.filename.substring(0 until (lastDashIndex))
+                logger.info("Found collection: '${fullCollection}' from filename '${item.filename}'.")
                 httpClientProvider.client().use {
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
