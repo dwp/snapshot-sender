@@ -15,9 +15,10 @@ import java.io.FileInputStream
 @Profile("directoryReader")
 class DirectoryReader: ItemReader<EncryptedStream> {
 
+    @Synchronized
     override fun read(): EncryptedStream? {
-        if (fileIndex++ < files().size) {
-            val encryptedFile = files()[fileIndex]
+        if (fileIndex < files().size) {
+            val encryptedFile = files()[fileIndex++]
             val metadataFile: File = File(encryptedFile.parentFile,
                     encryptedFile.name.replace(Regex("""\.\w{3}\.\w{3}(\.\w{3})?$"""), ".metadata"))
             logger.info("encryptedFile: '$encryptedFile', metadataFile: '$metadataFile'.")
