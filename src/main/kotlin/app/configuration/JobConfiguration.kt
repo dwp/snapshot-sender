@@ -49,7 +49,6 @@ class JobConfiguration {
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("snapshot_sender").apply {
-        println("threadCount: ${threadCount}")
         concurrencyLimit = Integer.parseInt(threadCount)
     }
 
