@@ -15,6 +15,7 @@ import java.io.FileInputStream
 @Profile("directoryReader")
 class DirectoryReader: ItemReader<EncryptedStream> {
 
+    @Synchronized
     override fun read(): EncryptedStream? {
         if (fileIndex < files().size) {
             val encryptedFile = files()[fileIndex++]
