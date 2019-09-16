@@ -14,10 +14,11 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
 import org.springframework.batch.item.support.CompositeItemProcessor
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.core.task.*
+import org.springframework.core.task.SimpleAsyncTaskExecutor
 
 @Configuration
 @EnableBatchProcessing
@@ -34,22 +35,31 @@ class JobConfiguration {
 
     @Bean
     fun step() =
-        stepBuilderFactory.get("step")
-            .chunk<EncryptedStream, DecryptedStream>(10)
-            .reader(itemReader)
-            .faultTolerant()
-            .skip(DataKeyDecryptionException::class.java)
-            .skip(WriterException::class.java)
-            .skipLimit(Integer.MAX_VALUE)
-            .processor(itemProcessor())
-            .writer(itemWriter)
-            .taskExecutor(SimpleAsyncTaskExecutor())
-            .build()
+            stepBuilderFactory.get("step")
+                    .chunk<EncryptedStream, DecryptedStream>(10)
+                    .reader(itemReader)
+                    .faultTolerant()
+                    .skip(DataKeyDecryptionException::class.java)
+                    .skip(WriterException::class.java)
+                    .skipLimit(Integer.MAX_VALUE)
+                    .processor(itemProcessor())
+                    .writer(itemWriter)
+                    .taskExecutor(taskExecutor())
+                    .build()
+
+    @Bean
+    fun taskExecutor() = SimpleAsyncTaskExecutor("snapshot_sender").apply {
+        println("threadCount: ${threadCount}")
+        concurrencyLimit = Integer.parseInt(threadCount)
+    }
 
     fun itemProcessor(): ItemProcessor<EncryptedStream, DecryptedStream> =
         CompositeItemProcessor<EncryptedStream, DecryptedStream>().apply {
             setDelegates(listOf(datakeyProcessor, decryptionProcessor))
         }
+
+    @Value("\${thread.count:10}")
+    lateinit var threadCount: String;
 
     @Autowired
     lateinit var itemReader: ItemReader<EncryptedStream>

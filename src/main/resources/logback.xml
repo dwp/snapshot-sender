@@ -15,7 +15,7 @@
     </appender>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%file:%method:%line] %message%n</pattern>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%thread] [%file:%method:%line] %message%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${ss.log.level.console}</level>
