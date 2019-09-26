@@ -12,6 +12,7 @@ resources:
   source:
     owner: dwp
     repository: snapshot-sender
+    access_token: ((github_com.token))
   check_every: 3m
 
 
