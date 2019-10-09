@@ -18,6 +18,7 @@ build/
 !**/src/test/**
 .DS_Store
 ss.log.directory_IS_UNDEFINED
+ss.log.*
 
 .mypy_cache
 
