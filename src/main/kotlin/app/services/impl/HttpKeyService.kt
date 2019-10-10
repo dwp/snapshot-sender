@@ -47,7 +47,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             else {
                 httpClientProvider.client().use { client ->
                     val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
-                    logger.info("dataKeyServiceUrl: '$dksUrl'.")
+                    logger.info("Calling dataKeyServiceUrl: '$dksUrl'.")
                     val httpPost = HttpPost(dksUrl)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
@@ -73,14 +73,13 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                 }
             }
         }
-        catch (ex: DataKeyDecryptionException) {
-            throw ex
-        }
-        catch (ex: DataKeyServiceUnavailableException) {
-            throw ex
-        }
         catch (ex: Exception) {
-            throw DataKeyServiceUnavailableException("Error contacting data key service: $ex")
+            when(ex) {
+                is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {
+                    throw ex
+                }
+                else -> throw DataKeyServiceUnavailableException("Error contacting data key service: $ex")
+            }
         }
     }
 
