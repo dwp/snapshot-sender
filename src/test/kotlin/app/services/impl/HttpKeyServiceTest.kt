@@ -155,7 +155,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDecryptKey_WithServerError_WillRetry_UntilSuccessfulBeforeMaxCalls() {
+    fun testDecryptKey_WillRetry_UntilSuccessfulBeforeMaxCalls() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
