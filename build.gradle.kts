@@ -16,8 +16,11 @@ repositories {
 }
 
 dependencies {
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.springframework.boot:spring-boot-starter-batch")
+	implementation("org.springframework.retry:spring-retry")
+	implementation("org.springframework.boot:spring-boot-starter-aop")
+
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
@@ -28,6 +31,8 @@ dependencies {
 	// sdk v1
 	implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
 	implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
+
+	// tests
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
 }
