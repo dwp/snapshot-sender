@@ -16,7 +16,7 @@ class S3RealConfiguration {
     @Bean
     fun amazonS3(): AmazonS3 {
 
-        // eu-west-1 -> EU_WEST_2 (i.e tf style to enum name)
+        // eu-west-2 -> EU_WEST_2 (i.e tf style to enum name)
         val updatedRegion = region.toUpperCase().replace("-", "_")
         val clientRegion = Regions.valueOf(updatedRegion)
 
