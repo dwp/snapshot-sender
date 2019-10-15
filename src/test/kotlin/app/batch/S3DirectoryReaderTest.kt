@@ -10,10 +10,11 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
+import org.mockito.Mockito.verify
+import org.mockito.verification.VerificationMode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -33,18 +34,18 @@ import java.nio.charset.StandardCharsets
 @TestPropertySource(properties = [
     "data.key.service.url=dummy.com:8090",
     "s3.bucket=bucket1",
-    "s3.prefix.folder=business-sender-status/test/output/",
-    "s3.status.folder=business-sender-status",
-    "s3.htme.root.folder=business-data-export"
+    "s3.prefix.folder=exporter-output/job01",
+    "s3.status.folder=sender-status",
+    "s3.htme.root.folder=exporter-output"
 ])
 class S3DirectoryReaderTest {
 
-    private val BUCKET_NAME1 = "bucket1"
-    private val S3_PREFIX_FOLDER = "test/output/"
-    private val KEY1 = "key1"
-    private val KEY1_FINISHED = "key1.finished"
-    private val KEY2 = "key2"
-    private val KEY2_FINISHED = "key2.finished"
+    private val BUCKET_NAME1 = "bucket1" //must match test property "s3.bucket" above
+    private val S3_PREFIX_WITH_SLASH = "exporter-output/job005/" //must match test property "s3.prefix.folder" above + "/"
+    private val KEY1 = "exporter-output/job01/file1"
+    private val KEY1_FINISHED = "sender-status/job01/key1.finished"
+    private val KEY2 = "exporter-output/job01/file1"
+    private val KEY2_FINISHED = "sender-status/job01/key2.finished"
     private val IV = "iv"
     private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
     private val CIPHER_TEXT = "cipherText"
@@ -52,12 +53,12 @@ class S3DirectoryReaderTest {
     private val OBJECT_CONTENT2 = "SAMPLE2"
 
     private lateinit var listObjectsV2Result: ListObjectsV2Result
-    private lateinit var s3ObjectSummary1: S3ObjectSummary;
-    private lateinit var s3ObjectSummary2: S3ObjectSummary;
-    private lateinit var s3Object1: S3Object;
-    private lateinit var s3Object2: S3Object;
-    private lateinit var objectMetadata1: ObjectMetadata;
-    private lateinit var objectMetadata2: ObjectMetadata;
+    private lateinit var s3ObjectSummary1: S3ObjectSummary
+    private lateinit var s3ObjectSummary2: S3ObjectSummary
+    private lateinit var s3Object1: S3Object
+    private lateinit var s3Object2: S3Object
+    private lateinit var objectMetadata1: ObjectMetadata
+    private lateinit var objectMetadata2: ObjectMetadata
 
     @Autowired
     private lateinit var s3DirectorReader: S3DirectoryReader
@@ -69,7 +70,7 @@ class S3DirectoryReaderTest {
     fun setUp() {
 
         listObjectsV2Result = ListObjectsV2Result()
-        listObjectsV2Result.prefix = S3_PREFIX_FOLDER
+        listObjectsV2Result.prefix = S3_PREFIX_WITH_SLASH
 
         s3ObjectSummary1 = S3ObjectSummary()
         s3ObjectSummary1.bucketName = BUCKET_NAME1
@@ -84,6 +85,7 @@ class S3DirectoryReaderTest {
 
         objectMetadata1 = ObjectMetadata()
         objectMetadata1.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
+
         s3DirectorReader.reset()
         Mockito.reset(s3Client)
     }
@@ -100,8 +102,8 @@ class S3DirectoryReaderTest {
 
     @Test
     fun should_read_a_file_in_a_given_prefix_if_not_already_processed() {
+        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
-        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(listObjectsV2Result)
         given(s3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
 
@@ -109,10 +111,19 @@ class S3DirectoryReaderTest {
         val actualStream1 = encryptedStream1?.inputStream
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
 
+        verify(s3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
+        verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
+        verify(s3Client, once()).getObject(BUCKET_NAME1, KEY1)
+        verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
+
         //compare the expected and actual metadata
         assertObjectMetadata(objectMetadata1, actualMetadata1)
         assertObjectContent(OBJECT_CONTENT1, actualStream1)
         assertTrue(KEY1.equals(encryptedStream1?.fileName))
+    }
+
+    fun once(): VerificationMode? {
+        return Mockito.times(1)
     }
 
     @Test
@@ -134,7 +145,7 @@ class S3DirectoryReaderTest {
 
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)).willReturn(false)
-        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(listObjectsV2Result)
+        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
         given(s3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
         given(s3Client.getObject(BUCKET_NAME1, KEY2)).willReturn(s3Object2)
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
@@ -172,7 +183,8 @@ class S3DirectoryReaderTest {
             //when
             s3DirectorReader.read()
             fail("Expected a DataKeyDecryptionException")
-        } catch (ex: DataKeyDecryptionException){
+        }
+        catch (ex: DataKeyDecryptionException) {
             //then
             assertEquals("Couldn't get the metadata", ex.message)
         }

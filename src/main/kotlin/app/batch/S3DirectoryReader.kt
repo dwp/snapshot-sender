@@ -66,7 +66,7 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            iterator = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries.listIterator()
+            iterator = s3Client.listObjectsV2(bucketName, getS3PrefixFolder()).objectSummaries.listIterator()
         }
         return iterator!!
     }
@@ -103,6 +103,10 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
 
     @Value("\${s3.prefix.folder}") //where the sender searches for work to do i.e. "business-data-export/JobNumber/1990-01-31"
     private lateinit var s3PrefixFolder: String
+
+    fun getS3PrefixFolder(): String {
+        return if (s3PrefixFolder.endsWith("/")) { s3PrefixFolder } else {"$s3PrefixFolder/"}
+    }
 
     @Value("\${s3.status.folder}") //where the sender records its progress i.e. "business-sender-status"
     private lateinit var s3StatusFolder: String

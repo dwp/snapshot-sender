@@ -10,7 +10,7 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.CloseableHttpClient
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import org.slf4j.Logger
@@ -39,13 +39,13 @@ class HttpWriterTest {
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         val statusLine = Mockito.mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream));
         Mockito.verify(httpClient, Mockito.times(1))
-                .execute(ArgumentMatchers.any(HttpPost::class.java))
+                .execute(any(HttpPost::class.java))
     }
 
     @Test
@@ -56,13 +56,13 @@ class HttpWriterTest {
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         val statusLine = Mockito.mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream));
         Mockito.verify(httpClient, Mockito.times(1))
-                .execute(ArgumentMatchers.any(HttpPost::class.java))
+                .execute(any(HttpPost::class.java))
     }
 
     @Test
@@ -73,13 +73,13 @@ class HttpWriterTest {
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         val statusLine = Mockito.mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream));
         Mockito.verify(httpClient, Mockito.times(1))
-                .execute(ArgumentMatchers.any(HttpPost::class.java))
+                .execute(any(HttpPost::class.java))
 
     }
 
@@ -91,7 +91,7 @@ class HttpWriterTest {
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         val statusLine = Mockito.mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(400)
         given(httpResponse.statusLine).willReturn((statusLine))
