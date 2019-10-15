@@ -12,6 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.verifyNoMoreInteractions
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.verification.VerificationMode
@@ -41,11 +42,11 @@ import java.nio.charset.StandardCharsets
 class S3DirectoryReaderTest {
 
     private val BUCKET_NAME1 = "bucket1" //must match test property "s3.bucket" above
-    private val S3_PREFIX_WITH_SLASH = "exporter-output/job005/" //must match test property "s3.prefix.folder" above + "/"
+    private val S3_PREFIX_WITH_SLASH = "exporter-output/job01/" //must match test property "s3.prefix.folder" above + "/"
     private val KEY1 = "exporter-output/job01/file1"
-    private val KEY1_FINISHED = "sender-status/job01/key1.finished"
+    private val KEY1_FINISHED = "sender-status/job01/file1.finished"
     private val KEY2 = "exporter-output/job01/file1"
-    private val KEY2_FINISHED = "sender-status/job01/key2.finished"
+    private val KEY2_FINISHED = "sender-status/job01/file1.finished"
     private val IV = "iv"
     private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
     private val CIPHER_TEXT = "cipherText"
@@ -115,11 +116,13 @@ class S3DirectoryReaderTest {
         verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(s3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verifyNoMoreInteractions(s3Client)
 
         //compare the expected and actual metadata
         assertObjectMetadata(objectMetadata1, actualMetadata1)
         assertObjectContent(OBJECT_CONTENT1, actualStream1)
-        assertTrue(KEY1.equals(encryptedStream1?.fileName))
+        assertFileNameEndsWith(KEY1, encryptedStream1!!)
+        assertEquals("file1", encryptedStream1.fileName)
     }
 
     fun once(): VerificationMode? {
@@ -143,9 +146,9 @@ class S3DirectoryReaderTest {
         objectMetadata2 = ObjectMetadata()
         objectMetadata2.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
 
+        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)).willReturn(false)
-        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
         given(s3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
         given(s3Client.getObject(BUCKET_NAME1, KEY2)).willReturn(s3Object2)
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
@@ -167,8 +170,17 @@ class S3DirectoryReaderTest {
         assertObjectContent(OBJECT_CONTENT1, actualStream1)
         assertObjectContent(OBJECT_CONTENT2, actualStream2)
 
-        assertFileName(KEY1, encryptedStream1)
-        assertFileName(KEY2, encryptedStream2)
+        assertFileNameEndsWith(KEY1, encryptedStream1!!)
+        assertFileNameEndsWith(KEY2, encryptedStream2!!)
+
+        verify(s3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
+        verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
+        verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)
+        verify(s3Client, once()).getObject(BUCKET_NAME1, KEY1)
+        verify(s3Client, once()).getObject(BUCKET_NAME1, KEY2)
+        verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY2)
+        verifyNoMoreInteractions(s3Client)
     }
 
     @Test
@@ -188,6 +200,12 @@ class S3DirectoryReaderTest {
             //then
             assertEquals("Couldn't get the metadata", ex.message)
         }
+
+        verify(s3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
+        verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
+        verify(s3Client, once()).getObject(BUCKET_NAME1, KEY1)
+        verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verifyNoMoreInteractions(s3Client)
     }
 
     @Test
@@ -195,8 +213,8 @@ class S3DirectoryReaderTest {
         //TODO
     }
 
-    private fun assertFileName(key: String, encryptedStream2: EncryptedStream?) {
-        assertTrue(key.equals(encryptedStream2?.fileName))
+    private fun assertFileNameEndsWith(key: String, encryptedStream: EncryptedStream) {
+        assertTrue(key.endsWith("/${encryptedStream.fileName}"))
     }
 
     private fun assertObjectContent(objectContent: String, actualStream: InputStream?) {
@@ -210,12 +228,12 @@ class S3DirectoryReaderTest {
                 }
             }
         }
-        assertTrue(objectContent.equals(textBuilder.toString().trim()))
+        assertEquals(objectContent, textBuilder.toString().trim())
     }
 
     private fun assertObjectMetadata(objectMetadata: ObjectMetadata, actualMetadata1: EncryptionMetadata?) {
-        assertTrue(objectMetadata.userMetadata.get(IV).equals(actualMetadata1?.initializationVector))
-        assertTrue(objectMetadata.userMetadata.get(DATAENCRYPTION_KEY).equals(actualMetadata1?.datakeyEncryptionKeyId))
-        assertTrue(objectMetadata.userMetadata.get(CIPHER_TEXT).equals(actualMetadata1?.cipherText))
+        assertEquals(objectMetadata.userMetadata.get(IV), actualMetadata1?.initializationVector)
+        assertEquals(objectMetadata.userMetadata.get(DATAENCRYPTION_KEY), actualMetadata1?.datakeyEncryptionKeyId)
+        assertEquals(objectMetadata.userMetadata.get(CIPHER_TEXT), actualMetadata1?.cipherText)
     }
 }
