@@ -14,6 +14,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.verifyNoMoreInteractions
 import org.mockito.Mockito
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.verification.VerificationMode
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,19 +48,25 @@ class S3DirectoryReaderTest {
     private val KEY1_FINISHED = "sender-status/job01/file1.finished"
     private val KEY2 = "exporter-output/job01/file2"
     private val KEY2_FINISHED = "sender-status/job01/file2.finished"
+    private val KEY3 = "exporter-output/job01/file3"
+    private val KEY3_FINISHED = "sender-status/job01/file3.finished"
     private val IV = "iv"
     private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
     private val CIPHER_TEXT = "cipherText"
     private val OBJECT_CONTENT1 = "SAMPLE_1"
     private val OBJECT_CONTENT2 = "SAMPLE_2"
+    private val OBJECT_CONTENT3 = "SAMPLE_3"
 
     private lateinit var listObjectsV2Result: ListObjectsV2Result
     private lateinit var s3ObjectSummary1: S3ObjectSummary
     private lateinit var s3ObjectSummary2: S3ObjectSummary
+    private lateinit var s3ObjectSummary3: S3ObjectSummary
     private lateinit var s3Object1: S3Object
     private lateinit var s3Object2: S3Object
+    private lateinit var s3Object3: S3Object
     private lateinit var objectMetadata1: ObjectMetadata
     private lateinit var objectMetadata2: ObjectMetadata
+    private lateinit var objectMetadata3: ObjectMetadata
 
     @Autowired
     private lateinit var s3DirectorReader: S3DirectoryReader
@@ -77,7 +84,6 @@ class S3DirectoryReaderTest {
         s3ObjectSummary1.bucketName = BUCKET_NAME1
         s3ObjectSummary1.key = KEY1
 
-        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
 
         s3Object1 = S3Object()
         s3Object1.bucketName = BUCKET_NAME1
@@ -86,6 +92,30 @@ class S3DirectoryReaderTest {
 
         objectMetadata1 = ObjectMetadata()
         objectMetadata1.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
+
+        s3ObjectSummary2 = S3ObjectSummary()
+        s3ObjectSummary2.bucketName = BUCKET_NAME1
+        s3ObjectSummary2.key = KEY2
+
+        s3Object2 = S3Object()
+        s3Object2.bucketName = BUCKET_NAME1
+        s3Object2.key = KEY2
+        s3Object2.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT2.toByteArray()), HttpGet())
+
+        objectMetadata2 = ObjectMetadata()
+        objectMetadata2.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
+
+        s3ObjectSummary3 = S3ObjectSummary()
+        s3ObjectSummary3.bucketName = BUCKET_NAME1
+        s3ObjectSummary3.key = KEY3
+
+        s3Object3 = S3Object()
+        s3Object3.bucketName = BUCKET_NAME1
+        s3Object3.key = KEY3
+        s3Object3.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT3.toByteArray()), HttpGet())
+
+        objectMetadata3 = ObjectMetadata()
+        objectMetadata3.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
 
         s3DirectorReader.reset()
         Mockito.reset(s3Client)
@@ -103,22 +133,26 @@ class S3DirectoryReaderTest {
 
     @Test
     fun should_read_a_file_in_a_given_prefix_if_not_already_processed() {
+        //given one object on results
+        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
+
         given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
         given(s3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
 
+        //when it is read
         val encryptedStream1 = s3DirectorReader.read()
         val actualStream1 = encryptedStream1?.inputStream
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
 
+        //then
         verify(s3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
         verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(s3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(s3Client)
 
-        //compare the expected and actual metadata
         assertObjectMetadata(objectMetadata1, actualMetadata1)
         assertObjectContent(OBJECT_CONTENT1, actualStream1)
         assertFileNameEndsWith(KEY1, encryptedStream1!!)
@@ -131,20 +165,9 @@ class S3DirectoryReaderTest {
 
     @Test
     fun should_read_all_files_in_a_given_prefix_if_not_already_processed() {
-        //given
-        s3ObjectSummary2 = S3ObjectSummary()
-        s3ObjectSummary2.bucketName = BUCKET_NAME1
-        s3ObjectSummary2.key = KEY2
-
+        //given two objects ion list
+        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary2)
-
-        s3Object2 = S3Object()
-        s3Object2.bucketName = BUCKET_NAME1
-        s3Object2.key = KEY2
-        s3Object2.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT2.toByteArray()), HttpGet())
-
-        objectMetadata2 = ObjectMetadata()
-        objectMetadata2.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
 
         given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
@@ -154,10 +177,11 @@ class S3DirectoryReaderTest {
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY2)).willReturn(objectMetadata2)
 
-        //when
+        //when read in turn
         val encryptedStream1 = s3DirectorReader.read()
         val encryptedStream2 = s3DirectorReader.read()
 
+        //then
         verify(s3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
         verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)
@@ -173,7 +197,6 @@ class S3DirectoryReaderTest {
         val actualMetadata2 = encryptedStream2?.encryptionMetadata
         val actualStream2 = encryptedStream2?.inputStream
 
-        //then compare the expected and actual metadata
         assertObjectMetadata(objectMetadata1, actualMetadata1)
         assertObjectMetadata(objectMetadata2, actualMetadata2)
 
@@ -186,7 +209,9 @@ class S3DirectoryReaderTest {
 
     @Test
     fun should_throw_exception_when_metadata_is_empty() {
-        //given
+        //given an object with blank metadata
+        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
+
         given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
         given(s3Client.getObject(anyString(), anyString())).willReturn(s3Object1)
@@ -211,7 +236,55 @@ class S3DirectoryReaderTest {
 
     @Test
     fun should_skip_file_when_previously_processed() {
-        //TODO
+        //given three results
+        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
+        listObjectsV2Result.objectSummaries.add(s3ObjectSummary2)
+        listObjectsV2Result.objectSummaries.add(s3ObjectSummary3)
+
+        //and given the second result was already processed
+        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
+        given(s3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
+        given(s3Client.doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)).willReturn(true) //to be skipped inside read() method
+        given(s3Client.doesObjectExist(BUCKET_NAME1, KEY3_FINISHED)).willReturn(false)
+        given(s3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
+        given(s3Client.getObject(BUCKET_NAME1, KEY2)).willReturn(s3Object2)
+        given(s3Client.getObject(BUCKET_NAME1, KEY3)).willReturn(s3Object2)
+        given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
+        given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY2)).willReturn(objectMetadata2)
+        given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY3)).willReturn(objectMetadata2)
+
+        //when read
+        val encryptedStreamRead1Result1 = s3DirectorReader.read()
+        val encryptedStreamRead2Result3 = s3DirectorReader.read()
+
+        //then the two non-processed objects are now processed and the already-done one is not
+        verify(s3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
+        verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED) //checked
+        verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED) //checked
+        verify(s3Client, once()).doesObjectExist(BUCKET_NAME1, KEY3_FINISHED) //checked
+        verify(s3Client, once()).getObject(BUCKET_NAME1, KEY1)
+        verify(s3Client, never()).getObject(BUCKET_NAME1, KEY2) //skipped
+        verify(s3Client, once()).getObject(BUCKET_NAME1, KEY3)
+        verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verify(s3Client, never()).getObjectMetadata(BUCKET_NAME1, KEY2) //skipped
+        verify(s3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY3)
+        verifyNoMoreInteractions(s3Client)
+
+        val actualMetadata1 = encryptedStreamRead1Result1?.encryptionMetadata
+        val actualStream1 = encryptedStreamRead1Result1?.inputStream
+
+        val actualMetadata3 = encryptedStreamRead2Result3?.encryptionMetadata
+        val actualStream3 = encryptedStreamRead2Result3?.inputStream
+
+        //then compare the expected and actual metadata
+        assertObjectMetadata(objectMetadata1, actualMetadata1)
+        assertObjectMetadata(objectMetadata3, actualMetadata3)
+
+        assertObjectContent(OBJECT_CONTENT1, actualStream1)
+        assertObjectContent(OBJECT_CONTENT3, actualStream3)
+
+        assertFileNameEndsWith(KEY1, encryptedStreamRead1Result1!!)
+        assertFileNameEndsWith(KEY3, encryptedStreamRead2Result3!!)
     }
 
     private fun assertFileNameEndsWith(key: String, encryptedStream: EncryptedStream) {
