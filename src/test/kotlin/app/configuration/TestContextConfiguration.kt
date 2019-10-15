@@ -1,7 +1,6 @@
 package app.configuration
 
 import app.services.KeyService
-import com.amazonaws.services.s3.AmazonS3
 import org.apache.http.client.HttpClient
 import org.mockito.Mockito
 import org.springframework.context.annotation.Bean
