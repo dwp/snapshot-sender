@@ -248,10 +248,10 @@ class S3DirectoryReaderTest {
         given(s3Client.doesObjectExist(BUCKET_NAME1, KEY3_FINISHED)).willReturn(false)
         given(s3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
         given(s3Client.getObject(BUCKET_NAME1, KEY2)).willReturn(s3Object2)
-        given(s3Client.getObject(BUCKET_NAME1, KEY3)).willReturn(s3Object2)
+        given(s3Client.getObject(BUCKET_NAME1, KEY3)).willReturn(s3Object3)
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
         given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY2)).willReturn(objectMetadata2)
-        given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY3)).willReturn(objectMetadata2)
+        given(s3Client.getObjectMetadata(BUCKET_NAME1, KEY3)).willReturn(objectMetadata3)
 
         //when read
         val encryptedStreamRead1Result1 = s3DirectorReader.read()
@@ -278,12 +278,11 @@ class S3DirectoryReaderTest {
 
         //then compare the expected and actual metadata
         assertObjectMetadata(objectMetadata1, actualMetadata1)
-        assertObjectMetadata(objectMetadata3, actualMetadata3)
-
         assertObjectContent(OBJECT_CONTENT1, actualStream1)
-        assertObjectContent(OBJECT_CONTENT3, actualStream3)
-
         assertFileNameEndsWith(KEY1, encryptedStreamRead1Result1!!)
+
+        assertObjectMetadata(objectMetadata3, actualMetadata3)
+        assertObjectContent(OBJECT_CONTENT3, actualStream3)
         assertFileNameEndsWith(KEY3, encryptedStreamRead2Result3!!)
     }
 
