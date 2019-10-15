@@ -17,10 +17,10 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build-jar: ## Build the jar file
-	./gradlew clean build
+	gradle clean build
 
 dist: ## Assemble distribution files in build/dist
-	./gradlew assembleDist
+	gradle assembleDist
 
 add-containers-to-hosts: ## Update laptop hosts file with reference to containers
 	./resources/add-containers-to-hosts.sh;
@@ -73,7 +73,7 @@ destroy: ## Bring down the hbase and other services then delete all volumes
 	docker volume prune -f
 
 .PHONY: integration-all
-integration-all: generate-developer-certs build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
+integration-all: build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
 
 .PHONY: integration-tests
 integration-tests: ## (Re-)Run the integration tests in a Docker container
