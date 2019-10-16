@@ -1,5 +1,6 @@
 package app.services.impl
 
+import app.TestUtils.Companion.once
 import app.configuration.HttpClientProvider
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
@@ -90,7 +91,7 @@ class HttpKeyServiceTest {
 
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
-        verify(httpClient, times(1)).execute(any(HttpPost::class.java))
+        verify(httpClient, once()).execute(any(HttpPost::class.java))
     }
 
     @Test
@@ -109,7 +110,7 @@ class HttpKeyServiceTest {
         }
         catch (ex: DataKeyDecryptionException) {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '400'", ex.message)
-            verify(httpClient, times(1)).execute(any(HttpPost::class.java))
+            verify(httpClient, once()).execute(any(HttpPost::class.java))
         }
     }
 

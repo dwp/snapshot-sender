@@ -1,5 +1,6 @@
 package app.batch
 
+import app.TestUtils.Companion.once
 import app.domain.EncryptedStream
 import app.domain.EncryptionMetadata
 import app.exceptions.DataKeyDecryptionException
@@ -157,10 +158,6 @@ class S3DirectoryReaderTest {
         assertObjectContent(OBJECT_CONTENT1, actualStream1)
         assertFileNameEndsWith(KEY1, encryptedStream1!!)
         assertEquals("file1", encryptedStream1.fileName)
-    }
-
-    fun once(): VerificationMode? {
-        return Mockito.times(1)
     }
 
     @Test

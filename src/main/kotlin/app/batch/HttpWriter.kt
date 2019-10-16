@@ -16,48 +16,48 @@ import org.springframework.stereotype.Component
 
 @Component
 @Profile("httpWriter")
-class HttpWriter(private val httpClientProvider: HttpClientProvider): ItemWriter<DecryptedStream> {
+class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWriter<DecryptedStream> {
+
+//    @Autowired
+//    lateinit var s3StatusFileWriter: S3StatusFileWriter
 
     val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
 
     override fun write(items: MutableList<out DecryptedStream>) {
-        logger.info("Writing: '${items.size}' items.")
+        logger.info("Writing: '${items.size}' items")
         items.forEach { item ->
-            logger.info("Checking: '$item'.")
+            logger.info("Checking: '${item.filename}'")
             val match = filenameRe.find(item.filename)
-            if (match != null) {
-                logger.info("Writing: '$item'.")
-                val lastDashIndex = item.filename.lastIndexOf("-")
-                val fullCollection = item.filename.substring(0 until (lastDashIndex))
-                logger.info("Found collection: '${fullCollection}' from filename '${item.filename}'.")
-                httpClientProvider.client().use {
-                    val post = HttpPost(nifiUrl).apply {
-                        entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
-                        setHeader("filename", item.filename)
-                        setHeader("collection", fullCollection)
-                    }
+            if (match == null) {
+                val errorMessage = "Rejecting: '${item.filename}' as name does not match '$filenameRe'"
+                logger.error(errorMessage)
+                throw MetadataException(errorMessage)
+            }
 
-                    it.execute(post).use {response ->
-                        when (response.statusLine.statusCode) {
-                            200 -> {
-                                logger.info("Successfully posted '${item.filename}', response '${response.statusLine.statusCode}'.")
-                            }
-                            else -> {
-                                logger.error("""Failed to process '${item.filename}',
-                                    |response '${response.statusLine.statusCode}'.""".trimMargin())
-                                throw WriterException("""
-                                Failed to write '${item.filename}', post returned status code ${response.statusLine.statusCode}.
-                            """.trimIndent())
-                            }
+            logger.info("Writing: '$item'")
+            val lastDashIndex = item.filename.lastIndexOf("-")
+            val fullCollection = item.filename.substring(0 until (lastDashIndex))
+            logger.info("Found collection: '${fullCollection}' from filename '${item.filename}'")
+            httpClientProvider.client().use {
+                val post = HttpPost(nifiUrl).apply {
+                    entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
+                    setHeader("filename", item.filename)
+                    setHeader("collection", fullCollection)
+                }
+
+                it.execute(post).use { response ->
+                    when (response.statusLine.statusCode) {
+                        200 -> {
+                            logger.info("Successfully posted '${item.filename}': response '${response.statusLine.statusCode}'")
+                            //s3StatusFileWriter.writeStatus(item.filename)
+                        }
+                        else -> {
+                            val message = "Failed to write '${item.filename}': post returned status code ${response.statusLine.statusCode}"
+                            logger.error(message)
+                            throw WriterException(message)
                         }
                     }
                 }
-            }
-            else {
-                logger.error("Rejecting: '$item'.")
-                throw MetadataException("""Filename not in expected format, 
-                    |cannot parse collection name: 
-                    |'${item}' does not match '$filenameRe'.""".trimMargin())
             }
         }
     }

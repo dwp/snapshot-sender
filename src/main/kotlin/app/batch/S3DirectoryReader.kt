@@ -9,17 +9,13 @@ import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
 @Profile("S3DirectoryReader")
-class S3DirectoryReader : ItemReader<EncryptedStream> {
+class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
 
-    @Autowired
-    private lateinit var s3Client: AmazonS3
     private var iterator: ListIterator<S3ObjectSummary>? = null
     private val IV_KEY = "iv"
     private val DATAENCRYPTIONKEYID_KEY = "dataKeyEncryptionKeyId"
@@ -34,8 +30,8 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
             else {
                 return null
             }
-            logger.info("Checking object for '${nextObject.key}'")
-            val finishedKeyName = getFinishedStatusKeyName(nextObject.key, s3HtmeRootFolder, s3StatusFolder)
+            logger.info("Checking '${nextObject.key}'")
+            val finishedKeyName = getFinishedStatusKeyName(nextObject.key)
             val objectNeedsSkipping = getS3ObjectExists(finishedKeyName, s3Client, s3BucketName)
             if (objectNeedsSkipping) {
                 logger.info("Skipping '${nextObject.key}' as it was already sent: File '$finishedKeyName' exists")
@@ -44,18 +40,11 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
 
             val inputStream = getS3ObjectInputStream(nextObject, s3Client, s3BucketName)
             val metadata = getS3ObjectMetadata(nextObject, s3Client, s3BucketName)
-            logger.info("Returning object for '${nextObject.key}'")
-            logger.info("Returning metadata '$metadata'")
+            logger.info("Returning object for '${nextObject.key}' with metadata '$metadata'")
             return encryptedStream(metadata, nextObject.key, inputStream)
-
         }
         while (objectNeedsSkipping)
         return null
-    }
-
-    fun getFinishedStatusKeyName(htmeExportKey: String, htmeRootFolder: String, statusFolder: String): String {
-        val senderKey = htmeExportKey.replace(htmeRootFolder, statusFolder)
-        return "$senderKey.finished"
     }
 
     @Synchronized
@@ -66,7 +55,7 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            iterator = s3Client.listObjectsV2(bucketName, getS3PrefixFolder()).objectSummaries.listIterator()
+            iterator = s3Client.listObjectsV2(bucketName, prefixFolder()).objectSummaries.listIterator()
         }
         return iterator!!
     }
@@ -97,22 +86,6 @@ class S3DirectoryReader : ItemReader<EncryptedStream> {
             throw DataKeyDecryptionException("Couldn't get the metadata")
         }
     }
-
-    @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
-    private lateinit var s3BucketName: String
-
-    @Value("\${s3.prefix.folder}") //where the sender searches for work to do i.e. "business-data-export/JobNumber/1990-01-31"
-    private lateinit var s3PrefixFolder: String
-
-    fun getS3PrefixFolder(): String {
-        return if (s3PrefixFolder.endsWith("/")) { s3PrefixFolder } else {"$s3PrefixFolder/"}
-    }
-
-    @Value("\${s3.status.folder}") //where the sender records its progress i.e. "business-sender-status"
-    private lateinit var s3StatusFolder: String
-
-    @Value("\${s3.htme.root.folder}") //the root location the htme will output into i.e. "business-data-export"
-    private lateinit var s3HtmeRootFolder: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryReader::class.toString())

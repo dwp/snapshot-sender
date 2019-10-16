@@ -21,7 +21,7 @@ class DirectoryReader: ItemReader<EncryptedStream> {
             val encryptedFile = files()[fileIndex++]
             val metadataFile: File = File(encryptedFile.parentFile,
                     encryptedFile.name.replace(Regex("""\.\w{3}\.\w{3}(\.\w{3})?$"""), ".metadata"))
-            logger.info("encryptedFile: '$encryptedFile', metadataFile: '$metadataFile'.")
+            logger.info("encryptedFile: '$encryptedFile', metadataFile: '$metadataFile'")
             var iv: String = ""
             var dataKeyEncryptionKey: String = ""
             var ciphertext: String =  ""
