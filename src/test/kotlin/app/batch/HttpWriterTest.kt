@@ -60,6 +60,7 @@ class HttpWriterTest {
         given(httpResponse.statusLine).willReturn((statusLine))
 
         httpWriter.write(mutableListOf(decryptedStream));
+
         verify(httpClient, once()).execute(any(HttpPost::class.java))
     }
 
@@ -114,7 +115,7 @@ class HttpWriterTest {
             fail("Expected WriterException")
         }
         catch (ex: WriterException) {
-            assertEquals("Failed to write 'db.core.addressDeclaration-000001.txt.bx2.enc': post returned status code 400", ex.message)
+            assertEquals("Failed to post 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bx2.enc': post returned status code 400", ex.message)
         }
     }
 
@@ -128,7 +129,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("Rejecting: 'dbcoreaddressDeclaration-000001.txt' as name does not match '^\\w+\\.(?:\\w|-)+\\.((?:\\w|-)+)'", ex.message)
+            assertEquals("Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001.txt' as fileName does not match '^\\w+\\.(?:\\w|-)+\\.((?:\\w|-)+)'", ex.message)
         }
     }
 

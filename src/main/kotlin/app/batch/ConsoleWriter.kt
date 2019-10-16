@@ -14,7 +14,7 @@ class ConsoleWriter: ItemWriter<DecryptedStream> {
     override fun write(items: MutableList<out DecryptedStream>) {
         items.forEach { item ->
             var inputStream = item.inputStream
-            if (item.filename.contains("bz2")) {
+            if (item.fileName.contains("bz2")) {
                 inputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2,
                         item.inputStream)
             }

@@ -15,16 +15,16 @@ import java.io.InputStream
 @Profile("S3DirectoryReader", "httpWriter", "dummyS3Client")
 class S3StatusFileWriter : S3Utils() {
 
-    fun writeStatus(originalFileKey: String) {
+    fun writeStatus(originalS3Key: String) {
 
-        val payloadText = "finished $originalFileKey"
+        val payloadText = "Finished $originalS3Key"
         val payloadBytes = payloadText.toByteArray(Charsets.UTF_8)
         val payloadInputStream: InputStream = ByteArrayInputStream(payloadBytes)
 
         // i.e. sourceFile: s3://bucket/business-data-export/JobNumber/1990-01-31/db.user.data-0001.bz2.enc
         // i.e. statusFile: s3://bucket/business-sender-status/JobNumber/1990-01-31/db.user.data-0001.bz2.enc.finished
-        val statusFileKey = getFinishedStatusKeyName(originalFileKey)
-        logger.info("Writting status file $statusFileKey for $originalFileKey")
+        val statusFileKey = getFinishedStatusKeyName(originalS3Key)
+        logger.info("Writing status file $statusFileKey for $originalS3Key")
 
         try {
             // Upload a file as a new object with ContentType and title specified.
@@ -32,11 +32,11 @@ class S3StatusFileWriter : S3Utils() {
             metadata.contentType = "text/plain"
             metadata.contentLength = payloadBytes.size.toLong()
             metadata.addUserMetadata("x-amz-meta-title", statusFileKey)
-            metadata.addUserMetadata("original-filename", originalFileKey)
+            metadata.addUserMetadata("original-s3-filename", originalS3Key)
             val request = PutObjectRequest(s3BucketName, statusFileKey, payloadInputStream, metadata)
 
             s3Client.putObject(request)
-            logger.info("Written status file $statusFileKey for $originalFileKey")
+            logger.info("Written status file '$statusFileKey' for '$originalS3Key'")
         }
         catch (e: AmazonServiceException) {
             // The call was transmitted successfully, but Amazon S3 couldn't process

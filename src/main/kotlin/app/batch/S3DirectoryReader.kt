@@ -26,17 +26,17 @@ class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
             } else {
                 return null
             }
-            logger.info("Checking '${nextObject.key}'")
+            logger.info("Checking s3 object '${nextObject.key}'")
             val finishedKeyName = getFinishedStatusKeyName(nextObject.key)
             val objectNeedsSkipping = getS3ObjectExists(finishedKeyName, s3Client, s3BucketName)
             if (objectNeedsSkipping) {
-                logger.info("Skipping '${nextObject.key}' as it was already sent: File '$finishedKeyName' exists")
+                logger.info("Skipping s3 object '${nextObject.key}' as it was already sent: File '$finishedKeyName' exists")
                 continue
             }
 
             val inputStream = getS3ObjectInputStream(nextObject, s3Client, s3BucketName)
             val metadata = getS3ObjectMetadata(nextObject, s3Client, s3BucketName)
-            logger.info("Returning object for '${nextObject.key}' with metadata '$metadata'")
+            logger.info("Returning s3 object for '${nextObject.key}' with metadata '$metadata'")
             return encryptedStream(metadata, nextObject.key, inputStream)
         } while (objectNeedsSkipping)
         return null

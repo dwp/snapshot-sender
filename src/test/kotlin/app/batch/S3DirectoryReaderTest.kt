@@ -221,7 +221,7 @@ class S3DirectoryReaderTest {
         }
         catch (ex: DataKeyDecryptionException) {
             //then
-            assertEquals("Couldn't get the metadata", ex.message)
+            assertEquals("Couldn't get the metadata for 'exporter-output/job01/file1'", ex.message)
         }
 
         verify(s3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
