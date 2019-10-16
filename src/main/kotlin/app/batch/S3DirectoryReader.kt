@@ -1,16 +1,13 @@
 package app.batch
 
-import app.domain.EncryptedStream
-import app.domain.EncryptionMetadata
-import app.exceptions.DataKeyDecryptionException
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.S3ObjectInputStream
-import com.amazonaws.services.s3.model.S3ObjectSummary
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.batch.item.ItemReader
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
+import app.domain.*
+import app.exceptions.*
+import com.amazonaws.services.s3.*
+import com.amazonaws.services.s3.model.*
+import org.slf4j.*
+import org.springframework.batch.item.*
+import org.springframework.context.annotation.*
+import org.springframework.stereotype.*
 
 @Component
 @Profile("S3DirectoryReader")
@@ -26,8 +23,7 @@ class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
         do {
             val nextObject = if (iterator.hasNext()) {
                 iterator.next()
-            }
-            else {
+            } else {
                 return null
             }
             logger.info("Checking '${nextObject.key}'")
@@ -42,8 +38,7 @@ class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
             val metadata = getS3ObjectMetadata(nextObject, s3Client, s3BucketName)
             logger.info("Returning object for '${nextObject.key}' with metadata '$metadata'")
             return encryptedStream(metadata, nextObject.key, inputStream)
-        }
-        while (objectNeedsSkipping)
+        } while (objectNeedsSkipping)
         return null
     }
 
@@ -80,10 +75,9 @@ class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, cipherText, "")
             val fileSplitArr = filePath.split("/")
             val fileName = fileSplitArr[fileSplitArr.size - 1]
-            return EncryptedStream(inputStream, fileName, encryptionMetadata)
-        }
-        catch (e: Exception) {
-            throw DataKeyDecryptionException("Couldn't get the metadata")
+            return EncryptedStream(inputStream, fileName, filePath, encryptionMetadata)
+        } catch (e: Exception) {
+            throw DataKeyDecryptionException("Couldn't get the metadata for '$filePath'")
         }
     }
 

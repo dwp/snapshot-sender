@@ -45,11 +45,12 @@ class HttpWriterTest {
     private lateinit var s3Client: AmazonS3
 
     val byteArray = "hello, world".toByteArray()
+    val s3Path = "exporter-output/job01" //should match the test properties above
 
     @Test
     fun test_will_write_to_nifi_when_valid_file() {
         val filename = "db.core.addressDeclaration-000001.txt.bz2.enc"
-        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
@@ -65,7 +66,7 @@ class HttpWriterTest {
     @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_dbname() {
         val filename = "db.core-with-hyphen.addressDeclaration-000001.txt.bz2.enc"
-        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
@@ -82,7 +83,7 @@ class HttpWriterTest {
     @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_collection() {
         val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.bz2.enc"
-        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
@@ -99,7 +100,7 @@ class HttpWriterTest {
     @Test
     fun test_will_raise_error_when_file_cannot_be_sent() {
         val filename = "db.core.addressDeclaration-000001.txt.bx2.enc"
-        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
@@ -120,7 +121,7 @@ class HttpWriterTest {
     @Test
     fun test_will_raise_metatdata_error_when_metadata_is_bad() {
         val filename = "dbcoreaddressDeclaration-000001.txt"
-        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename)
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         try {
             httpWriter.write(mutableListOf(decryptedStream))
@@ -136,9 +137,5 @@ class HttpWriterTest {
 
     @Autowired
     private lateinit var httpClientProvider: HttpClientProvider
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpWriterTest::class.toString())
-    }
 
 }

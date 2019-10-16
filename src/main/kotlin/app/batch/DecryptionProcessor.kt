@@ -1,29 +1,24 @@
 package app.batch
 
-import app.domain.DecryptedStream
-import app.domain.EncryptedStream
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.batch.item.ItemProcessor
-import org.springframework.stereotype.Component
-import java.security.Key
-import java.security.Security
+import app.domain.*
+import org.bouncycastle.jce.provider.*
+import org.slf4j.*
+import org.springframework.batch.item.*
+import org.springframework.stereotype.*
+import java.security.*
 import java.util.*
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
+import javax.crypto.*
+import javax.crypto.spec.*
 
 @Component
-class DecryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream> {
+class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
     }
 
     override fun process(item: EncryptedStream): DecryptedStream? {
-        logger.info("Processing '${item}'")
+        logger.info("Processing '${item.fullPath}'")
         val dataKey = item.encryptionMetadata.plaintext
         val iv = item.encryptionMetadata.initializationVector
         val inputStream = item.inputStream
@@ -33,10 +28,11 @@ class DecryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream> {
         }
 
         return DecryptedStream(CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher),
-                item.fileName.replace(Regex("""\.enc$"""), ""))
+            item.fileName.replace(Regex("""\.enc$"""), ""), item.fullPath)
     }
 
     private val cipherAlgorithm = "AES/CTR/NoPadding"
+
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DecryptionProcessor::class.toString())
     }
