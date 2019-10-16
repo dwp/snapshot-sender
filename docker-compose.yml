@@ -92,7 +92,7 @@ services:
       - dks-standalone-https
       - mock-nifi
     command: >-
-      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3DirectoryReader,dummyS3Client
+      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,dummyS3Client
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
       --nifi.url=https://mock-nifi:5443/collections

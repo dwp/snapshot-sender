@@ -24,7 +24,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "unitTest", "S3DirectoryReader")
+@ActiveProfiles("httpDataKeyService", "unitTest", "S3SourceData")
 @SpringBootTest
 @TestPropertySource(properties = [
     "data.key.service.url=datakey.service:8090",

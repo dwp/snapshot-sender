@@ -31,7 +31,7 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "unitTest", "S3DirectoryReader")
+@ActiveProfiles("httpDataKeyService", "unitTest", "S3SourceData")
 @SpringBootTest
 @TestPropertySource(properties = [
     "data.key.service.url=dummy.com:8090",

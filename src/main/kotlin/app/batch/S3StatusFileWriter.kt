@@ -12,7 +12,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 @Component
-@Profile("S3DirectoryReader", "httpWriter", "dummyS3Client")
+@Profile("S3SourceData")
 class S3StatusFileWriter : S3Utils() {
 
     fun writeStatus(originalS3Key: String) {

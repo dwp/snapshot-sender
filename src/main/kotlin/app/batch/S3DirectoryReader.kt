@@ -10,7 +10,7 @@ import org.springframework.context.annotation.*
 import org.springframework.stereotype.*
 
 @Component
-@Profile("S3DirectoryReader")
+@Profile("S3SourceData")
 class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
 
     private var iterator: ListIterator<S3ObjectSummary>? = null
