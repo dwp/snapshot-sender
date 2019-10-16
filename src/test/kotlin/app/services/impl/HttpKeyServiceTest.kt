@@ -41,7 +41,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDecryptKey_WillCallServer_AndDecrypt() {
+    fun test_decrypt_key_will_call_server_and_decrypt() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -66,7 +66,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDecryptKey_WillCallServer_AndCacheResult() {
+    fun test_decrypt_key_will_call_server_and_cache_result() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -95,7 +95,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDecryptKey_WithBadKey_WillCallServerAndNotRetry() {
+    fun test_decrypt_key_with_bad_key_will_call_server_and_not_retry() {
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(400)
         val httpResponse = mock(CloseableHttpResponse::class.java)
@@ -115,7 +115,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDecryptKey_WithServerError_WillRetry_WithMaxCalls() {
+    fun test_decrypt_key_with_server_error_will_retry_with_max_calls() {
 
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(503)
@@ -136,7 +136,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDecryptKey_WithHttpError_WillRetry_WithMaxCalls() {
+    fun test_decrypt_key_with_http_error_will_retry_until_max_calls() {
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(200)
         val httpResponse = mock(CloseableHttpResponse::class.java)
@@ -156,7 +156,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDecryptKey_WillRetry_UntilSuccessfulBeforeMaxCalls() {
+    fun test_decrypt_key_will_retry_untils_uccessful_before_max_calls() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",

@@ -10,6 +10,7 @@ import org.apache.http.entity.InputStreamEntity
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
@@ -18,8 +19,8 @@ import org.springframework.stereotype.Component
 @Profile("httpWriter")
 class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWriter<DecryptedStream> {
 
-//    @Autowired
-//    lateinit var s3StatusFileWriter: S3StatusFileWriter
+    @Autowired
+    lateinit var s3StatusFileWriter: S3StatusFileWriter
 
     val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
 
@@ -49,7 +50,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                     when (response.statusLine.statusCode) {
                         200 -> {
                             logger.info("Successfully posted '${item.fullPath}': response '${response.statusLine.statusCode}'")
-                            //s3StatusFileWriter.writeStatus(item.filename)
+                            s3StatusFileWriter.writeStatus(item.fullPath)
                         }
                         else -> {
                             val message = "Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}"

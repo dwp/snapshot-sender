@@ -16,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.never
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.slf4j.Logger
@@ -42,7 +43,13 @@ import java.io.ByteArrayInputStream
 class HttpWriterTest {
 
     @MockBean
-    private lateinit var s3Client: AmazonS3
+    private lateinit var s3StatusFileWriter: S3StatusFileWriter
+
+    @Autowired
+    private lateinit var httpWriter: HttpWriter
+
+    @Autowired
+    private lateinit var httpClientProvider: HttpClientProvider
 
     val byteArray = "hello, world".toByteArray()
     val s3Path = "exporter-output/job01" //should match the test properties above
@@ -62,6 +69,7 @@ class HttpWriterTest {
         httpWriter.write(mutableListOf(decryptedStream));
 
         verify(httpClient, once()).execute(any(HttpPost::class.java))
+        verify(s3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
     }
 
     @Test
@@ -79,6 +87,7 @@ class HttpWriterTest {
         httpWriter.write(mutableListOf(decryptedStream))
 
         verify(httpClient, once()).execute(any(HttpPost::class.java))
+        verify(s3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
     }
 
     @Test
@@ -96,6 +105,7 @@ class HttpWriterTest {
         httpWriter.write(mutableListOf(decryptedStream))
 
         verify(httpClient, once()).execute(any(HttpPost::class.java))
+        verify(s3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
     }
 
     @Test
@@ -117,6 +127,7 @@ class HttpWriterTest {
         catch (ex: WriterException) {
             assertEquals("Failed to post 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bx2.enc': post returned status code 400", ex.message)
         }
+        verify(s3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
 
     @Test
@@ -131,12 +142,6 @@ class HttpWriterTest {
         catch (ex: MetadataException) {
             assertEquals("Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001.txt' as fileName does not match '^\\w+\\.(?:\\w|-)+\\.((?:\\w|-)+)'", ex.message)
         }
+        verify(s3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
-
-    @Autowired
-    private lateinit var httpWriter: HttpWriter
-
-    @Autowired
-    private lateinit var httpClientProvider: HttpClientProvider
-
 }
