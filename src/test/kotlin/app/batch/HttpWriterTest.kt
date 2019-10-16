@@ -5,7 +5,6 @@ import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
-import com.amazonaws.services.s3.AmazonS3
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpPost
@@ -19,8 +18,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.never
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean

@@ -12,11 +12,11 @@ class TestContextConfiguration {
 
     @Bean
     @Profile("unitTest")
-    fun httpClientProvider()= Mockito.mock(HttpClientProvider::class.java)!!
+    fun httpClientProvider() = Mockito.mock(HttpClientProvider::class.java)!!
 
     @Bean
     @Profile("unitTest")
-    fun httpClient()= Mockito.mock(HttpClient::class.java)!!
+    fun httpClient() = Mockito.mock(HttpClient::class.java)!!
 
     @Bean
     @Profile("decryptionTest")
