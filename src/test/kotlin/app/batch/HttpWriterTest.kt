@@ -67,6 +67,7 @@ class HttpWriterTest {
 
     @Test
     fun test_will_write_to_nifi_when_valid_file() {
+        //given
         val filename = "db.core.addressDeclaration-000001.txt.bz2.enc"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
@@ -77,9 +78,17 @@ class HttpWriterTest {
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
 
+        //when
         httpWriter.write(mutableListOf(decryptedStream));
 
-        verify(httpClient, once()).execute(any(HttpPost::class.java))
+        //then
+        val httpCaptor = argumentCaptor<HttpPost>()
+        verify(httpClient, once()).execute(httpCaptor.capture())
+        assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
+        assertEquals(2, httpCaptor.firstValue.allHeaders.size)
+        assertEquals("filename: db.core.addressDeclaration-000001.txt.bz2.enc", httpCaptor.firstValue.allHeaders[0].toString())
+        assertEquals("collection: db.core.addressDeclaration", httpCaptor.firstValue.allHeaders[1].toString())
+
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()

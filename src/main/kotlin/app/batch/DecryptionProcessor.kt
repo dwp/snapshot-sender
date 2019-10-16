@@ -1,14 +1,19 @@
 package app.batch
 
-import app.domain.*
-import org.bouncycastle.jce.provider.*
-import org.slf4j.*
-import org.springframework.batch.item.*
-import org.springframework.stereotype.*
-import java.security.*
+import app.domain.DecryptedStream
+import app.domain.EncryptedStream
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.batch.item.ItemProcessor
+import org.springframework.stereotype.Component
+import java.security.Key
+import java.security.Security
 import java.util.*
-import javax.crypto.*
-import javax.crypto.spec.*
+import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 @Component
 class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {

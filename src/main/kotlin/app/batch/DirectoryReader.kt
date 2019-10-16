@@ -1,12 +1,15 @@
 package app.batch
 
-import app.domain.*
-import org.slf4j.*
-import org.springframework.batch.item.*
-import org.springframework.beans.factory.annotation.*
-import org.springframework.context.annotation.*
-import org.springframework.stereotype.*
-import java.io.*
+import app.domain.EncryptedStream
+import app.domain.EncryptionMetadata
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.batch.item.ItemReader
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
+import java.io.File
+import java.io.FileInputStream
 
 @Component
 @Profile("directoryReader")
@@ -38,7 +41,8 @@ class DirectoryReader : ItemReader<EncryptedStream> {
             }
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, ciphertext, "")
             return EncryptedStream(FileInputStream(encryptedFile), encryptedFile.name, encryptedFile.absolutePath, encryptionMetadata)
-        } else {
+        }
+        else {
             return null
         }
     }

@@ -10,13 +10,14 @@ import java.io.InputStreamReader
 
 @Component
 @Profile("consoleWriter")
-class ConsoleWriter: ItemWriter<DecryptedStream> {
+class ConsoleWriter : ItemWriter<DecryptedStream> {
     override fun write(items: MutableList<out DecryptedStream>) {
         items.forEach { item ->
             var inputStream = item.inputStream
             if (item.fileName.contains("bz2")) {
-                inputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2,
-                        item.inputStream)
+                inputStream = CompressorStreamFactory().createCompressorInputStream(
+                    CompressorStreamFactory.BZIP2,
+                    item.inputStream)
             }
             BufferedReader(InputStreamReader(inputStream)).forEachLine {
                 println(it)
