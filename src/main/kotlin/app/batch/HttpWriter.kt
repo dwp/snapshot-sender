@@ -35,10 +35,16 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 throw MetadataException(errorMessage)
             }
 
-            logger.info("Posting: '${item.fullPath}'")
             val lastDashIndex = item.fileName.lastIndexOf("-")
+            if (lastDashIndex < 0) {
+                val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
+                logger.error(errorMessage)
+                throw MetadataException(errorMessage)
+            }
             val fullCollection = item.fileName.substring(0 until (lastDashIndex))
             logger.info("Found collection: '${fullCollection}' from fileName of '${item.fullPath}'")
+
+            logger.info("Posting: '${item.fullPath}' to '$fullCollection'")
             httpClientProvider.client().use {
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)

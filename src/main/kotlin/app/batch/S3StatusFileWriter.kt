@@ -24,7 +24,7 @@ class S3StatusFileWriter : S3Utils() {
         // i.e. sourceFile: s3://bucket/business-data-export/JobNumber/1990-01-31/db.user.data-0001.bz2.enc
         // i.e. statusFile: s3://bucket/business-sender-status/JobNumber/1990-01-31/db.user.data-0001.bz2.enc.finished
         val statusFileKey = getFinishedStatusKeyName(originalS3Key)
-        logger.info("Writing status file $statusFileKey for $originalS3Key")
+        logger.info("Writing status file '$statusFileKey' for '$originalS3Key'")
 
         try {
             // Upload a file as a new object with ContentType and title specified.
@@ -42,13 +42,13 @@ class S3StatusFileWriter : S3Utils() {
             // The call was transmitted successfully, but Amazon S3 couldn't process
             // it, so it returned an error response.
             e.printStackTrace()
-            logger.error(e.message)
+            logger.error("AmazonServiceException processing '$originalS3Key': ${e.message}")
         }
         catch (e: SdkClientException) {
             // Amazon S3 couldn't be contacted for a response, or the client
             // couldn't parse the response from Amazon S3.
             e.printStackTrace()
-            logger.error(e.message)
+            logger.error("SdkClientException processing '$originalS3Key': ${e.message}")
         }
     }
 
