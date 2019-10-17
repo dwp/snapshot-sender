@@ -20,5 +20,4 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DataKeyProcessor::class.toString())
     }
-
 }
