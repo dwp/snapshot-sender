@@ -37,6 +37,7 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 		pushd resources; \
 		docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
 		docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall . ; \
+		docker build --tag dwp-gradle:latest --file Dockerfile_gradle . ; \
 		popd; \
 	}
 
@@ -72,11 +73,9 @@ destroy: ## Bring down the hbase and other services then delete all volumes
 	docker network prune -f
 	docker volume prune -f
 
+.PHONY: integration-tests
+integration-tests:
+	docker-compose run sender-integration-test
+
 .PHONY: integration-all
 integration-all: build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
-
-.PHONY: integration-tests
-integration-tests: ## (Re-)Run the integration tests in a Docker container
-	@{ \
-		docker-compose up snapshot-sender-itest; \
-	}

@@ -153,17 +153,15 @@ services:
       TLS_CERT_ID: self
       TLS_CACERT_ID: mock-nifi
 
-  snapshot-sender-itest:
-    image: snapshot-sender-itest
+  sender-integration-test:
+    image: sender-integration-test:latest
     build:
-      context: resources
-      dockerfile: Dockerfile_itest
-    container_name: snapshot-sender-itest
-    volumes:
-      - shared-volume:/data/output:ro
-    command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
-              -timestamp 10 \
-              -linecount 7"
+      context: .
+      dockerfile: resources/Dockerfile_sender_integration
+    container_name: sender-integration-test
+    depends_on:
+      - mock-nifi
+    command: "gradle --rerun-tasks integration"
 
 volumes:
   shared-volume:
