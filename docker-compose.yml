@@ -92,13 +92,15 @@ services:
       - dks-standalone-https
       - mock-nifi
     command: >-
-      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3DirectoryReader,dummyS3Client
+      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,dummyS3Client
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
       --nifi.url=https://mock-nifi:5443/collections
       --s3.access.key=DummyKey
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output/
+      --s3.htme.root.folder=test
+      --s3.status.folder=status
       --s3.secret.key=DummyKey
       --s3.service.endpoint=http://s3-dummy:4572
       --identity.key.password=changeit

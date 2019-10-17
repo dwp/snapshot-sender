@@ -8,9 +8,9 @@ import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 @Component
-class DataKeyProcessor(val keyService: KeyService): ItemProcessor<EncryptedStream, EncryptedStream> {
+class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStream, EncryptedStream> {
     override fun process(item: EncryptedStream): EncryptedStream? {
-        logger.info("Processing '${item}'")
+        logger.info("Processing '${item.fullPath}'")
         val encryptionMetadata = item.encryptionMetadata
         val plaintextKey = keyService.decryptKey(encryptionMetadata.datakeyEncryptionKeyId, encryptionMetadata.cipherText)
         encryptionMetadata.plaintext = plaintextKey
@@ -20,5 +20,4 @@ class DataKeyProcessor(val keyService: KeyService): ItemProcessor<EncryptedStrea
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DataKeyProcessor::class.toString())
     }
-
 }

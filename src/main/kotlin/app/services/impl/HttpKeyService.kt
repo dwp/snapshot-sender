@@ -38,7 +38,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
-        logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
+        logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'")
         val cacheKey = "$encryptedKey/$encryptionKeyId"
         try {
             return if (decryptedKeyCache.containsKey(cacheKey)) {
@@ -47,12 +47,12 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             else {
                 httpClientProvider.client().use { client ->
                     val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
-                    logger.info("Calling dataKeyServiceUrl: '$dksUrl'.")
+                    logger.info("Calling dataKeyServiceUrl: '$dksUrl'")
                     val httpPost = HttpPost(dksUrl)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
-                        logger.info("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
+                        logger.info("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'")
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity

@@ -35,6 +35,7 @@ dependencies {
 	// tests
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
+	testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
 }
 
 tasks.withType<KotlinCompile> {

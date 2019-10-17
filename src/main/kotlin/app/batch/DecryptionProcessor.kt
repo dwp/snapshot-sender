@@ -16,14 +16,17 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Component
-class DecryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream> {
+class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
     }
 
+    private val decryptionRegEx = Regex("""\.enc$""")
+    private val cipherAlgorithm = "AES/CTR/NoPadding"
+
     override fun process(item: EncryptedStream): DecryptedStream? {
-        logger.info("Processing '${item}'")
+        logger.info("Processing '${item.fullPath}'")
         val dataKey = item.encryptionMetadata.plaintext
         val iv = item.encryptionMetadata.initializationVector
         val inputStream = item.inputStream
@@ -33,10 +36,9 @@ class DecryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream> {
         }
 
         return DecryptedStream(CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher),
-                item.fileName.replace(Regex("""\.enc$"""), ""))
+            item.fileName.replace(decryptionRegEx, ""), item.fullPath)
     }
 
-    private val cipherAlgorithm = "AES/CTR/NoPadding"
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DecryptionProcessor::class.toString())
     }
