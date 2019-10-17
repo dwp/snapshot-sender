@@ -1,11 +1,13 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 
 plugins {
-	id("org.springframework.boot") version "2.1.7.RELEASE"
-	id("io.spring.dependency-management") version "1.0.7.RELEASE"
-	kotlin("jvm") version "1.2.71"
-	kotlin("plugin.spring") version "1.2.71"
+	id("org.springframework.boot") version "2.1.8.RELEASE"
+	id("io.spring.dependency-management") version "1.0.8.RELEASE"
+	kotlin("jvm") version "1.3.21"
+	kotlin("plugin.spring") version "1.3.21"
 }
 
 group = "snapshot-sender"
@@ -36,12 +38,35 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
 	testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
+	// integration tests
+	testImplementation("io.kotlintest", "kotlintest-runner-junit5", "3.3.2")
 }
 
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
 		jvmTarget = "1.8"
+	}
+}
+
+sourceSets {
+	create("integration") {
+		java.srcDir(file("src/integration/kotlin"))
+		compileClasspath += sourceSets.getByName("main").output + configurations.testRuntimeClasspath
+		runtimeClasspath += output + compileClasspath
+	}
+}
+
+tasks.register<Test>("integration") {
+	description = "Runs the integration tests"
+	group = "verification"
+	testClassesDirs = sourceSets["integration"].output.classesDirs
+	classpath = sourceSets["integration"].runtimeClasspath
+
+	useJUnitPlatform { }
+	testLogging {
+		exceptionFormat = TestExceptionFormat.FULL
+		events = setOf(TestLogEvent.SKIPPED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT)
 	}
 }
 
