@@ -19,7 +19,7 @@ build/
 .DS_Store
 ss.log.directory_IS_UNDEFINED
 ss.log.*
-
+.kotlintest
 .mypy_cache
 
 ### STS ###
