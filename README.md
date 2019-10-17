@@ -2,6 +2,19 @@
 
 Sends JSON-L snapshots to Crown via a HTTPS receiver (i.e. NiFi)
 
+# Key settings
+
+For a sample list of settings see the `docker-compose.yml`
+
+The following settings are typically set by Terraform and must match as follows:
+
+| Target                   | Sample Value | Description |
+|--------------------------|--------------|-------------|
+|  `--s3.bucket`           | MyBucket     | Source bucket where the HTME exports and the Sender picks up from |
+|  `--s3.prefix.folder`    | business-data-export/JobNumber/2019-12-31 | Where the sender will search for file to pick up |
+|  `--s3.htme.root.folder` | business-data-export | The root location the htme will output into - should be the start of `s3.prefix.folder` |
+|  `--s3.status.folder`    | business-sender-export | Where the sender records its progress - should be a sibling folder of `s3.htme.root.folder` |
+
 ## Makefile targets
 
 A Makefile wraps some of the gradle and docker-compose commands to give a
@@ -14,17 +27,17 @@ $ make help
 | Target                       | Description |
 |------------------------------|-------------|
 | add-containers-to-hosts      | Update laptop hosts file with reference to containers |
-| build-all                    |  Build the jar file and then all docker images |
-| build-base-images            |  Build base images to avoid rebuilding frequently |
-| build-images                 |  Build all ecosystem of images |
-| build-jar                    |  Build the jar file |
-| destroy                      |  Bring down the hbase and other services then delete all volumes |
-| dist                         |  Assemble distribution files in build/dist |
-| generate-developer-certs     |  Generate temporary local certs and stores for the local developer containers to use |
-| hbase-shell                  |  Open an Hbase shell onto the running hbase container |
-| integration-all              |  Generate certs, build the jar and images, put up the containers, run the integration tests |
-| integration-tests            |  (Re-)Run the integration tests in a Docker container |
-| up                           |  Run the ecosystem of containers |
+| build-all                    | Build the jar file and then all docker images |
+| build-base-images            | Build base images to avoid rebuilding frequently |
+| build-images                 | Build all ecosystem of images |
+| build-jar                    | Build the jar file |
+| destroy                      | Bring down the hbase and other services then delete all volumes |
+| dist                         | Assemble distribution files in build/dist |
+| generate-developer-certs     | Generate temporary local certs and stores for the local developer containers to use |
+| hbase-shell                  | Open an Hbase shell onto the running hbase container |
+| integration-all              | Generate certs, build the jar and images, put up the containers, run the integration tests |
+| integration-tests            | (Re-)Run the integration tests in a Docker container |
+| up                           | Run the ecosystem of containers |
 
 
 ## Build
