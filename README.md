@@ -1,10 +1,8 @@
 # snapshot-sender
-Sends JSON-L snapshots to Crown
+
+Sends JSON-L snapshots to Crown via a HTTPS receiver (i.e. NiFi)
 
 ## Makefile targets
-
-`generate-developer-certs` - One-time activity to generate temporary local certs and stores for the local developer containers to use
-
 
 A Makefile wraps some of the gradle and docker-compose commands to give a
 more unified basic set of operations. These can be checked by running:
@@ -13,11 +11,27 @@ more unified basic set of operations. These can be checked by running:
 $ make help
 ```
 
+| Target                       | Description |
+|------------------------------|-------------|
+| add-containers-to-hosts      | Update laptop hosts file with reference to containers |
+| build-all                    |  Build the jar file and then all docker images |
+| build-base-images            |  Build base images to avoid rebuilding frequently |
+| build-images                 |  Build all ecosystem of images |
+| build-jar                    |  Build the jar file |
+| destroy                      |  Bring down the hbase and other services then delete all volumes |
+| dist                         |  Assemble distribution files in build/dist |
+| generate-developer-certs     |  Generate temporary local certs and stores for the local developer containers to use |
+| hbase-shell                  |  Open an Hbase shell onto the running hbase container |
+| integration-all              |  Generate certs, build the jar and images, put up the containers, run the integration tests |
+| integration-tests            |  (Re-)Run the integration tests in a Docker container |
+| up                           |  Run the ecosystem of containers |
+
+
 ## Build
 
 Ensure a JVM is installed and run gradle.
 
-    make build
+    make build-all
 
 ## Run full local stack
 
@@ -25,30 +39,25 @@ A full local stack can be run using the provided Dockerfile and Docker
 Compose configuration. The Dockerfile uses a multi-stage build so no
 pre-compilation is required.
 
-    make up-all
+    make up
 
-The environment can be stopped without losing any data:
+The environment can completely removed including all data volumes:
 
-    make down
+    make add-containers-to-hosts
 
-Or completely removed including all data volumes:
+## Run full local stack and integration tests against it
 
-    make destroy
-
+    make integration-all
 
 ## Run in an IDE
 
-First bring up the containerized versions of hbase, aws and dks:
+Then arrange for the docker level network names and IPs to be in your hosts files:
 
-    make up-ancillary
-
-Then arrange for their docker level network names and IPs to be in your hosts files:
-
-    make hosts
+    make add-containers-to-hosts
 
 Create a run configuration with the environment variable `SPRING_CONFIG_LOCATION`
 pointing to `resources/application-ide.properties` and a main class of
-`app.UcHistoricDataImporterApplication`, run this.
+`app.SnapshotSenderApplication.kt`, run this.
 
 
 ## Getting logs
@@ -56,15 +65,15 @@ pointing to `resources/application-ide.properties` and a main class of
 The services are listed in the `docker-compose.yaml` file and logs can be
 retrieved for all services, or for a subset.
 
-    docker-compose logs aws-s3
+    docker-compose logs <container-name-or-id>
 
-The logs can be followed so new lines are automatically shown.
+The logs can be followed so output is automatically shown:
 
-    docker-compose logs -f aws-s3
+    docker-compose logs -f  <container-name-or-id>
 
-## UC laptops
+## UC laptop setup
 
-This is a one time activity.
+This is a set of one time activities.
 
 ### Java
 
@@ -83,18 +92,6 @@ but if it is still not set you may need to add a line to your `.bashrc` thus:
 then have it set in your current session by executing
 
     exec bash
-
-### Gradle wrapper
-
-Update the project's gradle wrapper properties file to include a gradle
-repository that can be accessed from a UC laptop. From the project root
-directory:
-
-    cd setup
-    ./wrapper.sh ../gradle/wrapper/gradle-wrapper.properties
-
-A backup of the original file will created at
-`./gradle/wrapper/gradle-wrapper.properties.backup.1`
 
 ### Gradle.org certificates
 
@@ -123,12 +120,24 @@ Then run a gradle build
 To ensure the dockerized setup is functional, first generate the self-signed
 certificates needed for local development (from the project root):
 
-    make genrate-developer-certs.sh
-
+    make genrate-developer-certs
 
 Then bring up the containers:
 
     make up
 
-Note that you are at the mercy of the quarry house wifi here as there are a
+Note that you are at the mercy of any office wifi here as there are a
 number of large docker image downloads.
+
+
+### Gradle wrapper (optional - deprecated)
+
+Update the project's gradle wrapper properties file to include a gradle
+repository that can be accessed from a UC laptop. From the project root
+directory:
+
+    cd setup
+    ./wrapper.sh ../gradle/wrapper/gradle-wrapper.properties
+
+A backup of the original file will created at
+`./gradle/wrapper/gradle-wrapper.properties.backup.1`
