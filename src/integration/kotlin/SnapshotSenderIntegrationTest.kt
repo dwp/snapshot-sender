@@ -17,15 +17,16 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         val logger: Logger = LoggerFactory.getLogger(SnapshotSenderIntegrationTest::class.toString())
     }
 
+    val test1 = System.getenv("test1") ?: "NONE"
     val s3Bucket = System.getenv("s3.bucket") ?: "demobucket"
     val s3PrefixFolder = System.getenv("s3.prefix.folder") ?: "test/output/"
     val s3HtmeRootFolder = System.getenv("s3.htme.root.folder") ?: "test"
     val s3StatusFolder = System.getenv("s3.status.folder") ?: "status"
-    val s3ServiceEndpoint = System.getenv("s3.service.endpoint") ?: "http://localhost:4572"
+    val s3ServiceEndpoint = System.getenv("s3.service.endpoint") ?: "http://s3-dummy:4572"
     val nifiRootFolder = System.getenv("nifi.root.folder") ?: "/data/output"
     val nifiTimestamp = System.getenv("nifi.timestamp") ?: "10"
     val nifiFileNamesCSV = System.getenv("nifi.file.names.csv")
-        ?: "/data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
+        ?: "db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
     val nifiLineCountsCSV = System.getenv("nifi.file.linecounts.csv") ?: "7"
 
     var bucketUri = "$s3ServiceEndpoint/$s3Bucket"
@@ -35,6 +36,11 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     var nifiLineCounts = nifiLineCountsCSV.split(",")
 
     init {
+
+        "Verify env vars" {
+            logger.info("env vars: $test1")
+            logger.info("env vars: ${System.getenv()}")
+        }
 
         "Verify for every source collection a finished file was written to s3" {
             logger.info("Checking $bucketUri ...")
@@ -47,15 +53,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             //content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
             val bucketResultsXml = getS3Content(bucketUri)
             val fileKeys = getXmlNodesByTagName("Key", bucketResultsXml)
-
-            val allKeys = mutableListOf<String>()
-            for (index in 0 until fileKeys.length) {
-                val key = fileKeys.item(index)
-                val keyText = key.textContent
-                logger.info("keyText: $keyText")
-                allKeys.add(keyText)
-            }
-
+            val allKeys = getFileKeys(fileKeys)
             val exporterKeys = allKeys.filter { it.startsWith(s3SourceExporterFolder) }
             logger.info("exporterKeys: $exporterKeys")
             val statusKeys = allKeys.filter { it.startsWith(s3SenderStatusFolder) }
@@ -83,12 +81,29 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
 
         "Verify for every source collection an output file was sent to nifi as bz2 with valid json lines at expected timestamp" {
-            logger.info("Hello Mum 1")
+            logger.info("Check collections vs nifi")
 
             //s3 in:    test/output/db.core.addressDeclaration-000001.txt.bz2.enc
             //nifi out: /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2
 
-            File(nifiRootFolder).walkTopDown().forEach { println(it) }
+            val bucketResultsXml = getS3Content(bucketUri)
+            val fileKeys = getXmlNodesByTagName("Key", bucketResultsXml)
+            val allKeys = getFileKeys(fileKeys)
+            val exporterKeys = allKeys.filter { it.startsWith(s3SourceExporterFolder) }
+            logger.info("exporterKeys: $exporterKeys")
+
+            val exporterKeysToMatchNifi = exporterKeys
+                .map { it.replace(s3SourceExporterFolder, "") }
+                .map { it.replace(".enc", "") }
+                .map {
+                    val collection = deriveCollection(it)
+                    "$collection/$it"
+                }
+            logger.info("exporterKeysToMatchNifi: $exporterKeysToMatchNifi")
+
+            val nifiFiles = File(nifiRootFolder).walkTopDown()
+                .map {it.absolutePath}
+                .filter { it.contains("db.") && it.contains(".txt.bz2")}
 
             //     command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
             //              -timestamp 10 \
@@ -96,10 +111,21 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
 
         "Verify nifi output files have specified line count" {
-            logger.info("Hello Mum 2")
+            logger.info("Check nifi outputs")
             //     command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
             //              -linecount 7"
         }
+    }
+
+    private fun getFileKeys(fileKeys: NodeList): MutableList<String> {
+        val allKeys = mutableListOf<String>()
+        for (index in 0 until fileKeys.length) {
+            val key = fileKeys.item(index)
+            val keyText = key.textContent
+            logger.info("keyText: $keyText")
+            allKeys.add(keyText)
+        }
+        return allKeys
     }
 
     private val dbFactory = DocumentBuilderFactory.newInstance()
@@ -128,4 +154,24 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         return keys
     }
 
+    private fun deriveCollection(fileName: String) {
+        //s3 in:    test/output/db.core.addressDeclaration-000001.txt.bz2.enc
+        //out       db.core.addressDeclaration
+
+        val lastSlashIndex = fileName.lastIndexOf("/")
+        if (lastSlashIndex < 0) {
+            val errorMessage = "Rejecting: '$fileName' as fileName does not contain '/' to find collection"
+            logger.error(errorMessage)
+            throw RuntimeException(errorMessage)
+        }
+        val lastDashIndex = fileName.lastIndexOf("-")
+        if (lastDashIndex < 0) {
+            val errorMessage = "Rejecting: '$fileName' as fileName does not contain '-' to find collection"
+            logger.error(errorMessage)
+            throw RuntimeException(errorMessage)
+        }
+        val fullCollection = fileName.substring((lastSlashIndex + 1) until (lastDashIndex))
+        logger.info("Found collection: '${fullCollection}' from fileName of '$fileName'")
+        return fullCollection
+    }
 }

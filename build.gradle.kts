@@ -63,6 +63,16 @@ tasks.register<Test>("integration") {
 	group = "verification"
 	testClassesDirs = sourceSets["integration"].output.classesDirs
 	classpath = sourceSets["integration"].runtimeClasspath
+	this.environment("test1", System.getenv("test1"))
+	this.environment("s3.bucket", System.getenv("s3.bucket"))
+	this.environment("s3.prefix.folder", System.getenv("s3.prefix.folder"))
+	this.environment("s3.htme.root.folder", System.getenv("s3.htme.root.folder"))
+	this.environment("s3.status.folder", System.getenv("s3.status.folder"))
+	this.environment("s3.service.endpoint", System.getenv("s3.service.endpoint"))
+	this.environment("nifi.root.folder", System.getenv("nifi.root.folder"))
+	this.environment("nifi.timestamp", System.getenv("nifi.timestamp"))
+	this.environment("nifi.file.names.csv", System.getenv("nifi.file.names.csv"))
+	this.environment("nifi.file.linecounts.csv", System.getenv("nifi.file.linecounts.csv"))
 
 	useJUnitPlatform { }
 	testLogging {
