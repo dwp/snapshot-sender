@@ -167,6 +167,7 @@ services:
       - mock-nifi
     command: "gradle --rerun-tasks integration"
     environment:
+      s3.bucket: "demobucket"
       s3.prefix.folder: "test/output/"
       s3.htme.root.folder: "test"
       s3.status.folder: "status"
