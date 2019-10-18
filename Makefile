@@ -84,4 +84,4 @@ integration-tests:
 	docker-compose run sender-integration-test
 
 .PHONY: integration-all
-integration-all: build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
+integration-all: destroy build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
