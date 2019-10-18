@@ -38,8 +38,8 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 		pushd resources; \
 		docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
 		docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall . ; \
-		docker build --tag dwp-gradle:latest --file Dockerfile_gradle . ; \
 		popd; \
+		docker build --tag dwp-gradle:latest --file resources/Dockerfile_gradle . ; \
 	}
 
 .PHONY: build-images

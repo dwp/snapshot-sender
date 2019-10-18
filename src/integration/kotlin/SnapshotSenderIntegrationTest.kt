@@ -10,6 +10,17 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         val logger: Logger = LoggerFactory.getLogger(SnapshotSenderIntegrationTest::class.toString())
     }
 
+    /*
+    s3.prefix.folder: "test/output/"
+    s3.htme.root.folder: "test"
+    s3.status.folder: "status"
+    s3.service.endpoint: "http://s3-dummy:4572"
+    nifi.root.folder: "/data/output"
+    nifi.timestamp: "10"
+    nifi.file.names: "/data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
+    nifi.file.linecounts: "7"
+     */
+
     init {
         "Verify for every source collection a finished file was written to s3" {
             logger.info("Hello Mum 1")
