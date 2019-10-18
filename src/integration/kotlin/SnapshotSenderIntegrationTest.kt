@@ -57,6 +57,15 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val doc = dBuilder.parse(xmlInput)
             val keys = doc.getElementsByTagName("Key")
             logger.info(keys.toString())
+
+            val exporterKeys = mutableListOf<String>()
+            val ststusKeys = mutableListOf<String>()
+
+            for (index in 0 until keys.length) {
+                val key = keys.item(index)
+                val keyText = key.textContent
+                logger.info("keyText: $keyText")
+            }
         }
 
         "Verify for every source collection an output file was sent to nifi as bz2 with valid json lines at expected timestamp" {
