@@ -46,6 +46,7 @@ build-images: build-base-images ## Build all ecosystem of images
 	@{ \
 		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi snapshot-sender-itest; \
 		docker-compose build --no-cache snapshot-sender; \
+		docker-compose build --no-cache sender-integration-test; \
 	}
 
 .PHONY: up
