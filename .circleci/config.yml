@@ -83,15 +83,21 @@ jobs:
             docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall . ; \
             cd -
             ./gradlew build
-            docker-compose build hbase hbase-populate snapshot-sender snapshot-sender-itest dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi s3-dummy s3-bucket-provision
+            docker-compose build hbase hbase-populate snapshot-sender sender-integration-test dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi s3-dummy s3-bucket-provision
             docker-compose up -d hbase dks-standalone-http dks-standalone-https mock-nifi s3-dummy
-            sleep 60
+
+            S3_READY_REGEX=^Ready\.$
+            while ! docker logs s3-dummy 2> /dev/null | grep -q $S3_READY_REGEX; do
+                echo Waiting for s3-dummy.
+                sleep 2
+            done
+
             docker-compose up s3-bucket-provision
             docker-compose up hbase-populate
             docker-compose up hbase-to-mongo-export
             docker-compose up snapshot-sender
-            docker-compose up snapshot-sender-itest
-            docker ps -a
+            sleep 30
+            docker-compose up sender-integration-test
 
   publish-github-release:
     docker:

@@ -9,6 +9,7 @@ s3_prefix_folder=test-exporter
 data_key_service_url=http://dks-standalone-http:8080
 data_key_service_url_ssl=https://dks-standalone-https:8443
 follow_flag=--follow
+S3_READY_REGEX=^Ready\.$
 
 default: help
 
@@ -16,8 +17,8 @@ default: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-build-jar: ## Build the jar file
-	gradle clean build
+build-jar: ## Build all code including tests and main jar
+	gradle clean build test
 
 dist: ## Assemble distribution files in build/dist
 	gradle assembleDist
@@ -44,7 +45,7 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 .PHONY: build-images
 build-images: build-base-images ## Build all ecosystem of images
 	@{ \
-		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi snapshot-sender-itest; \
+		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi; \
 		docker-compose build --no-cache snapshot-sender; \
 		docker-compose build --no-cache sender-integration-test; \
 	}
@@ -53,7 +54,11 @@ build-images: build-base-images ## Build all ecosystem of images
 up: ## Run the ecosystem of containers
 	@{ \
 		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
-		echo "Waiting for services" && sleep 20; \
+		echo "Waiting for services"; \
+		while ! docker logs s3-dummy 2> /dev/null | grep -q $(S3_READY_REGEX); do \
+		echo "Waiting for s3-dummy.""; \
+		sleep 2; \
+		done; \
 		docker-compose up hbase-populate s3-bucket-provision; \
 		docker-compose up hbase-to-mongo-export; \
 		docker-compose up snapshot-sender; \

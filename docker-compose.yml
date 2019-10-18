@@ -78,10 +78,12 @@ services:
       --data.key.service.url=https://dks-standalone-https:8443
       --aws.region=eu-west-2
       --s3.bucket=demobucket
-      --s3.prefix.folder=test/output
+      --s3.prefix.folder=businessdata/mongo/ucdata/2010-01-01
       --s3.service.endpoint=http://s3-dummy:4572
       --s3.access.key=DummyKey
       --s3.secret.key=DummySecret
+    environment:
+      topic.name=db.core.addressDeclaration
 
   snapshot-sender:
     image: snapshot-sender
@@ -159,9 +161,19 @@ services:
       context: .
       dockerfile: resources/Dockerfile_sender_integration
     container_name: sender-integration-test
+    volumes:
+      - shared-volume:/data/output
     depends_on:
       - mock-nifi
     command: "gradle --rerun-tasks integration"
-
+      environment:
+        s3.prefix.folder=test/output/
+        s3.htme.root.folder=test
+        s3.status.folder=status
+        s3.service.endpoint=http://s3-dummy:4572
+        nifi.root.folder=/data/output
+        nifi.file=/data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2
+        nifi.timestamp=10
+        nifi.linecount=7
 volumes:
   shared-volume:
