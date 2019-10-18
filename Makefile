@@ -47,7 +47,6 @@ build-images: build-base-images ## Build all ecosystem of images
 	@{ \
 		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi; \
 		docker-compose build --no-cache snapshot-sender; \
-		docker-compose build --no-cache sender-integration-test; \
 	}
 
 .PHONY: up
@@ -81,6 +80,7 @@ destroy: ## Bring down the hbase and other services then delete all volumes
 
 .PHONY: integration-tests
 integration-tests:
+	docker-compose build --no-cache sender-integration-test
 	docker-compose run sender-integration-test
 
 .PHONY: integration-all
