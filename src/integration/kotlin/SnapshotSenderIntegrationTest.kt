@@ -1,8 +1,8 @@
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import org.apache.http.client.fluent.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 
 class SnapshotSenderIntegrationTest : StringSpec() {
 
@@ -20,6 +20,11 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
             // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
             //content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
+            val results = Request.Get("http://s3-dummy:4572/demobucket")
+                .connectTimeout(1000)
+                .socketTimeout(1000)
+                .execute().returnContent().asString()
+            logger.info(results)
         }
 
         "Verify for every source collection an output file was sent to nifi as bz2 with valid json lines at expected timestamp" {

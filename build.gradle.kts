@@ -26,7 +26,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
-	implementation("org.apache.httpcomponents:httpclient:4.5.9")
+	implementation("org.apache.httpcomponents:httpclient:4.5.10")
 	implementation("com.google.code.gson:gson:2.8.5")
 	implementation("org.apache.commons:commons-compress:1.5")
 
@@ -37,9 +37,10 @@ dependencies {
 	// tests
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
-	testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
+	testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 	// integration tests
-	testImplementation("io.kotlintest", "kotlintest-runner-junit5", "3.3.2")
+	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
+	testImplementation("org.apache.httpcomponents:fluent-hc:4.5.10")
 }
 
 tasks.withType<KotlinCompile> {
@@ -69,4 +70,3 @@ tasks.register<Test>("integration") {
 		events = setOf(TestLogEvent.SKIPPED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT)
 	}
 }
-
