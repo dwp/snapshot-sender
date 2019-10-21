@@ -1,3 +1,6 @@
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
+import io.kotlintest.fail
 import io.kotlintest.matchers.collections.shouldContain
 import io.kotlintest.matchers.collections.shouldContainAll
 import io.kotlintest.matchers.numerics.shouldBeGreaterThan
@@ -5,18 +8,15 @@ import io.kotlintest.matchers.numerics.shouldBeGreaterThanOrEqual
 import io.kotlintest.matchers.string.shouldNotBeEmpty
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.http.client.fluent.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.w3c.dom.NodeList
 import org.xml.sax.InputSource
-import java.io.File
-import java.io.StringReader
+import java.io.*
 import javax.xml.parsers.DocumentBuilderFactory
 
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.Parser
-import io.kotlintest.fail
 
 class SnapshotSenderIntegrationTest : StringSpec() {
 
@@ -161,13 +161,30 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
                 logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
                 logger.info("Looking for file $fullPath")
-                val linesInFile = File(fullPath).readLines(Charsets.US_ASCII)
-                logger.info("Loaded file, got: $linesInFile")
-                linesInFile.size.shouldBe(expectedLineCount)
 
-                linesInFile.forEach {
-                    val jsonLine = parseJson(it)
-                    jsonLine["timestamp"].shouldBe(expectedTimestamp)
+                val streamIn = FileInputStream(fullPath)
+                val dataStream = CompressorStreamFactory()
+                    .createCompressorInputStream(CompressorStreamFactory.BZIP2, BufferedInputStream(streamIn))
+                val dataReader = BufferedReader(InputStreamReader(dataStream, "UTF-8"))
+
+                var linesDone = 0
+                do {
+                    val line = dataReader.readLine()
+                    println(line)
+                    if (line != null) {
+                        linesDone++
+                        logger.info("Checking line $linesDone/$expectedLineCount in $expectedFile")
+                        val jsonLine = parseJson(line)
+                        jsonLine["timestamp"].shouldBe(expectedTimestamp)
+                    } else if (linesDone == expectedLineCount) {
+                        logger.info("Skipping blank line at EOF as should be end of file: have processed $linesDone/$expectedLineCount in $expectedFile")
+                    } else {
+                        fail("Did not expect blank line before EOF: have only processed $linesDone/$expectedLineCount in $expectedFile")
+                    }
+                } while (line != null)
+
+                if (linesDone != expectedLineCount) {
+                    fail("Did get expected line count: have only processed $linesDone/$expectedLineCount in $expectedFile")
                 }
             }
         }
@@ -178,7 +195,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val stringBuilder = StringBuilder(line)
             return jsonParser.parse(stringBuilder) as JsonObject
         }
-        catch (ex:Exception) {
+        catch (ex: Exception) {
             fail("Could not parse json line: Got '$ex' from parsing '$line' ")
         }
     }
