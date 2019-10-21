@@ -14,6 +14,10 @@ import java.io.File
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
+import io.kotlintest.fail
+
 class SnapshotSenderIntegrationTest : StringSpec() {
 
     companion object {
@@ -41,6 +45,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
     private val dbFactory = DocumentBuilderFactory.newInstance()
     private val dBuilder = dbFactory.newDocumentBuilder()
+    private val jsonParser: Parser = Parser.default()
 
     init {
 
@@ -155,8 +160,26 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val expectedTimestamp = nifiTimestamps[index].toLong()
 
                 logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
-                logger.info("Looking for $fullPath")
+                logger.info("Looking for file $fullPath")
+                val linesInFile = File(fullPath).readLines(Charsets.US_ASCII)
+                logger.info("Loaded file, got: $linesInFile")
+                linesInFile.size.shouldBe(expectedLineCount)
+
+                linesInFile.forEach {
+                    val jsonLine = parseJson(it)
+                    jsonLine["timestamp"].shouldBe(expectedTimestamp)
+                }
             }
+        }
+    }
+
+    private fun parseJson(line: String?): JsonObject {
+        try {
+            val stringBuilder = StringBuilder(line)
+            return jsonParser.parse(stringBuilder) as JsonObject
+        }
+        catch (ex:Exception) {
+            fail("Could not parse json line: Got '$ex' from parsing '$line' ")
         }
     }
 

@@ -15,6 +15,8 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
 	mavenCentral()
+	jcenter()
+	maven(url="https://jitpack.io")
 }
 
 dependencies {
@@ -38,6 +40,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
 	testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+	testImplementation("com.beust", "klaxon", "4.0.2")
 	// integration tests
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
 	testImplementation("org.apache.httpcomponents:fluent-hc:4.5.10")
