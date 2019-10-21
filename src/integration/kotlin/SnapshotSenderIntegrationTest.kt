@@ -1,6 +1,8 @@
 import io.kotlintest.matchers.collections.shouldContain
 import io.kotlintest.matchers.collections.shouldContainAll
 import io.kotlintest.matchers.numerics.shouldBeGreaterThan
+import io.kotlintest.matchers.numerics.shouldBeGreaterThanOrEqual
+import io.kotlintest.matchers.string.shouldNotBeEmpty
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import org.apache.http.client.fluent.Request
@@ -18,27 +20,47 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         val logger: Logger = LoggerFactory.getLogger(SnapshotSenderIntegrationTest::class.toString())
     }
 
-    val s3Bucket = System.getenv("S3_BUCKET") ?: "demobucket"
-    val s3PrefixFolder = System.getenv("S3_PREFIX_FOLDER") ?: "test/output/"
-    val s3HtmeRootFolder = System.getenv("S3_HTME_ROOT_FOLDER") ?: "test"
-    val s3StatusFolder = System.getenv("S3_STATUS_FOLDER") ?: "status"
-    val s3ServiceEndpoint = System.getenv("S3_SERVICE_ENDPOINT") ?: "http://localhost:4572"
-    val nifiRootFolder = System.getenv("NIFI_ROOT_FOLDER") ?: "/data/output"
-    val nifiTimestamp = System.getenv("NIFI_TIMESTAMP") ?: "10"
-    val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV")
-        ?: "db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
-    val nifiLineCountsCSV = System.getenv("NIFI_FILE_LINECOUNTS_CSV") ?: "7"
+    private val s3Bucket = System.getenv("S3_BUCKET") ?: "demobucket"
+    private val s3PrefixFolder = System.getenv("S3_PREFIX_FOLDER") ?: "test/output/"
+    private val s3HtmeRootFolder = System.getenv("S3_HTME_ROOT_FOLDER") ?: "test"
+    private val s3StatusFolder = System.getenv("S3_STATUS_FOLDER") ?: "status"
+    private val s3ServiceEndpoint = System.getenv("S3_SERVICE_ENDPOINT") ?: "http://localhost:4572"
+    private val nifiRootFolder = System.getenv("NIFI_ROOT_FOLDER") ?: "/data/output"
 
-    var bucketUri = "$s3ServiceEndpoint/$s3Bucket"
-    var s3SourceExporterFolder = "$s3PrefixFolder"
-    var s3SenderStatusFolder = s3SourceExporterFolder.replace("$s3HtmeRootFolder/", "$s3StatusFolder/")
-    var nifiFileNames = nifiFileNamesCSV.split(",")
-    var nifiLineCounts = nifiLineCountsCSV.split(",")
+    //matched triplets of file name, timestamp and line count
+    private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV")
+        ?: "db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
+    private val nifiLineCountsCSV = System.getenv("NIFI_LINE_COUNTS_CSV") ?: "7"
+    private val nifiTimestampsCSV = System.getenv("NIFI_TIME_STAMPS_CSV") ?: "10"
+
+    private val bucketUri = "$s3ServiceEndpoint/$s3Bucket"
+    private val s3SourceExporterFolder = s3PrefixFolder
+    private val s3SenderStatusFolder = s3SourceExporterFolder.replace("$s3HtmeRootFolder/", "$s3StatusFolder/")
+    private val nifiFileNames = nifiFileNamesCSV.split(",")
+    private val nifiLineCounts = nifiLineCountsCSV.split(",")
+    private val nifiTimestamps = nifiTimestampsCSV.split(",")
 
     init {
 
-        "Verify env vars" {
-            logger.info("env vars: ${System.getenv()}")
+        "Verify env vars were passed from docker via gradle to here" {
+            s3Bucket.shouldNotBeEmpty()
+            s3PrefixFolder.shouldNotBeEmpty()
+            s3HtmeRootFolder.shouldNotBeEmpty()
+            s3StatusFolder.shouldNotBeEmpty()
+            s3ServiceEndpoint.shouldNotBeEmpty()
+            nifiRootFolder.shouldNotBeEmpty()
+            nifiFileNamesCSV.shouldNotBeEmpty()
+            nifiLineCountsCSV.shouldNotBeEmpty()
+            nifiTimestampsCSV.shouldNotBeEmpty()
+            bucketUri.length.shouldBeGreaterThan(1)
+            s3SourceExporterFolder.shouldNotBeEmpty()
+            s3SenderStatusFolder.shouldNotBeEmpty()
+            nifiFileNames.size.shouldBeGreaterThanOrEqual(1)
+            nifiLineCounts.size.shouldBeGreaterThanOrEqual(1)
+            nifiTimestamps.size.shouldBeGreaterThanOrEqual(1)
+            //matched triplets of file name, timestamp and line count
+            nifiLineCounts.size.shouldBe(nifiFileNames.size)
+            nifiTimestamps.size.shouldBe(nifiFileNames.size)
         }
 
         "Verify for every source collection a finished file was written to s3" {
@@ -49,7 +71,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
             // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
             // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
-            //content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
+
             val bucketResultsXml = getS3Content(bucketUri)
             val fileKeys = getXmlNodesByTagName("Key", bucketResultsXml)
             val allKeys = getFileKeys(fileKeys)
@@ -75,6 +97,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val keyResult = getS3Content(fullPath)
                 logger.info("$keyResult file contains text '$keyResult'")
                 logger.info("Checking file '${pair.value}' contains '${pair.key}'")
+                //content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
                 keyResult.shouldBe("Finished ${pair.key}")
             }
         }
@@ -96,13 +119,13 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 .map { it.replace(".enc", "") }
                 .map {
                     val collection = deriveCollection(it)
-                    "$collection/$it"
+                    "$nifiRootFolder/$collection$it"
                 }
             logger.info("exporterKeysToMatchNifi: $exporterKeysToMatchNifi")
 
             val nifiFiles = File(nifiRootFolder).walkTopDown()
-                .map {it.absolutePath}
-                .filter { it.contains("db.") && it.contains(".txt.bz2")}
+                .map { it.absolutePath }
+                .filter { it.contains("db.") && it.contains(".txt.bz2") }
                 .toList()
             logger.info("nifiFiles: $nifiFiles")
 
@@ -115,6 +138,12 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             //     command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
             //              -linecount 7"
             //              -timestamp 10 \
+
+            val nifiFiles = File(nifiRootFolder).walkTopDown()
+                .map { it.absolutePath }
+                .filter { it.contains("db.") && it.contains(".txt.bz2") }
+                .toList()
+            logger.info("nifiFiles: $nifiFiles")
         }
     }
 
@@ -147,7 +176,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private fun getXmlNodesByTagName(keyName: String, sourceXmlString: String): NodeList {
         val xmlInput = InputSource(StringReader(sourceXmlString))
         val doc = dBuilder.parse(xmlInput)
-        val keys = doc.getElementsByTagName(keyName) ?: throw RuntimeException("No elements found for '$keyName' in given xml")
+        val keys = doc.getElementsByTagName(keyName)
+            ?: throw RuntimeException("No elements found for '$keyName' in given xml")
         logger.info("Found ${keys.length} keys with tag name '$keyName'")
         return keys
     }

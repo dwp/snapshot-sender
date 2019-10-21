@@ -175,7 +175,7 @@ services:
       NIFI_ROOT_FOLDER: "/data/output/" # see the shared-volume above
       NIFI_TIMESTAMP: "10"
       NIFI_FILE_NAMES_CSV: "db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2,db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
-      NIFI_FILE_LINECOUNTS_CSV: "7,5"
+      NIFI_LINE_COUNTS_CSV: "7,5"
 
 volumes:
   shared-volume:

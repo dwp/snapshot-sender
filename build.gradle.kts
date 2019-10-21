@@ -69,9 +69,9 @@ tasks.register<Test>("integration") {
 	environment("S3_STATUS_FOLDER", System.getenv("S3_STATUS_FOLDER"))
 	environment("S3_SERVICE_ENDPOINT", System.getenv("S3_SERVICE_ENDPOINT"))
 	environment("NIFI_ROOT_FOLDER", System.getenv("NIFI_ROOT_FOLDER"))
-	environment("NIFI_TIMESTAMP", System.getenv("NIFI_TIMESTAMP"))
 	environment("NIFI_FILE_NAMES_CSV", System.getenv("NIFI_FILE_NAMES_CSV"))
-	environment("NIFI_FILE_LINECOUNTS_CSV", System.getenv("NIFI_FILE_LINECOUNTS_CSV"))
+	environment("NIFI_TIME_STAMPS_CSV", System.getenv("NIFI_TIME_STAMPS_CSV"))
+	environment("NIFI_LINE_COUNTS_CSV", System.getenv("NIFI_LINE_COUNTS_CSV"))
 
 	useJUnitPlatform { }
 	testLogging {
