@@ -174,7 +174,7 @@ services:
       S3_SERVICE_ENDPOINT: "http://s3-dummy:4572"
       NIFI_ROOT_FOLDER: "/data/output" # see the shared-volume above
       NIFI_FILE_NAMES_CSV: "db.core.addressDeclaration-000001.txt.bz2,db.core.addressDeclaration-000001.txt.bz2"
-      NIFI_TIMESTAMP: "10,10"
+      NIFI_TIME_STAMPS_CSV: "10,10"
       NIFI_LINE_COUNTS_CSV: "7,7"
 
 volumes:

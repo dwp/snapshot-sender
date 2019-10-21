@@ -28,8 +28,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private val nifiRootFolder = System.getenv("NIFI_ROOT_FOLDER") ?: "/data/output"
 
     //matched triplets of file name, timestamp and line count
-    private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV")
-        ?: "db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
+    private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV") ?: "db.core.addressDeclaration-000001.txt.bz2"
     private val nifiLineCountsCSV = System.getenv("NIFI_LINE_COUNTS_CSV") ?: "7"
     private val nifiTimestampsCSV = System.getenv("NIFI_TIME_STAMPS_CSV") ?: "10"
 
