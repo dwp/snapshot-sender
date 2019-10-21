@@ -150,7 +150,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
             for (index in nifiFileNames.indices) {
                 val expectedFile = nifiFileNames[index]
-                val collection = deriveCollection(expectedFile)
+                val collection = deriveCollection("/$expectedFile")
                 val fullPath = "$nifiRootFolder/$collection/$expectedFile"
                 val expectedLineCount = nifiLineCounts[index].toInt()
                 val expectedTimestamp = nifiTimestamps[index].toLong()
