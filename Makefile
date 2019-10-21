@@ -55,7 +55,7 @@ up: ## Run the ecosystem of containers
 		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
 		echo "Waiting for services"; \
 		while ! docker logs s3-dummy 2> /dev/null | grep -q $(S3_READY_REGEX); do \
-		echo "Waiting for s3-dummy."; \
+		echo "Waiting for s3-dummy..."; \
 		sleep 2; \
 		done; \
 		docker-compose up hbase-populate s3-bucket-provision; \
@@ -84,4 +84,4 @@ integration-tests:
 	docker-compose run sender-integration-test
 
 .PHONY: integration-all
-integration-all: build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests
+integration-all: destroy build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests

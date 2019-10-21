@@ -15,6 +15,8 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
 	mavenCentral()
+	jcenter()
+	maven(url="https://jitpack.io")
 }
 
 dependencies {
@@ -38,6 +40,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
 	testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+	testImplementation("com.beust", "klaxon", "4.0.2")
 	// integration tests
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
 	testImplementation("org.apache.httpcomponents:fluent-hc:4.5.10")
@@ -63,6 +66,15 @@ tasks.register<Test>("integration") {
 	group = "verification"
 	testClassesDirs = sourceSets["integration"].output.classesDirs
 	classpath = sourceSets["integration"].runtimeClasspath
+	environment("S3_BUCKET", System.getenv("S3_BUCKET"))
+	environment("S3_PREFIX_FOLDER", System.getenv("S3_PREFIX_FOLDER"))
+	environment("S3_HTME_ROOT_FOLDER", System.getenv("S3_HTME_ROOT_FOLDER"))
+	environment("S3_STATUS_FOLDER", System.getenv("S3_STATUS_FOLDER"))
+	environment("S3_SERVICE_ENDPOINT", System.getenv("S3_SERVICE_ENDPOINT"))
+	environment("NIFI_ROOT_FOLDER", System.getenv("NIFI_ROOT_FOLDER"))
+	environment("NIFI_FILE_NAMES_CSV", System.getenv("NIFI_FILE_NAMES_CSV"))
+	environment("NIFI_TIME_STAMPS_CSV", System.getenv("NIFI_TIME_STAMPS_CSV"))
+	environment("NIFI_LINE_COUNTS_CSV", System.getenv("NIFI_LINE_COUNTS_CSV"))
 
 	useJUnitPlatform { }
 	testLogging {
