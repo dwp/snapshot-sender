@@ -40,6 +40,9 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private val nifiLineCounts = nifiLineCountsCSV.split(",")
     private val nifiTimestamps = nifiTimestampsCSV.split(",")
 
+    private val dbFactory = DocumentBuilderFactory.newInstance()
+    private val dBuilder = dbFactory.newDocumentBuilder()
+
     init {
 
         "Verify env vars were passed from docker via gradle to here" {
@@ -123,14 +126,14 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 }
             logger.info("exporterKeysToMatchNifi: $exporterKeysToMatchNifi")
 
-            val nifiFiles = File(nifiRootFolder).walkTopDown()
+            val actualNifiFiles = File(nifiRootFolder).walkTopDown()
                 .map { it.absolutePath }
                 .filter { it.contains("db.") && it.contains(".txt.bz2") }
                 .toList()
-            logger.info("nifiFiles: $nifiFiles")
+            logger.info("actualNifiFiles: $actualNifiFiles")
 
-            nifiFiles.shouldContainAll(exporterKeysToMatchNifi)
-            nifiFiles.size.shouldBe(exporterKeysToMatchNifi.size)
+            actualNifiFiles.shouldContainAll(exporterKeysToMatchNifi)
+            actualNifiFiles.size.shouldBe(exporterKeysToMatchNifi.size)
         }
 
         "Verify nifi output files are with valid json lines at expected timestamp with specified line count" {
@@ -139,11 +142,22 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             //              -linecount 7"
             //              -timestamp 10 \
 
-            val nifiFiles = File(nifiRootFolder).walkTopDown()
+            val actualNifiFiles = File(nifiRootFolder).walkTopDown()
                 .map { it.absolutePath }
                 .filter { it.contains("db.") && it.contains(".txt.bz2") }
                 .toList()
-            logger.info("nifiFiles: $nifiFiles")
+            logger.info("actualNifiFiles: $actualNifiFiles")
+
+            for (index in nifiFileNames.indices) {
+                val expectedFile = nifiFileNames[index]
+                val collection = deriveCollection(expectedFile)
+                val fullPath = "$nifiRootFolder/$collection/$expectedFile"
+                val expectedLineCount = nifiLineCounts[index].toInt()
+                val expectedTimestamp = nifiTimestamps[index].toLong()
+
+                logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
+                logger.info("Looking for $fullPath")
+            }
         }
     }
 
@@ -157,9 +171,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
         return allKeys
     }
-
-    private val dbFactory = DocumentBuilderFactory.newInstance()
-    private val dBuilder = dbFactory.newDocumentBuilder()
 
     private fun getS3Content(s3FullPath: String): String {
         val results = Request.Get(s3FullPath)
