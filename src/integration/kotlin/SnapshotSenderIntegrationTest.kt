@@ -1,4 +1,5 @@
 import io.kotlintest.matchers.collections.shouldContain
+import io.kotlintest.matchers.collections.shouldContainAll
 import io.kotlintest.matchers.numerics.shouldBeGreaterThan
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
@@ -17,17 +18,16 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         val logger: Logger = LoggerFactory.getLogger(SnapshotSenderIntegrationTest::class.toString())
     }
 
-    val test1 = System.getenv("test1") ?: "NONE"
-    val s3Bucket = System.getenv("s3.bucket") ?: "demobucket"
-    val s3PrefixFolder = System.getenv("s3.prefix.folder") ?: "test/output/"
-    val s3HtmeRootFolder = System.getenv("s3.htme.root.folder") ?: "test"
-    val s3StatusFolder = System.getenv("s3.status.folder") ?: "status"
-    val s3ServiceEndpoint = System.getenv("s3.service.endpoint") ?: "http://s3-dummy:4572"
-    val nifiRootFolder = System.getenv("nifi.root.folder") ?: "/data/output"
-    val nifiTimestamp = System.getenv("nifi.timestamp") ?: "10"
-    val nifiFileNamesCSV = System.getenv("nifi.file.names.csv")
+    val s3Bucket = System.getenv("S3_BUCKET") ?: "demobucket"
+    val s3PrefixFolder = System.getenv("S3_PREFIX_FOLDER") ?: "test/output/"
+    val s3HtmeRootFolder = System.getenv("S3_HTME_ROOT_FOLDER") ?: "test"
+    val s3StatusFolder = System.getenv("S3_STATUS_FOLDER") ?: "status"
+    val s3ServiceEndpoint = System.getenv("S3_SERVICE_ENDPOINT") ?: "http://localhost:4572"
+    val nifiRootFolder = System.getenv("NIFI_ROOT_FOLDER") ?: "/data/output"
+    val nifiTimestamp = System.getenv("NIFI_TIMESTAMP") ?: "10"
+    val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV")
         ?: "db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2"
-    val nifiLineCountsCSV = System.getenv("nifi.file.linecounts.csv") ?: "7"
+    val nifiLineCountsCSV = System.getenv("NIFI_FILE_LINECOUNTS_CSV") ?: "7"
 
     var bucketUri = "$s3ServiceEndpoint/$s3Bucket"
     var s3SourceExporterFolder = "$s3PrefixFolder"
@@ -38,7 +38,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     init {
 
         "Verify env vars" {
-            logger.info("env vars: $test1")
             logger.info("env vars: ${System.getenv()}")
         }
 
@@ -80,7 +79,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             }
         }
 
-        "Verify for every source collection an output file was sent to nifi as bz2 with valid json lines at expected timestamp" {
+        "Verify for every source collection an output file was sent to nifi as bz2" {
             logger.info("Check collections vs nifi")
 
             //s3 in:    test/output/db.core.addressDeclaration-000001.txt.bz2.enc
@@ -104,16 +103,18 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val nifiFiles = File(nifiRootFolder).walkTopDown()
                 .map {it.absolutePath}
                 .filter { it.contains("db.") && it.contains(".txt.bz2")}
+                .toList()
+            logger.info("nifiFiles: $nifiFiles")
 
-            //     command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
-            //              -timestamp 10 \
-
+            nifiFiles.shouldContainAll(exporterKeysToMatchNifi)
+            nifiFiles.size.shouldBe(exporterKeysToMatchNifi.size)
         }
 
-        "Verify nifi output files have specified line count" {
+        "Verify nifi output files are with valid json lines at expected timestamp with specified line count" {
             logger.info("Check nifi outputs")
             //     command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
             //              -linecount 7"
+            //              -timestamp 10 \
         }
     }
 
@@ -146,15 +147,12 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private fun getXmlNodesByTagName(keyName: String, sourceXmlString: String): NodeList {
         val xmlInput = InputSource(StringReader(sourceXmlString))
         val doc = dBuilder.parse(xmlInput)
-        val keys = doc.getElementsByTagName(keyName)
-        if (keys == null) {
-            throw RuntimeException("No results found for '$keyName' in given xml")
-        }
+        val keys = doc.getElementsByTagName(keyName) ?: throw RuntimeException("No elements found for '$keyName' in given xml")
         logger.info("Found ${keys.length} keys with tag name '$keyName'")
         return keys
     }
 
-    private fun deriveCollection(fileName: String) {
+    private fun deriveCollection(fileName: String): String {
         //s3 in:    test/output/db.core.addressDeclaration-000001.txt.bz2.enc
         //out       db.core.addressDeclaration
 
