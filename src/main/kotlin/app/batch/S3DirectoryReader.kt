@@ -11,7 +11,7 @@ import org.springframework.stereotype.*
 
 @Component
 @Profile("S3SourceData")
-class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
+class S3DirectoryReader(val s3utils: S3Utils) : ItemReader<EncryptedStream> {
 
     private var iterator: ListIterator<S3ObjectSummary>? = null
     private val IV_KEY = "iv"
@@ -19,27 +19,16 @@ class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
     private val CIPHERTEXT_KEY = "cipherText"
 
     override fun read(): EncryptedStream? {
-        val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
-        do {
-            val nextObject = if (iterator.hasNext()) {
-                iterator.next()
-            } else {
-                return null
-            }
-            logger.info("Checking s3 object '${nextObject.key}'")
-            val finishedKeyName = getFinishedStatusKeyName(nextObject.key)
-            val objectNeedsSkipping = getS3ObjectExists(finishedKeyName, s3Client, s3BucketName)
-            if (objectNeedsSkipping) {
-                logger.info("Skipping s3 object '${nextObject.key}' as it was already sent: File '$finishedKeyName' exists")
-                continue
-            }
-
-            val inputStream = getS3ObjectInputStream(nextObject, s3Client, s3BucketName)
-            val metadata = getS3ObjectMetadata(nextObject, s3Client, s3BucketName)
-            logger.info("Returning s3 object for '${nextObject.key}' with metadata '$metadata'")
-            return encryptedStream(metadata, nextObject.key, inputStream)
-        } while (objectNeedsSkipping)
-        return null
+        val iterator = getS3ObjectSummariesIterator(s3utils.s3Client, s3utils.s3BucketName)
+        return if (iterator.hasNext()) {
+            val next = iterator.next()
+            val inputStream = getS3ObjectInputStream(next, s3utils.s3Client, s3utils.s3BucketName)
+            val metadata = getS3ObjectMetadata(next, s3utils.s3Client, s3utils.s3BucketName)
+            logger.info("Returning s3 object for '${next.key}' with metadata '$metadata'")
+            encryptedStream(metadata, next.key, inputStream)
+        } else {
+            null
+        }
     }
 
     @Synchronized
@@ -50,13 +39,9 @@ class S3DirectoryReader : ItemReader<EncryptedStream>, S3Utils() {
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            iterator = s3Client.listObjectsV2(bucketName, prefixFolder()).objectSummaries.listIterator()
+            iterator = s3Client.listObjectsV2(bucketName, s3utils.prefixFolder()).objectSummaries.listIterator()
         }
         return iterator!!
-    }
-
-    private fun getS3ObjectExists(s3Key: String, s3Client: AmazonS3, bucketName: String): Boolean {
-        return s3Client.doesObjectExist(bucketName, s3Key)
     }
 
     private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {

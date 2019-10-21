@@ -13,7 +13,7 @@ import java.io.InputStream
 
 @Component
 @Profile("S3SourceData")
-class S3StatusFileWriter : S3Utils() {
+class S3StatusFileWriter(val s3utils: S3Utils) {
 
     fun writeStatus(originalS3Key: String) {
 
@@ -23,7 +23,7 @@ class S3StatusFileWriter : S3Utils() {
 
         // i.e. sourceFile: s3://bucket/business-data-export/JobNumber/1990-01-31/db.user.data-0001.bz2.enc
         // i.e. statusFile: s3://bucket/business-sender-status/JobNumber/1990-01-31/db.user.data-0001.bz2.enc.finished
-        val statusFileKey = getFinishedStatusKeyName(originalS3Key)
+        val statusFileKey = s3utils.getFinishedStatusKeyName(originalS3Key)
         logger.info("Writing status file '$statusFileKey' for '$originalS3Key'")
 
         try {
@@ -33,9 +33,9 @@ class S3StatusFileWriter : S3Utils() {
             metadata.contentLength = payloadBytes.size.toLong()
             metadata.addUserMetadata("x-amz-meta-title", statusFileKey)
             metadata.addUserMetadata("original-s3-filename", originalS3Key)
-            val request = PutObjectRequest(s3BucketName, statusFileKey, payloadInputStream, metadata)
+            val request = PutObjectRequest(s3utils.s3BucketName, statusFileKey, payloadInputStream, metadata)
 
-            s3Client.putObject(request)
+            s3utils.s3Client.putObject(request)
             logger.info("Written status file '$statusFileKey' for '$originalS3Key'")
         }
         catch (e: AmazonServiceException) {

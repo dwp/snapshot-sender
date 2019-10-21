@@ -63,7 +63,7 @@ class S3StatusFileWriterTest {
     fun should_calculate_finished_status_file_name_from_htme_file_name() {
         val htmeFileName = "$HTME_FOLDER/1990-01-31/myfilename.enc"
 
-        val actual = s3StatusFileWriter.getFinishedStatusKeyName(htmeFileName, HTME_FOLDER, STATUS_FOLDER)
+        val actual = s3StatusFileWriter.s3utils.getFinishedStatusKeyName(htmeFileName, HTME_FOLDER, STATUS_FOLDER)
         assertEquals("$STATUS_FOLDER/1990-01-31/myfilename.enc.finished", actual)
     }
 

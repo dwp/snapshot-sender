@@ -14,6 +14,7 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
 import org.springframework.batch.item.support.CompositeItemProcessor
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -54,7 +55,7 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<EncryptedStream, DecryptedStream> =
         CompositeItemProcessor<EncryptedStream, DecryptedStream>().apply {
-            setDelegates(listOf(datakeyProcessor, decryptionProcessor))
+            setDelegates(listOf(finishedFilterProcessor, datakeyProcessor, decryptionProcessor))
         }
 
     @Value("\${thread.count:10}")
@@ -64,6 +65,11 @@ class JobConfiguration {
     lateinit var itemReader: ItemReader<EncryptedStream>
 
     @Autowired
+    @Qualifier("filter")
+    lateinit var finishedFilterProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+
+    @Autowired
+    @Qualifier("datakey")
     lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired

@@ -10,7 +10,9 @@ add_container() {
 
         temp_file=$(mktemp)
         (
-            cat /etc/hosts | fgrep -v $container
+
+            regex="[[:space:]]${container}[[:space:]]"
+            cat /etc/hosts | egrep -v $regex
             echo ${host_entry} $container \# added by $FUNCNAME.
         ) > $temp_file
 
@@ -25,11 +27,8 @@ add_container() {
 
 }
 
-add_container dks-standalone-http
-add_container dks-standalone-https
-add_container mock-nifi
-add_container hbase
-add_container s3-dummy
-add_container zookeeper
+docker ps --format '{{.Names}}' | while read container; do
+    add_container $container
+done
 
 cat /etc/hosts

@@ -3,8 +3,10 @@ package app.batch
 import com.amazonaws.services.s3.AmazonS3
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-open class S3Utils {
+@Component
+class S3Utils {
 
     @Autowired
     lateinit var s3Client: AmazonS3

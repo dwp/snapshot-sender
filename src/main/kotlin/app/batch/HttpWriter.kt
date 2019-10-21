@@ -44,7 +44,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
             val fullCollection = item.fileName.substring(0 until (lastDashIndex))
             logger.info("Found collection: '${fullCollection}' from fileName of '${item.fullPath}'")
 
-            logger.info("Posting: '${item.fullPath}' to '$fullCollection'")
+            logger.info("Posting: '${item.fullPath}' to '$fullCollection'.")
             httpClientProvider.client().use {
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
