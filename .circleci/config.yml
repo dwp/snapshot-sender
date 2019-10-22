@@ -93,7 +93,10 @@ jobs:
             done
             docker-compose up s3-bucket-provision
             docker-compose up hbase-populate
-            sleep 40
+            while ! docker logs dks-standalone-https 2> /dev/null | grep HEALTHCHECK ; do
+                echo Waiting for dks-standalone-https.
+                sleep 2
+            done
             docker-compose up hbase-to-mongo-export
             docker logs dks-standalone-https
             # docker-compose up snapshot-sender
