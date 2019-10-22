@@ -79,7 +79,7 @@ destroy: ## Bring down the hbase and other services then delete all volumes
 	docker volume prune -f
 
 .PHONY: integration-tests
-integration-tests:
+integration-tests: ## Run the integration tests.
 	docker-compose build --no-cache sender-integration-test
 	docker-compose run sender-integration-test
 
