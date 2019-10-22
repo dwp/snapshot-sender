@@ -8,5 +8,5 @@ RUN ls -la *.jar
 
 COPY resources/snapshot-sender*.jks ./
 COPY resources/snapshot-sender*.crt ./
-
+RUN java -version
 ENTRYPOINT ["sh", "-c", "java -jar snapshot-sender-latest.jar \"$@\"", "--"]

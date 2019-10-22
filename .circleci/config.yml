@@ -101,7 +101,7 @@ jobs:
             docker-compose up hbase-to-mongo-export
             docker logs dks-standalone-https
             docker-compose up snapshot-sender
-            # docker-compose up sender-integration-test
+            docker-compose up sender-integration-test
 
   publish-github-release:
     docker:

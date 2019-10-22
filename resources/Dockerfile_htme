@@ -16,4 +16,4 @@ RUN chmod a+rwx -R /opt/hbase-to-mongo-export/ /opt/snapshot-sender/
 RUN pwd
 RUN java -version
 RUN ls -la
-ENTRYPOINT ["sh", "-c", "java -Dtopic.name=test -jar htme-latest.jar \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "java -jar htme-latest.jar \"$@\"", "--"]
