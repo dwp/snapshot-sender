@@ -92,7 +92,7 @@ jobs:
                 echo Waiting for s3-dummy.
                 sleep 2
             done
-
+            echo s3 up
             docker-compose up s3-bucket-provision
             docker-compose up hbase-populate
             docker-compose up hbase-to-mongo-export
