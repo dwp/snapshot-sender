@@ -9,14 +9,13 @@ import io.kotlintest.matchers.numerics.shouldBeGreaterThanOrEqual
 import io.kotlintest.matchers.string.shouldNotBeEmpty
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
+import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.http.client.fluent.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.w3c.dom.NodeList
 import org.xml.sax.InputSource
 import java.io.*
-import java.util.stream.Collectors
 import javax.xml.parsers.DocumentBuilderFactory
 
 class SnapshotSenderIntegrationTest : StringSpec() {
@@ -78,7 +77,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             //s3 out: test/status/db.core.addressDeclaration-000001.txt.bz2.enc.finished
 
             // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
-            // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
+            // ...should have content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
 
             val bucketResultsXml = getS3Content(bucketUri)
             val fileKeys = getXmlNodesByTagName("Key", bucketResultsXml)
@@ -105,7 +104,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val keyResult = getS3Content(fullPath)
                 logger.info("$keyResult file contains text '$keyResult'")
                 logger.info("Checking file '${pair.value}' contains '${pair.key}'")
-                //content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
                 keyResult.shouldBe("Finished ${pair.key}")
             }
         }
@@ -148,9 +146,9 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             actualNifiFiles.size.shouldBe(exporterKeysToMatchNifi.size)
         }
 
-        "Verify nifi output files are with valid json lines at expected timestamp with specified line count" {
+        "Verify nifi output files have a valid json per line at expected timestamp with specified line count" {
             logger.info("Check nifi outputs")
-            //     command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
+            // Verify "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
             //              -linecount 7"
             //              -timestamp 10 \
 
@@ -168,19 +166,52 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val expectedTimestamp = nifiTimestamps[index].toLong()
 
                 logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
+//<<<<<<< HEAD
+//
+//                val contents = BZip2CompressorInputStream(FileInputStream(fullPath)).use {
+//                    it.readBytes()
+//                }
+//
+//                val reader = BufferedReader(InputStreamReader(ByteArrayInputStream(contents)))
+//                val linesInFile = reader.lines().collect(Collectors.toList())
+//                linesInFile.size.shouldBe(expectedLineCount)
+//                linesInFile.forEach { line ->
+//                    val jsonLine = parseJson(line)
+//                    jsonLine["timestamp"].shouldBe(expectedTimestamp)
+//=======
+                logger.info("Looking for file $fullPath")
 
-                val contents = BZip2CompressorInputStream(FileInputStream(fullPath)).use {
-                    it.readBytes()
+                val streamIn = FileInputStream(fullPath)
+                val dataStream = CompressorStreamFactory()
+                    .createCompressorInputStream(CompressorStreamFactory.BZIP2, BufferedInputStream(streamIn))
+                val dataReader = BufferedReader(InputStreamReader(dataStream, "UTF-8"))
+
+                var linesDone = 0
+                do {
+                    val line = dataReader.readLine()
+                    println(line)
+                    if (line != null) {
+                        linesDone++
+                        logger.info("Checking line $linesDone/$expectedLineCount in $expectedFile")
+                        val jsonLine = parseJson(line)
+                        jsonLine["timestamp"].shouldBe(expectedTimestamp)
+                    }
+                    else if (linesDone == expectedLineCount) {
+                        logger.info("Skipping blank line at EOF as should be end of file: have processed $linesDone/$expectedLineCount in $expectedFile")
+                    }
+                    else {
+                        fail("Did not expect blank line before EOF: have only processed $linesDone/$expectedLineCount in $expectedFile")
+                    }
                 }
+                while (line != null)
 
-                val reader = BufferedReader(InputStreamReader(ByteArrayInputStream(contents)))
-                val linesInFile = reader.lines().collect(Collectors.toList())
-                linesInFile.size.shouldBe(expectedLineCount)
-                linesInFile.forEach { line ->
-                    val jsonLine = parseJson(line)
-                    jsonLine["timestamp"].shouldBe(expectedTimestamp)
+                if (linesDone != expectedLineCount) {
+                    fail("Did get expected line count: have only processed $linesDone/$expectedLineCount in $expectedFile")
+//>>>>>>> origin/DW-2513-send-files-once-integration-tests
                 }
             }
+
+            actualNifiFiles.size.shouldBe(nifiFileNames.size)
         }
     }
 
@@ -212,7 +243,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             .execute().returnContent().asString()
         logger.info("S3 results for '$s3FullPath':\n$results")
         if (results == null) {
-            throw RuntimeException("No results found for $s3FullPath")
+            fail("No s3 file found for $s3FullPath")
         }
         return results
     }
@@ -220,8 +251,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private fun getXmlNodesByTagName(keyName: String, sourceXmlString: String): NodeList {
         val xmlInput = InputSource(StringReader(sourceXmlString))
         val doc = dBuilder.parse(xmlInput)
-        val keys = doc.getElementsByTagName(keyName)
-            ?: throw RuntimeException("No elements found for '$keyName' in given xml")
+        val keys = doc.getElementsByTagName(keyName) ?: fail("No elements found for '$keyName' in given xml")
         logger.info("Found ${keys.length} keys with tag name '$keyName'")
         return keys
     }
@@ -232,15 +262,11 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
         val lastSlashIndex = fileName.lastIndexOf("/")
         if (lastSlashIndex < 0) {
-            val errorMessage = "Rejecting: '$fileName' as fileName does not contain '/' to find collection"
-            logger.error(errorMessage)
-            throw RuntimeException(errorMessage)
+            fail("Rejecting: '$fileName' as fileName does not contain '/' to find collection")
         }
         val lastDashIndex = fileName.lastIndexOf("-")
         if (lastDashIndex < 0) {
-            val errorMessage = "Rejecting: '$fileName' as fileName does not contain '-' to find collection"
-            logger.error(errorMessage)
-            throw RuntimeException(errorMessage)
+            fail("Rejecting: '$fileName' as fileName does not contain '-' to find collection")
         }
         val fullCollection = fileName.substring((lastSlashIndex + 1) until (lastDashIndex))
         logger.info("Found collection: '${fullCollection}' from fileName of '$fileName'")
