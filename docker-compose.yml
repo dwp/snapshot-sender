@@ -75,7 +75,7 @@ services:
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=/opt/snapshot-sender/data/ready
-      --data.key.service.url=http://dks-standalone-http:8080
+      --data.key.service.url=https://dks-standalone-https:8443
       --aws.region=eu-west-2
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
