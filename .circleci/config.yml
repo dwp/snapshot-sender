@@ -69,8 +69,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install openjdk-8-jdk
 
-            export DATA_KEY_SERVICE_URL=http://dks-standalone-http:8090
-            export DATA_KEY_SERVICE_URL_SSL=https://dks-standalone-https:8091
             export S3_BUCKET=dummy-bucket
             export S3_PREFIX_FOLDER=dummy-folder
             export AWS_DEFAULT_REGION=dummy-region
