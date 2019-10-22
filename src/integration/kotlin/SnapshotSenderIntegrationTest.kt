@@ -77,7 +77,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             //s3 out: test/status/db.core.addressDeclaration-000001.txt.bz2.enc.finished
 
             // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
-            // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
+            // ...should have content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
 
             val bucketResultsXml = getS3Content(bucketUri)
             val fileKeys = getXmlNodesByTagName("Key", bucketResultsXml)
@@ -104,7 +104,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val keyResult = getS3Content(fullPath)
                 logger.info("$keyResult file contains text '$keyResult'")
                 logger.info("Checking file '${pair.value}' contains '${pair.key}'")
-                //content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
                 keyResult.shouldBe("Finished ${pair.key}")
             }
         }
@@ -176,12 +175,15 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                         logger.info("Checking line $linesDone/$expectedLineCount in $expectedFile")
                         val jsonLine = parseJson(line)
                         jsonLine["timestamp"].shouldBe(expectedTimestamp)
-                    } else if (linesDone == expectedLineCount) {
+                    }
+                    else if (linesDone == expectedLineCount) {
                         logger.info("Skipping blank line at EOF as should be end of file: have processed $linesDone/$expectedLineCount in $expectedFile")
-                    } else {
+                    }
+                    else {
                         fail("Did not expect blank line before EOF: have only processed $linesDone/$expectedLineCount in $expectedFile")
                     }
-                } while (line != null)
+                }
+                while (line != null)
 
                 if (linesDone != expectedLineCount) {
                     fail("Did get expected line count: have only processed $linesDone/$expectedLineCount in $expectedFile")
@@ -226,8 +228,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private fun getXmlNodesByTagName(keyName: String, sourceXmlString: String): NodeList {
         val xmlInput = InputSource(StringReader(sourceXmlString))
         val doc = dBuilder.parse(xmlInput)
-        val keys = doc.getElementsByTagName(keyName)
-            ?: throw RuntimeException("No elements found for '$keyName' in given xml")
+        val keys = doc.getElementsByTagName(keyName) ?: fail("No elements found for '$keyName' in given xml")
         logger.info("Found ${keys.length} keys with tag name '$keyName'")
         return keys
     }
@@ -238,15 +239,11 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
         val lastSlashIndex = fileName.lastIndexOf("/")
         if (lastSlashIndex < 0) {
-            val errorMessage = "Rejecting: '$fileName' as fileName does not contain '/' to find collection"
-            logger.error(errorMessage)
-            throw RuntimeException(errorMessage)
+            fail("Rejecting: '$fileName' as fileName does not contain '/' to find collection")
         }
         val lastDashIndex = fileName.lastIndexOf("-")
         if (lastDashIndex < 0) {
-            val errorMessage = "Rejecting: '$fileName' as fileName does not contain '-' to find collection"
-            logger.error(errorMessage)
-            throw RuntimeException(errorMessage)
+            fail("Rejecting: '$fileName' as fileName does not contain '-' to find collection")
         }
         val fullCollection = fileName.substring((lastSlashIndex + 1) until (lastDashIndex))
         logger.info("Found collection: '${fullCollection}' from fileName of '$fileName'")
