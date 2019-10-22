@@ -130,9 +130,9 @@ workflows:
       # - integration-test:
       #     requires:
       #       - build
-      - publish-github-release:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+      # - publish-github-release:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: master
