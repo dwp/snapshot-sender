@@ -220,7 +220,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             .execute().returnContent().asString()
         logger.info("S3 results for '$s3FullPath':\n$results")
         if (results == null) {
-            throw RuntimeException("No results found for $s3FullPath")
+            fail("No s3 file found for $s3FullPath")
         }
         return results
     }
