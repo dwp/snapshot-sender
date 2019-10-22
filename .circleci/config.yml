@@ -98,6 +98,7 @@ jobs:
             docker-compose up hbase-to-mongo-export
             docker-compose up snapshot-sender
             sleep 30
+            set -euxo pipefail
             docker-compose up sender-integration-test
 
   publish-github-release:
