@@ -139,9 +139,9 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             actualNifiFiles.size.shouldBe(exporterKeysToMatchNifi.size)
         }
 
-        "Verify nifi output files are with valid json lines at expected timestamp with specified line count" {
+        "Verify nifi output files have a valid json per line at expected timestamp with specified line count" {
             logger.info("Check nifi outputs")
-            //     command: "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
+            // Verify "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
             //              -linecount 7"
             //              -timestamp 10 \
 
@@ -189,6 +189,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                     fail("Did get expected line count: have only processed $linesDone/$expectedLineCount in $expectedFile")
                 }
             }
+
+            actualNifiFiles.size.shouldBe(nifiFileNames.size)
         }
     }
 
