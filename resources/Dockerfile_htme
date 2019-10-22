@@ -14,5 +14,5 @@ COPY application-htme.properties ./
 COPY htme*.jks htme*.crt ./
 
 RUN chmod a+rwx -R /opt/hbase-to-mongo-export/ /opt/snapshot-sender/
-
+RUN java -version
 ENTRYPOINT ["sh", "-c", "java -Dtopic.name=test -jar htme-latest.jar \"$@\"", "--"]
