@@ -1,5 +1,3 @@
-
-
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import io.kotlintest.fail
@@ -11,6 +9,7 @@ import io.kotlintest.matchers.string.shouldNotBeEmpty
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
+import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.http.client.fluent.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -130,7 +129,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 .map { it.replace(".enc", "") }
                 .map {
                     println("it: '$it'.")
-                    //val collection2 = deriveCollection(it)
                     val collection = File(it).name
                             .replace(Regex("-.*$"), "")
                             .replace(Regex("^.*/"), "")
@@ -179,8 +177,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val linesInFile = reader.lines().collect(Collectors.toList())
                 linesInFile.size.shouldBe(expectedLineCount)
 
-                linesInFile.forEach {
-                    val jsonLine = parseJson(it)
+                linesInFile.forEach { line ->
+                    val jsonLine = parseJson(line)
                     jsonLine["timestamp"].shouldBe(expectedTimestamp)
                 }
             }
@@ -192,7 +190,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val stringBuilder = StringBuilder(line)
             return jsonParser.parse(stringBuilder) as JsonObject
         }
-        catch (ex:Exception) {
+        catch (ex: Exception) {
             fail("Could not parse json line: Got '$ex' from parsing '$line' ")
         }
     }

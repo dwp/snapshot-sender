@@ -82,6 +82,7 @@ jobs:
             docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java . ; \
             docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall . ; \
             cd -
+            docker build --tag dwp-gradle:latest --file resources/Dockerfile_gradle . ; \
             ./gradlew build
             docker-compose build hbase hbase-populate snapshot-sender sender-integration-test dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi s3-dummy s3-bucket-provision
             docker-compose up -d hbase dks-standalone-http dks-standalone-https mock-nifi s3-dummy

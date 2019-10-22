@@ -42,6 +42,7 @@ dependencies {
 	testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 	testImplementation("com.beust", "klaxon", "4.0.2")
 	// integration tests
+	testImplementation("org.apache.commons:commons-compress:1.5")
 	testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
 	testImplementation("org.apache.httpcomponents:fluent-hc:4.5.10")
 }
