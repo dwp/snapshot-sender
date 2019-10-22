@@ -1,3 +1,8 @@
+
+
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
+import io.kotlintest.fail
 import io.kotlintest.matchers.collections.shouldContain
 import io.kotlintest.matchers.collections.shouldContainAll
 import io.kotlintest.matchers.numerics.shouldBeGreaterThan
@@ -5,18 +10,15 @@ import io.kotlintest.matchers.numerics.shouldBeGreaterThanOrEqual
 import io.kotlintest.matchers.string.shouldNotBeEmpty
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 import org.apache.http.client.fluent.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.w3c.dom.NodeList
 import org.xml.sax.InputSource
-import java.io.File
-import java.io.StringReader
+import java.io.*
+import java.util.stream.Collectors
 import javax.xml.parsers.DocumentBuilderFactory
-
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.Parser
-import io.kotlintest.fail
 
 class SnapshotSenderIntegrationTest : StringSpec() {
 
@@ -121,13 +123,21 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val exporterKeys = allKeys.filter { it.startsWith(s3SourceExporterFolder) }
             logger.info("exporterKeys: $exporterKeys")
 
+
+            println("s3SourceExporterFolder: '$s3SourceExporterFolder'.")
             val exporterKeysToMatchNifi = exporterKeys
                 .map { it.replace(s3SourceExporterFolder, "") }
                 .map { it.replace(".enc", "") }
                 .map {
-                    val collection = deriveCollection(it)
-                    "$nifiRootFolder/$collection$it"
+                    println("it: '$it'.")
+                    //val collection2 = deriveCollection(it)
+                    val collection = File(it).name
+                            .replace(Regex("-.*$"), "")
+                            .replace(Regex("^.*/"), "")
+                    println("collection: '$collection'.")
+                    "$nifiRootFolder/$collection/$it"
                 }
+
             logger.info("exporterKeysToMatchNifi: $exporterKeysToMatchNifi")
 
             val actualNifiFiles = File(nifiRootFolder).walkTopDown()
@@ -161,8 +171,12 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
                 logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
                 logger.info("Looking for file $fullPath")
-                val linesInFile = File(fullPath).readLines(Charsets.US_ASCII)
-                logger.info("Loaded file, got: $linesInFile")
+
+                val inputStream = BufferedInputStream(BZip2CompressorInputStream(FileInputStream(fullPath)))
+                val contents = inputStream.readBytes()
+                val reader = BufferedReader(InputStreamReader(ByteArrayInputStream(contents)))
+                logger.info("Looking for file $fullPath")
+                val linesInFile = reader.lines().collect(Collectors.toList())
                 linesInFile.size.shouldBe(expectedLineCount)
 
                 linesInFile.forEach {

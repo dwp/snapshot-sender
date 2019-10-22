@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
@@ -14,6 +15,9 @@ import java.io.InputStream
 @Component
 @Profile("S3SourceData")
 class S3StatusFileWriter(val s3utils: S3Utils) {
+
+    @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
+    lateinit var s3BucketName: String
 
     fun writeStatus(originalS3Key: String) {
 
@@ -33,7 +37,7 @@ class S3StatusFileWriter(val s3utils: S3Utils) {
             metadata.contentLength = payloadBytes.size.toLong()
             metadata.addUserMetadata("x-amz-meta-title", statusFileKey)
             metadata.addUserMetadata("original-s3-filename", originalS3Key)
-            val request = PutObjectRequest(s3utils.s3BucketName, statusFileKey, payloadInputStream, metadata)
+            val request = PutObjectRequest(s3BucketName, statusFileKey, payloadInputStream, metadata)
 
             s3utils.s3Client.putObject(request)
             logger.info("Written status file '$statusFileKey' for '$originalS3Key'")

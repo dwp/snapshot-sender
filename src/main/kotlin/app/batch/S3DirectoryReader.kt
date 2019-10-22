@@ -6,24 +6,29 @@ import com.amazonaws.services.s3.*
 import com.amazonaws.services.s3.model.*
 import org.slf4j.*
 import org.springframework.batch.item.*
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.*
 import org.springframework.stereotype.*
 
 @Component
 @Profile("S3SourceData")
-class S3DirectoryReader(val s3utils: S3Utils) : ItemReader<EncryptedStream> {
+class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3Utils) : ItemReader<EncryptedStream> {
 
     private var iterator: ListIterator<S3ObjectSummary>? = null
     private val IV_KEY = "iv"
     private val DATAENCRYPTIONKEYID_KEY = "dataKeyEncryptionKeyId"
     private val CIPHERTEXT_KEY = "cipherText"
 
+    @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
+    lateinit var s3BucketName: String
+
+
     override fun read(): EncryptedStream? {
-        val iterator = getS3ObjectSummariesIterator(s3utils.s3Client, s3utils.s3BucketName)
+        val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
         return if (iterator.hasNext()) {
             val next = iterator.next()
-            val inputStream = getS3ObjectInputStream(next, s3utils.s3Client, s3utils.s3BucketName)
-            val metadata = getS3ObjectMetadata(next, s3utils.s3Client, s3utils.s3BucketName)
+            val inputStream = getS3ObjectInputStream(next, s3Client, s3BucketName)
+            val metadata = getS3ObjectMetadata(next, s3Client, s3BucketName)
             logger.info("Returning s3 object for '${next.key}' with metadata '$metadata'")
             encryptedStream(metadata, next.key, inputStream)
         } else {
@@ -39,7 +44,7 @@ class S3DirectoryReader(val s3utils: S3Utils) : ItemReader<EncryptedStream> {
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            iterator = s3Client.listObjectsV2(bucketName, s3utils.prefixFolder()).objectSummaries.listIterator()
+            iterator = s3Client.listObjectsV2(bucketName, s3Utils.s3PrefixFolder).objectSummaries.listIterator()
         }
         return iterator!!
     }

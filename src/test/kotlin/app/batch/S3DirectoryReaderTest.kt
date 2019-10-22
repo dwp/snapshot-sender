@@ -15,7 +15,6 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.verifyNoMoreInteractions
 import org.mockito.Mockito
-import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -49,7 +48,6 @@ class S3DirectoryReaderTest {
     private val KEY2 = "exporter-output/job01/file2"
     private val KEY2_FINISHED = "sender-status/job01/file2.finished"
     private val KEY3 = "exporter-output/job01/file3"
-    private val KEY3_FINISHED = "sender-status/job01/file3.finished"
     private val IV = "iv"
     private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
     private val CIPHER_TEXT = "cipherText"
@@ -122,16 +120,6 @@ class S3DirectoryReaderTest {
     }
 
     @Test
-    fun should_calculate_finished_status_file_name_from_htme_file_name() {
-        val htmeFileName = "business-data-export/JobNumber/1990-01-31/myfilename.00001.txt.bz2.enc"
-        val htmeRootFolder = "business-data-export"
-        val statusFolder = "business-sender-status"
-
-        val actual = s3DirectorReader.s3utils.getFinishedStatusKeyName(htmeFileName, htmeRootFolder, statusFolder)
-        assertEquals("business-sender-status/JobNumber/1990-01-31/myfilename.00001.txt.bz2.enc.finished", actual)
-    }
-
-    @Test
     fun should_read_a_file_in_a_given_prefix_if_not_already_processed() {
         //given one object on results
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
@@ -148,7 +136,7 @@ class S3DirectoryReaderTest {
 
         //then
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
+//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)
@@ -179,8 +167,8 @@ class S3DirectoryReaderTest {
 
         //then
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)
+//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
+//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY2)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
@@ -224,7 +212,7 @@ class S3DirectoryReaderTest {
         }
 
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
+//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)

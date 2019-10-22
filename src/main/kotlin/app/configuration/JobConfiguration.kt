@@ -59,7 +59,7 @@ class JobConfiguration {
         }
 
     @Value("\${thread.count:10}")
-    lateinit var threadCount: String;
+    lateinit var threadCount: String
 
     @Autowired
     lateinit var itemReader: ItemReader<EncryptedStream>

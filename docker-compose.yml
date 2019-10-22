@@ -85,6 +85,9 @@ services:
     environment:
       topic.name: "db.core.addressDeclaration"
 
+
+  #httpWriter,batchRun,secureHttpClient,S3SourceData,dummyS3Client
+
   snapshot-sender:
     image: snapshot-sender
     build:

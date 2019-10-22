@@ -7,4 +7,5 @@ interface KeyService {
 
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     fun decryptKey(encryptionKeyId: String, encryptedKey: String): String
+    fun clearCache()
 }

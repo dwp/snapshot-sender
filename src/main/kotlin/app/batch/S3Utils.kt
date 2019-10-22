@@ -3,19 +3,27 @@ package app.batch
 import com.amazonaws.services.s3.AmazonS3
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 
 @Component
 class S3Utils {
 
     @Autowired
+    lateinit var env: Environment
+
+    @Autowired
     lateinit var s3Client: AmazonS3
 
-    @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
-    lateinit var s3BucketName: String
 
-    @Value("\${s3.prefix.folder}") //where the sender searches for work to do i.e. "business-data-export/JobNumber/1990-01-31"
-    lateinit var s3PrefixFolder: String
+    val s3PrefixFolder: String by lazy {
+        val prefix = env.getProperty("s3.prefix.folder")!!
+        if (prefix.endsWith("/")) {
+            prefix
+        } else {
+            "$prefix/"
+        }
+    }
 
     @Value("\${s3.status.folder}") //where the sender records its progress i.e. "business-sender-status"
     lateinit var s3StatusFolder: String
@@ -32,12 +40,12 @@ class S3Utils {
         return "$senderKey.finished"
     }
 
-    fun prefixFolder(): String {
-        return if (s3PrefixFolder.endsWith("/")) {
-            s3PrefixFolder
-        }
-        else {
-            "$s3PrefixFolder/"
-        }
-    }
+//    fun prefixFolder(): String {
+//        return if (s3PrefixFolder.endsWith("/")) {
+//            s3PrefixFolder
+//        }
+//        else {
+//            "$s3PrefixFolder/"
+//        }
+//    }
 }

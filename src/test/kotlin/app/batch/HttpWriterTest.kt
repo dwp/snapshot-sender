@@ -33,7 +33,7 @@ import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("httpDataKeyService", "unitTest", "httpWriter")
-@SpringBootTest()
+@SpringBootTest(classes = [HttpWriter::class])
 @TestPropertySource(properties = [
     "data.key.service.url=datakey.service:8090",
     "nifi.url=nifi:8091/dummy",
@@ -50,7 +50,7 @@ class HttpWriterTest {
     @Autowired
     private lateinit var httpWriter: HttpWriter
 
-    @Autowired
+    @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
 
     val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
@@ -79,7 +79,7 @@ class HttpWriterTest {
         given(httpResponse.statusLine).willReturn((statusLine))
 
         //when
-        httpWriter.write(mutableListOf(decryptedStream));
+        httpWriter.write(mutableListOf(decryptedStream))
 
         //then
         val httpCaptor = argumentCaptor<HttpPost>()
@@ -197,7 +197,4 @@ class HttpWriterTest {
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
-
-    @MockBean
-    private lateinit var finishedFilterProcessor: FinishedFilterProcessor
 }

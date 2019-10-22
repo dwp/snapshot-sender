@@ -3,10 +3,9 @@ package app.batch
 import app.domain.EncryptedStream
 import app.domain.EncryptionMetadata
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3Client
 import com.nhaarman.mockitokotlin2.given
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertNull
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.slf4j.Logger
@@ -59,8 +58,7 @@ class FinishedFilterProcessorTest {
     }
 
     @Test
-    fun testProcessedFileIsProcessed() {
-        logger.info("hello")
+    fun testProcessedFileIsNotProcessed() {
         val initializationVector = "initializationVector"
         val datakeyEncryptionKeyId = "datakeyEncryptionKeyId"
         val cipherText = "cipherText"
