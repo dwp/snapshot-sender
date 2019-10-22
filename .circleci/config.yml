@@ -69,8 +69,8 @@ jobs:
             sudo apt-get update
             sudo apt-get install openjdk-8-jdk
 
-            export DATA_KEY_SERVICE_URL=http://localhost:8090
-            export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
+            export DATA_KEY_SERVICE_URL=http://dks-standalone-http:8090
+            export DATA_KEY_SERVICE_URL_SSL=https://dks-standalone-https:8091
             export S3_BUCKET=dummy-bucket
             export S3_PREFIX_FOLDER=dummy-folder
             export AWS_DEFAULT_REGION=dummy-region
@@ -96,10 +96,8 @@ jobs:
             docker-compose up s3-bucket-provision
             docker-compose up hbase-populate
             docker-compose up hbase-to-mongo-export
-            docker-compose up snapshot-sender
-            sleep 30
-            set -euxo pipefail
-            docker-compose up sender-integration-test
+            # docker-compose up snapshot-sender
+            # docker-compose up sender-integration-test
 
   publish-github-release:
     docker:
