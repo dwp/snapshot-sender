@@ -1,3 +1,4 @@
+
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import io.kotlintest.fail
@@ -9,7 +10,6 @@ import io.kotlintest.matchers.string.shouldNotBeEmpty
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
-import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.http.client.fluent.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -168,15 +168,14 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val expectedTimestamp = nifiTimestamps[index].toLong()
 
                 logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
-                logger.info("Looking for file $fullPath")
 
-                val inputStream = BufferedInputStream(BZip2CompressorInputStream(FileInputStream(fullPath)))
-                val contents = inputStream.readBytes()
+                val contents = BZip2CompressorInputStream(FileInputStream(fullPath)).use {
+                    it.readBytes()
+                }
+
                 val reader = BufferedReader(InputStreamReader(ByteArrayInputStream(contents)))
-                logger.info("Looking for file $fullPath")
                 val linesInFile = reader.lines().collect(Collectors.toList())
                 linesInFile.size.shouldBe(expectedLineCount)
-
                 linesInFile.forEach { line ->
                     val jsonLine = parseJson(line)
                     jsonLine["timestamp"].shouldBe(expectedTimestamp)
