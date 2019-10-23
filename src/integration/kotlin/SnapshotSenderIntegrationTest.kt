@@ -32,9 +32,9 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private val nifiRootFolder = System.getenv("NIFI_ROOT_FOLDER") ?: "/data/output"
 
     //matched triplets of file name, timestamp and line count
-    private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV") ?: "db.core.addressDeclaration-000001.txt.bz2"
-    private val nifiLineCountsCSV = System.getenv("NIFI_LINE_COUNTS_CSV") ?: "7"
-    private val nifiTimestampsCSV = System.getenv("NIFI_TIME_STAMPS_CSV") ?: "10"
+    private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV") ?: "db.core.addressDeclaration-000001.txt.bz2,db.quartz.claimantEvent-000001.txt.bz2"
+    private val nifiLineCountsCSV = System.getenv("NIFI_LINE_COUNTS_CSV") ?: "7,1"
+    private val nifiTimestampsCSV = System.getenv("NIFI_TIME_STAMPS_CSV") ?: "10,1"
 
     private val bucketUri = "$s3ServiceEndpoint/$s3Bucket"
     private val s3SourceExporterFolder = s3PrefixFolder
@@ -125,13 +125,14 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val exporterKeysToMatchNifi = exporterKeys
                 .map { it.replace(s3SourceExporterFolder, "") }
                 .map { it.replace(".enc", "") }
+                .map { it.replace(Regex("^/"), "") }
                 .map {
-                    println("it: '$it'.")
-                    val collection = File(it).name
+                    Pair(File(it).name
                             .replace(Regex("-.*$"), "")
-                            .replace(Regex("^.*/"), "")
-                    println("collection: '$collection'.")
-                    "$nifiRootFolder/$collection/$it"
+                            .replace(Regex("^.*/"), ""), it)
+                }
+                .map {(collection, filename) ->
+                        "$nifiRootFolder/$collection/$filename"
                 }
 
             logger.info("exporterKeysToMatchNifi: $exporterKeysToMatchNifi")
@@ -166,19 +167,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 val expectedTimestamp = nifiTimestamps[index].toLong()
 
                 logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
-//<<<<<<< HEAD
-//
-//                val contents = BZip2CompressorInputStream(FileInputStream(fullPath)).use {
-//                    it.readBytes()
-//                }
-//
-//                val reader = BufferedReader(InputStreamReader(ByteArrayInputStream(contents)))
-//                val linesInFile = reader.lines().collect(Collectors.toList())
-//                linesInFile.size.shouldBe(expectedLineCount)
-//                linesInFile.forEach { line ->
-//                    val jsonLine = parseJson(line)
-//                    jsonLine["timestamp"].shouldBe(expectedTimestamp)
-//=======
                 logger.info("Looking for file $fullPath")
 
                 val streamIn = FileInputStream(fullPath)
@@ -207,7 +195,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
                 if (linesDone != expectedLineCount) {
                     fail("Did get expected line count: have only processed $linesDone/$expectedLineCount in $expectedFile")
-//>>>>>>> origin/DW-2513-send-files-once-integration-tests
                 }
             }
 

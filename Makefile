@@ -55,11 +55,16 @@ up: ## Run the ecosystem of containers
 		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
 		echo "Waiting for services"; \
 		while ! docker logs s3-dummy 2> /dev/null | grep -q $(S3_READY_REGEX); do \
-		echo "Waiting for s3-dummy..."; \
-		sleep 2; \
+			echo "Waiting for s3-dummy..."; \
+			sleep 2; \
+		done; \
+		while ! docker logs dks-standalone-https 2> /dev/null | grep HEALTHCHECK ; do \
+			echo Waiting for dks-standalone-https.; \
+			sleep 2; \
 		done; \
 		docker-compose up hbase-populate s3-bucket-provision; \
 		docker-compose up hbase-to-mongo-export; \
+		docker-compose up hbase-to-mongo-export-claimant-event; \
 		docker-compose up snapshot-sender; \
 	}
 
