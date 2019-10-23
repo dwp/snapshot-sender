@@ -133,7 +133,7 @@ class S3StatusFileWriterTest {
         val actualMetadata = awsCaptor.firstValue.metadata
         assertEquals("text/plain", actualMetadata.contentType)
         assertEquals(39, actualMetadata.contentLength)
-        assertEquals("sender-status/myfilename.enc.finished", actualMetadata.userMetadata.get("x-amz-meta-title"))
-        assertEquals("exporter-output/myfilename.enc", actualMetadata.userMetadata.get("original-s3-filename"))
+        assertEquals("sender-status/myfilename.enc.finished", actualMetadata.userMetadata["x-amz-meta-title"])
+        assertEquals("exporter-output/myfilename.enc", actualMetadata.userMetadata["original-s3-filename"])
     }
 }

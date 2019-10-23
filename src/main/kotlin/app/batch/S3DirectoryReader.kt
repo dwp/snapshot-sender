@@ -59,9 +59,9 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
 
     private fun encryptedStream(metadata: Map<String, String>, filePath: String, inputStream: S3ObjectInputStream): EncryptedStream {
         try {
-            val iv = metadata.get(IV_KEY)!!
-            val dataKeyEncryptionKey = metadata.get(DATAENCRYPTIONKEYID_KEY)!!
-            val cipherText = metadata.get(CIPHERTEXT_KEY)!!
+            val iv = metadata[IV_KEY]!!
+            val dataKeyEncryptionKey = metadata[DATAENCRYPTIONKEYID_KEY]!!
+            val cipherText = metadata[CIPHERTEXT_KEY]!!
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, cipherText, "")
             val fileSplitArr = filePath.split("/")
             val fileName = fileSplitArr[fileSplitArr.size - 1]

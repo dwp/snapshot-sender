@@ -233,8 +233,8 @@ class S3DirectoryReaderTest {
     }
 
     private fun assertObjectMetadata(objectMetadata: ObjectMetadata, actualMetadata1: EncryptionMetadata?) {
-        assertEquals(objectMetadata.userMetadata.get(IV), actualMetadata1?.initializationVector)
-        assertEquals(objectMetadata.userMetadata.get(DATAENCRYPTION_KEY), actualMetadata1?.datakeyEncryptionKeyId)
-        assertEquals(objectMetadata.userMetadata.get(CIPHER_TEXT), actualMetadata1?.cipherText)
+        assertEquals(objectMetadata.userMetadata[IV], actualMetadata1?.initializationVector)
+        assertEquals(objectMetadata.userMetadata[DATAENCRYPTION_KEY], actualMetadata1?.datakeyEncryptionKeyId)
+        assertEquals(objectMetadata.userMetadata[CIPHER_TEXT], actualMetadata1?.cipherText)
     }
 }

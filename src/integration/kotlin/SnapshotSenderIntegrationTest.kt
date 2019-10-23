@@ -120,17 +120,19 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             logger.info("exporterKeys: $exporterKeys")
 
             val exporterKeysToMatchNifi = exporterKeys
-                .map { it.replace(s3SourceExporterFolder, "") }
-                .map { it.replace(".enc", "") }
-                .map { it.replace(Regex("^/"), "") }
-                .map {
-                    Pair(File(it).name
-                            .replace(Regex("-.*$"), "")
-                            .replace(Regex("^.*/"), ""), it)
-                }
-                .map {(collection, filename) ->
+                    .asSequence()
+                    .map { it.replace(s3SourceExporterFolder, "") }
+                    .map { it.replace(".enc", "") }
+                    .map { it.replace(Regex("^/"), "") }
+                    .map {
+                        Pair(File(it).name
+                                .replace(Regex("-.*$"), "")
+                                .replace(Regex("^.*/"), ""), it)
+                    }
+                    .map {(collection, filename) ->
                         "$nifiRootFolder/$collection/$filename"
-                }
+                    }
+                    .toList()
 
             logger.info("exporterKeysToMatchNifi: $exporterKeysToMatchNifi")
 
