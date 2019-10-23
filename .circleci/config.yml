@@ -134,14 +134,13 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      # - build
-      - integration-test
-      # - integration-test:
-      #     requires:
-      #       - build
-      # - publish-github-release:
-      #     requires:
-      #       - build
-      #     filters:
-      #       branches:
-      #         only: master
+      - build
+      - integration-test:
+          requires:
+            - build
+      - publish-github-release:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
