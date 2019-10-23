@@ -1,4 +1,3 @@
-
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import io.kotlintest.fail
@@ -120,8 +119,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val exporterKeys = allKeys.filter { it.startsWith(s3SourceExporterFolder) }
             logger.info("exporterKeys: $exporterKeys")
 
-
-            println("s3SourceExporterFolder: '$s3SourceExporterFolder'.")
             val exporterKeysToMatchNifi = exporterKeys
                 .map { it.replace(s3SourceExporterFolder, "") }
                 .map { it.replace(".enc", "") }
