@@ -5,7 +5,4 @@ WORKDIR /opt/test
 
 COPY integration_test.py ./
 
-RUN ls ./
-RUN which python3
-RUN echo $PATH
 ENTRYPOINT ["sh", "-c", "python integration_test.py \"$@\"", "--"]

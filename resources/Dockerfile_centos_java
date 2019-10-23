@@ -1,6 +1,5 @@
 FROM centos:latest
 
-RUN echo hello
 RUN mkdir -p /opt/snapshot-sender/data
 
 RUN yum -y upgrade

@@ -1,5 +1,5 @@
 FROM python:3.7.3-stretch
-RUN echo HELLO
+
 ENV SERVICE_USER=dataworks
 ENV SERVICE_USER_HOME=/home/${SERVICE_USER}
 ENV INSTALL_DIR=/opt/snapshot-sender
