@@ -136,7 +136,6 @@ class S3DirectoryReaderTest {
 
         //then
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)
@@ -167,8 +166,6 @@ class S3DirectoryReaderTest {
 
         //then
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
-//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY2)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
@@ -212,7 +209,6 @@ class S3DirectoryReaderTest {
         }
 
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-//        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)

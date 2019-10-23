@@ -39,13 +39,4 @@ class S3Utils {
         val senderKey = htmeExportKey.replace(htmeRootFolder, statusFolder)
         return "$senderKey.finished"
     }
-
-//    fun prefixFolder(): String {
-//        return if (s3PrefixFolder.endsWith("/")) {
-//            s3PrefixFolder
-//        }
-//        else {
-//            "$s3PrefixFolder/"
-//        }
-//    }
 }
