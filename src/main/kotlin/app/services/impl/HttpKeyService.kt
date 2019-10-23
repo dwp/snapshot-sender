@@ -83,7 +83,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
         }
     }
 
-    fun clearCache() {
+    override fun clearCache() {
         this.decryptedKeyCache = mutableMapOf()
     }
 

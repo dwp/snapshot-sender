@@ -33,7 +33,7 @@ import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("httpDataKeyService", "unitTest", "httpWriter")
-@SpringBootTest
+@SpringBootTest(classes = [HttpWriter::class])
 @TestPropertySource(properties = [
     "data.key.service.url=datakey.service:8090",
     "nifi.url=nifi:8091/dummy",
@@ -50,7 +50,7 @@ class HttpWriterTest {
     @Autowired
     private lateinit var httpWriter: HttpWriter
 
-    @Autowired
+    @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
 
     val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
@@ -79,7 +79,7 @@ class HttpWriterTest {
         given(httpResponse.statusLine).willReturn((statusLine))
 
         //when
-        httpWriter.write(mutableListOf(decryptedStream));
+        httpWriter.write(mutableListOf(decryptedStream))
 
         //then
         val httpCaptor = argumentCaptor<HttpPost>()
@@ -97,7 +97,7 @@ class HttpWriterTest {
         assertEquals("Writing: '1' items", formattedMessages[0])
         assertEquals("Checking: 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc'", formattedMessages[1])
         assertEquals("Found collection: 'db.core.addressDeclaration' from fileName of 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc'", formattedMessages[2])
-        assertEquals("Posting: 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc' to 'db.core.addressDeclaration'", formattedMessages[3])
+        assertEquals("Posting: 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc' to 'db.core.addressDeclaration'.", formattedMessages[3])
         assertEquals("Successfully posted 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc': response '200'", formattedMessages[4])
     }
 
@@ -164,7 +164,7 @@ class HttpWriterTest {
         assertEquals("Writing: '1' items", formattedMessages[0])
         assertEquals("Checking: 'exporter-output/job01/db.a.b-01.enc'", formattedMessages[1])
         assertEquals("Found collection: 'db.a.b' from fileName of 'exporter-output/job01/db.a.b-01.enc'", formattedMessages[2])
-        assertEquals("Posting: 'exporter-output/job01/db.a.b-01.enc' to 'db.a.b'", formattedMessages[3])
+        assertEquals("Posting: 'exporter-output/job01/db.a.b-01.enc' to 'db.a.b'.", formattedMessages[3])
         assertEquals("Failed to post 'exporter-output/job01/db.a.b-01.enc': post returned status code 400", formattedMessages[4])
     }
 

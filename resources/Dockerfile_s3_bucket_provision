@@ -3,7 +3,7 @@ FROM dwp-python-preinstall:latest
 COPY s3dummy/*.sh ./
 
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
+
 USER $SERVICE_USER
 
 ENTRYPOINT ["./provision-s3.sh"]

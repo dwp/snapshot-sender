@@ -15,7 +15,6 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.verifyNoMoreInteractions
 import org.mockito.Mockito
-import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -49,7 +48,6 @@ class S3DirectoryReaderTest {
     private val KEY2 = "exporter-output/job01/file2"
     private val KEY2_FINISHED = "sender-status/job01/file2.finished"
     private val KEY3 = "exporter-output/job01/file3"
-    private val KEY3_FINISHED = "sender-status/job01/file3.finished"
     private val IV = "iv"
     private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
     private val CIPHER_TEXT = "cipherText"
@@ -122,16 +120,6 @@ class S3DirectoryReaderTest {
     }
 
     @Test
-    fun should_calculate_finished_status_file_name_from_htme_file_name() {
-        val htmeFileName = "business-data-export/JobNumber/1990-01-31/myfilename.00001.txt.bz2.enc"
-        val htmeRootFolder = "business-data-export"
-        val statusFolder = "business-sender-status"
-
-        val actual = s3DirectorReader.getFinishedStatusKeyName(htmeFileName, htmeRootFolder, statusFolder)
-        assertEquals("business-sender-status/JobNumber/1990-01-31/myfilename.00001.txt.bz2.enc.finished", actual)
-    }
-
-    @Test
     fun should_read_a_file_in_a_given_prefix_if_not_already_processed() {
         //given one object on results
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
@@ -148,7 +136,6 @@ class S3DirectoryReaderTest {
 
         //then
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)
@@ -179,8 +166,6 @@ class S3DirectoryReaderTest {
 
         //then
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY2)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
@@ -224,62 +209,9 @@ class S3DirectoryReaderTest {
         }
 
         verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)
         verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
         verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)
-    }
-
-    @Test
-    fun should_skip_file_when_previously_processed() {
-        //given three results
-        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
-        listObjectsV2Result.objectSummaries.add(s3ObjectSummary2)
-        listObjectsV2Result.objectSummaries.add(s3ObjectSummary3)
-
-        //and given the second result was already processed
-        given(mockS3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)).willReturn(listObjectsV2Result)
-        given(mockS3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
-        given(mockS3Client.doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)).willReturn(true) //to be skipped inside read() method
-        given(mockS3Client.doesObjectExist(BUCKET_NAME1, KEY3_FINISHED)).willReturn(false)
-        given(mockS3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
-        given(mockS3Client.getObject(BUCKET_NAME1, KEY2)).willReturn(s3Object2)
-        given(mockS3Client.getObject(BUCKET_NAME1, KEY3)).willReturn(s3Object3)
-        given(mockS3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
-        given(mockS3Client.getObjectMetadata(BUCKET_NAME1, KEY2)).willReturn(objectMetadata2)
-        given(mockS3Client.getObjectMetadata(BUCKET_NAME1, KEY3)).willReturn(objectMetadata3)
-
-        //when read
-        val encryptedStreamRead1Result1 = s3DirectorReader.read()
-        val encryptedStreamRead2Result3 = s3DirectorReader.read()
-
-        //then the two non-processed objects are now processed and the already-done one is not
-        verify(mockS3Client, once()).listObjectsV2(BUCKET_NAME1, S3_PREFIX_WITH_SLASH)
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY1_FINISHED) //checked
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY2_FINISHED) //checked
-        verify(mockS3Client, once()).doesObjectExist(BUCKET_NAME1, KEY3_FINISHED) //checked
-        verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, never()).getObject(BUCKET_NAME1, KEY2) //skipped
-        verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY3)
-        verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, never()).getObjectMetadata(BUCKET_NAME1, KEY2) //skipped
-        verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY3)
-        verifyNoMoreInteractions(mockS3Client)
-
-        val actualMetadata1 = encryptedStreamRead1Result1?.encryptionMetadata
-        val actualStream1 = encryptedStreamRead1Result1?.inputStream
-
-        val actualMetadata3 = encryptedStreamRead2Result3?.encryptionMetadata
-        val actualStream3 = encryptedStreamRead2Result3?.inputStream
-
-        //then compare the expected and actual metadata
-        assertObjectMetadata(objectMetadata1, actualMetadata1)
-        assertObjectContent(OBJECT_CONTENT1, actualStream1)
-        assertFileNameEndsWith(KEY1, encryptedStreamRead1Result1!!)
-
-        assertObjectMetadata(objectMetadata3, actualMetadata3)
-        assertObjectContent(OBJECT_CONTENT3, actualStream3)
-        assertFileNameEndsWith(KEY3, encryptedStreamRead2Result3!!)
     }
 
     private fun assertFileNameEndsWith(key: String, encryptedStream: EncryptedStream) {
@@ -301,8 +233,8 @@ class S3DirectoryReaderTest {
     }
 
     private fun assertObjectMetadata(objectMetadata: ObjectMetadata, actualMetadata1: EncryptionMetadata?) {
-        assertEquals(objectMetadata.userMetadata.get(IV), actualMetadata1?.initializationVector)
-        assertEquals(objectMetadata.userMetadata.get(DATAENCRYPTION_KEY), actualMetadata1?.datakeyEncryptionKeyId)
-        assertEquals(objectMetadata.userMetadata.get(CIPHER_TEXT), actualMetadata1?.cipherText)
+        assertEquals(objectMetadata.userMetadata[IV], actualMetadata1?.initializationVector)
+        assertEquals(objectMetadata.userMetadata[DATAENCRYPTION_KEY], actualMetadata1?.datakeyEncryptionKeyId)
+        assertEquals(objectMetadata.userMetadata[CIPHER_TEXT], actualMetadata1?.cipherText)
     }
 }

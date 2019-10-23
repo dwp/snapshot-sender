@@ -70,20 +70,70 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
-      --hbase.zookeeper.quorum=hbase
-      --data.table.name=ucfs-data
-      --column.family=topic
-      --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=/opt/snapshot-sender/data/ready
-      --data.key.service.url=https://dks-standalone-https:8443
       --aws.region=eu-west-2
+      --column.family=topic
+      --compress.output=true
+      --data.key.service.url=https://dks-standalone-https:8443
+      --data.ready.flag.location=/opt/snapshot-sender/data/ready
+      --data.table.name=ucfs-data
+      --encrypt.output=true
+      --hbase.zookeeper.quorum=hbase
+      --identity.key.password=changeit
+      --identity.keystore=htme-keystore.jks
+      --identity.store.alias=cid
+      --identity.store.password=changeit
+      --logging.level.root=INFO
+      --output.batch.size.max.bytes=10000
+      --s3.access.key=DummyKey
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
-      --s3.service.endpoint=http://s3-dummy:4572
-      --s3.access.key=DummyKey
       --s3.secret.key=DummySecret
+      --s3.service.endpoint=http://s3-dummy:4572
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient
+      --topic.name=db.core.addressDeclaration
+      --trust.keystore=htme-truststore.jks
+      --trust.store.password=changeit
     environment:
       topic.name: "db.core.addressDeclaration"
+
+  hbase-to-mongo-export-claimant-event:
+    image: hbase-to-mongo-export
+    build:
+      context: resources
+      dockerfile: Dockerfile_htme
+    container_name: hbase-to-mongo-export-claimant-event
+    depends_on:
+      - hbase
+      - dks-standalone-https
+      - s3-dummy
+    volumes:
+      - shared-volume:/opt/snapshot-sender/data
+    command: >-
+      --aws.region=eu-west-2
+      --column.family=topic
+      --compress.output=true
+      --data.key.service.url=https://dks-standalone-https:8443
+      --data.ready.flag.location=/opt/snapshot-sender/data/ready
+      --data.table.name=ucfs-data
+      --encrypt.output=true
+      --hbase.zookeeper.quorum=hbase
+      --identity.key.password=changeit
+      --identity.keystore=htme-keystore.jks
+      --identity.store.alias=cid
+      --identity.store.password=changeit
+      --logging.level.root=INFO
+      --output.batch.size.max.bytes=10000
+      --s3.access.key=DummyKey
+      --s3.bucket=demobucket
+      --s3.prefix.folder=test/output
+      --s3.secret.key=DummySecret
+      --s3.service.endpoint=http://s3-dummy:4572
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient
+      --topic.name=db.quartz.claimantEvent
+      --trust.keystore=htme-truststore.jks
+      --trust.store.password=changeit
+    environment:
+      topic.name: "db.quartz.claimantEvent"
 
   snapshot-sender:
     image: snapshot-sender
@@ -173,9 +223,9 @@ services:
       S3_STATUS_FOLDER: "status"
       S3_SERVICE_ENDPOINT: "http://s3-dummy:4572"
       NIFI_ROOT_FOLDER: "/data/output" # see the shared-volume above
-      NIFI_FILE_NAMES_CSV: "db.core.addressDeclaration-000001.txt.bz2,db.core.addressDeclaration-000001.txt.bz2"
-      NIFI_TIME_STAMPS_CSV: "10,10"
-      NIFI_LINE_COUNTS_CSV: "7,7"
+      NIFI_FILE_NAMES_CSV: "db.core.addressDeclaration-000001.txt.bz2,db.quartz.claimantEvent-000001.txt.bz2"
+      NIFI_TIME_STAMPS_CSV: "10,1"
+      NIFI_LINE_COUNTS_CSV: "7,1"
 
 volumes:
   shared-volume:

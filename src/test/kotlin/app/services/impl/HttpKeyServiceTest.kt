@@ -4,6 +4,7 @@ import app.TestUtils.Companion.once
 import app.configuration.HttpClientProvider
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
+import app.services.KeyService
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -18,22 +19,30 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "unitTest", "outputToConsole")
-@SpringBootTest
+@SpringBootTest(classes = [HttpKeyService::class])
+@EnableRetry
 @TestPropertySource(properties = [
     "data.key.service.url=dummy.com:8090"
 ])
 class HttpKeyServiceTest {
 
+    @Autowired
+    private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var httpClientProvider: HttpClientProvider
+
+
     @Before
     fun init() {
-        this.keyService.clearCache()
+        keyService.clearCache()
         reset(this.httpClientProvider)
     }
 
@@ -177,11 +186,5 @@ class HttpKeyServiceTest {
 
         verify(httpClient, times(3)).execute(any(HttpPost::class.java))
     }
-
-    @Autowired
-    private lateinit var keyService: HttpKeyService
-
-    @Autowired
-    private lateinit var httpClientProvider: HttpClientProvider
 
 }
