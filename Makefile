@@ -58,10 +58,6 @@ up: ## Run the ecosystem of containers
 			echo "Waiting for s3-dummy..."; \
 			sleep 2; \
 		done; \
-		while ! docker logs dks-standalone-https 2> /dev/null | grep HEALTHCHECK ; do \
-			echo Waiting for dks-standalone-https.; \
-			sleep 2; \
-		done; \
 		docker-compose up hbase-populate s3-bucket-provision; \
 		docker-compose up hbase-to-mongo-export; \
 		docker-compose up hbase-to-mongo-export-claimant-event; \
