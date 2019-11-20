@@ -93,6 +93,8 @@ services:
       --topic.name=db.core.addressDeclaration
       --trust.keystore=htme-truststore.jks
       --trust.store.password=changeit
+      --s3.manifest.prefix.folder=test/manifest
+      --s3.manifest.bucket=demobucket
     environment:
       topic.name: "db.core.addressDeclaration"
 
@@ -132,6 +134,8 @@ services:
       --topic.name=db.quartz.claimantEvent
       --trust.keystore=htme-truststore.jks
       --trust.store.password=changeit
+      --s3.manifest.prefix.folder=test/manifest
+      --s3.manifest.bucket=demobucket
     environment:
       topic.name: "db.quartz.claimantEvent"
 
