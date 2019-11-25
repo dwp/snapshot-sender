@@ -44,7 +44,21 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            iterator = s3Client.listObjectsV2(bucketName, s3Utils.s3PrefixFolder).objectSummaries.listIterator()
+            var results: ListObjectsV2Result? = null
+            val objectSummaries: MutableList<S3ObjectSummary> = mutableListOf()
+            val request = ListObjectsV2Request().apply {
+                withBucketName(bucketName)
+                withPrefix(s3Utils.s3PrefixFolder)
+            }
+            do {
+                logger.info("Getting paginated results.")
+                results = s3Client.listObjectsV2(request)
+                objectSummaries.addAll(results.objectSummaries)
+                request.continuationToken = results.nextContinuationToken
+            }
+            while (results != null && results?.isTruncated)
+
+            iterator = objectSummaries.listIterator()
         }
         return iterator!!
     }
