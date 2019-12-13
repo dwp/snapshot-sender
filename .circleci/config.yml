@@ -2,7 +2,11 @@
 #
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
-version: 2
+version: 2.1
+
+orbs:
+  snyk: snyk/snyk@0.0.8
+
 jobs:
   build:
     docker:
@@ -102,6 +106,29 @@ jobs:
             docker-compose up snapshot-sender
             docker-compose up sender-integration-test
 
+  snyk-pr:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - snyk/scan:
+          organization: dwp-dataworks
+          severity-threshold: high
+          target-file: build.gradle.kts
+          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
+
+  snyk-master:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - snyk/scan:
+          organization: dwp-dataworks
+          severity-threshold: high
+          target-file: build.gradle.kts
+          project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
+
+
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
@@ -129,6 +156,18 @@ workflows:
   build-and-deploy:
     jobs:
       - build
+      - snyk-pr:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: master
+      - snyk-master:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
       - integration-test:
           requires:
             - build
