@@ -35,7 +35,7 @@ class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
             init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(iv)))
         }
 
-        return DecryptedStream(CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher),
+        return DecryptedStream(CipherInputStream(inputStream, cipher),
             item.fileName.replace(decryptionRegEx, ""), item.fullPath)
     }
 

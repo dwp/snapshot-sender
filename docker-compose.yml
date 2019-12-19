@@ -89,7 +89,7 @@ services:
       --s3.prefix.folder=test/output
       --s3.secret.key=DummySecret
       --s3.service.endpoint=http://s3-dummy:4572
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,bz2Compressor
       --topic.name=db.core.addressDeclaration
       --trust.keystore=htme-truststore.jks
       --trust.store.password=changeit
@@ -130,7 +130,7 @@ services:
       --s3.prefix.folder=test/output
       --s3.secret.key=DummySecret
       --s3.service.endpoint=http://s3-dummy:4572
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,bz2Compressor
       --topic.name=db.quartz.claimantEvent
       --trust.keystore=htme-truststore.jks
       --trust.store.password=changeit
