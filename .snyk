@@ -2,6 +2,10 @@
 version: v1.13.5
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-540500
+    - '*':
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469676:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
