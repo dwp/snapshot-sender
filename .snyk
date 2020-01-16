@@ -4,34 +4,34 @@ version: v1.13.5
 ignore:
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-540500:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469676:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469674:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-472980:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467014:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467015:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467016:
     - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-02-20T00:00:00.000Z
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-04-16T00:00:00.000Z
 patch: {}
