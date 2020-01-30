@@ -246,8 +246,8 @@ class S3DirectoryReaderTest {
         }
 
         given(mockS3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
-                .willReturn(resultsPage1)
-                .willReturn(resultsPage2)
+            .willReturn(resultsPage1)
+            .willReturn(resultsPage2)
 
         val page1Object1 = mockS3Object()
         val page1Object2 = mockS3Object()
@@ -261,17 +261,17 @@ class S3DirectoryReaderTest {
 
         val objectMetadata = mock<ObjectMetadata> {
             on { userMetadata } doReturn mapOf("iv" to "INITIALISAION_VECTOR",
-                    "dataKeyEncryptionKeyId" to "DATAKEY_ENCRYPTION_KEY_ID",
-                    "cipherText" to "CIPHER_TEXT")
+                "dataKeyEncryptionKeyId" to "DATAKEY_ENCRYPTION_KEY_ID",
+                "cipherText" to "CIPHER_TEXT")
         }
 
         given(mockS3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
-                .willReturn(objectMetadata)
+            .willReturn(objectMetadata)
 
         s3DirectorReader.read()
 
         verify(mockS3Client, times(2))
-                .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+            .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
 
     }
 
@@ -292,7 +292,7 @@ class S3DirectoryReaderTest {
 
 
         given(mockS3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
-                .willReturn(resultsPage1)
+            .willReturn(resultsPage1)
 
         val page1Object1 = mockS3Object()
         val page1Object2 = mockS3Object()
@@ -302,29 +302,29 @@ class S3DirectoryReaderTest {
 
         val objectMetadata = mock<ObjectMetadata> {
             on { userMetadata } doReturn mapOf("iv" to "INITIALISAION_VECTOR",
-                    "dataKeyEncryptionKeyId" to "DATAKEY_ENCRYPTION_KEY_ID",
-                    "cipherText" to "CIPHER_TEXT")
+                "dataKeyEncryptionKeyId" to "DATAKEY_ENCRYPTION_KEY_ID",
+                "cipherText" to "CIPHER_TEXT")
         }
 
         given(mockS3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
-                .willReturn(objectMetadata)
+            .willReturn(objectMetadata)
 
         s3DirectorReader.read()
 
         verify(mockS3Client, times(1))
-                .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+            .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
 
     }
 
     private fun mockS3Object() =
-            mock<S3Object> {
-                on { objectContent } doReturn mock<S3ObjectInputStream>()
-            }
+        mock<S3Object> {
+            on { objectContent } doReturn mock<S3ObjectInputStream>()
+        }
 
-    private fun mockS3ObjectSummary(objectKey: String)=
-            mock<S3ObjectSummary> {
-                on { key } doReturn objectKey
-            }
+    private fun mockS3ObjectSummary(objectKey: String) =
+        mock<S3ObjectSummary> {
+            on { key } doReturn objectKey
+        }
 
     private fun assertFileNameEndsWith(key: String, encryptedStream: EncryptedStream) {
         assertTrue(key.endsWith("/${encryptedStream.fileName}"))

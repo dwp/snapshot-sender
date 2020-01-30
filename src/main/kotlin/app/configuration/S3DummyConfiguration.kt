@@ -20,13 +20,13 @@ class S3DummyConfiguration {
     @Bean
     fun amazonS3(): AmazonS3 {
         return AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndpoint, region))
-                .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-                .withCredentials(
-                        AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
-                .withPathStyleAccessEnabled(true)
-                .disableChunkedEncoding()
-                .build()
+            .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndpoint, region))
+            .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+            .withCredentials(
+                AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
+            .withPathStyleAccessEnabled(true)
+            .disableChunkedEncoding()
+            .build()
     }
 
     @Value("\${aws.region}")

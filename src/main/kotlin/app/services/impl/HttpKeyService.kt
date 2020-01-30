@@ -74,7 +74,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             }
         }
         catch (ex: Exception) {
-            when(ex) {
+            when (ex) {
                 is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {
                     throw ex
                 }

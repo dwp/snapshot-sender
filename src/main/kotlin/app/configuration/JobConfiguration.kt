@@ -36,17 +36,17 @@ class JobConfiguration {
 
     @Bean
     fun step() =
-            stepBuilderFactory.get("step")
-                    .chunk<EncryptedStream, DecryptedStream>(10)
-                    .reader(itemReader)
-                    .faultTolerant()
-                    .skip(DataKeyDecryptionException::class.java)
-                    .skip(WriterException::class.java)
-                    .skipLimit(Integer.MAX_VALUE)
-                    .processor(itemProcessor())
-                    .writer(itemWriter)
-                    .taskExecutor(taskExecutor())
-                    .build()
+        stepBuilderFactory.get("step")
+            .chunk<EncryptedStream, DecryptedStream>(10)
+            .reader(itemReader)
+            .faultTolerant()
+            .skip(DataKeyDecryptionException::class.java)
+            .skip(WriterException::class.java)
+            .skipLimit(Integer.MAX_VALUE)
+            .processor(itemProcessor())
+            .writer(itemWriter)
+            .taskExecutor(taskExecutor())
+            .build()
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("snapshot_sender").apply {

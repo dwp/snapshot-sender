@@ -23,9 +23,9 @@ class S3RealConfiguration {
         //This code expects that you have AWS credentials set up per:
         // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
         return AmazonS3ClientBuilder.standard()
-                .withCredentials(DefaultAWSCredentialsProviderChain())
-                .withRegion(clientRegion)
-                .build()
+            .withCredentials(DefaultAWSCredentialsProviderChain())
+            .withRegion(clientRegion)
+            .build()
     }
 
     @Value("\${aws.region}")

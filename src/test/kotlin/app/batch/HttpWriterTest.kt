@@ -59,7 +59,7 @@ class HttpWriterTest {
     val s3Path = "exporter-output/job01" //should match the test properties above
 
     @Before
-    fun before(){
+    fun before() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         root.addAppender(mockAppender)
         Mockito.reset(mockAppender)

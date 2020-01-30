@@ -1,14 +1,19 @@
 package app.batch
 
-import app.domain.*
-import app.exceptions.*
-import com.amazonaws.services.s3.*
-import com.amazonaws.services.s3.model.*
-import org.slf4j.*
-import org.springframework.batch.item.*
+import app.domain.EncryptedStream
+import app.domain.EncryptionMetadata
+import app.exceptions.DataKeyDecryptionException
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.ListObjectsV2Request
+import com.amazonaws.services.s3.model.ListObjectsV2Result
+import com.amazonaws.services.s3.model.S3ObjectInputStream
+import com.amazonaws.services.s3.model.S3ObjectSummary
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.*
-import org.springframework.stereotype.*
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
 
 @Component
 @Profile("S3SourceData")
@@ -31,7 +36,8 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
             val metadata = getS3ObjectMetadata(next, s3Client, s3BucketName)
             logger.info("Returning s3 object for '${next.key}' with metadata '$metadata'")
             encryptedStream(metadata, next.key, inputStream)
-        } else {
+        }
+        else {
             null
         }
     }
@@ -56,7 +62,7 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
                 objectSummaries.addAll(results.objectSummaries)
                 request.continuationToken = results.nextContinuationToken
             }
-            while (results != null && results?.isTruncated)
+            while (results != null && results.isTruncated)
 
             iterator = objectSummaries.listIterator()
         }
@@ -80,7 +86,8 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
             val fileSplitArr = filePath.split("/")
             val fileName = fileSplitArr[fileSplitArr.size - 1]
             return EncryptedStream(inputStream, fileName, filePath, encryptionMetadata)
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             throw DataKeyDecryptionException("Couldn't get the metadata for '$filePath'")
         }
     }
