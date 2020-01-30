@@ -3,12 +3,13 @@ FROM dwp-centos-with-java:latest
 EXPOSE 8080
 EXPOSE 8443
 
-RUN mkdir -p /opt/data-key-service/data /opt/snapshot-sender/data
+RUN mkdir -p /opt/data-key-service/data /opt/data-key-service/logs /opt/snapshot-sender/data
 WORKDIR /opt/data-key-service
 
-RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
-    | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document dks-latest.jar
-
+RUN curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
+             | jq -r '.assets[0].browser_download_url' >> dks_version
+RUN cat dks_version
+RUN wget $(cat dks_version) --no-check-certificate --output-document dks-latest.jar
 RUN ls -la *.jar
 
 COPY application-dks-secure.properties ./
@@ -16,4 +17,4 @@ COPY dks*.jks dks*.crt ./
 
 RUN chmod a+rwx -R /opt/data-key-service /opt/snapshot-sender/
 
-ENTRYPOINT ["sh", "-c", "java -jar dks-latest.jar \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "java -Dlogging.level.root=DEBUG -Ddks.log.directory=/opt/data-key-service/logs -jar dks-latest.jar \"$@\"", "--"]

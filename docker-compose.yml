@@ -70,6 +70,8 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
+      --logging.level.root=DEBUG
+      --spring.main.banner-mode=off
       --aws.region=eu-west-2
       --column.family=topic
       --compress.output=true
@@ -96,7 +98,12 @@ services:
       --s3.manifest.prefix.folder=test/manifest
       --s3.manifest.bucket=demobucket
     environment:
-      topic.name: "db.core.addressDeclaration"
+      - topic.name=db.core.addressDeclaration
+      - ENVIRONMENT=local-docker
+      - APPLICATION=htme
+      - APP_VERSION=latest-dev
+      - COMPONENT=jar_file
+      - CORRELATION_ID=htme-address
 
   hbase-to-mongo-export-claimant-event:
     image: hbase-to-mongo-export
@@ -111,6 +118,8 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
+      --logging.level.root=DEBUG
+      --spring.main.banner-mode=off
       --aws.region=eu-west-2
       --column.family=topic
       --compress.output=true
@@ -137,7 +146,12 @@ services:
       --s3.manifest.prefix.folder=test/manifest
       --s3.manifest.bucket=demobucket
     environment:
-      topic.name: "db.quartz.claimantEvent"
+      - topic.name=db.quartz.claimantEvent
+      - ENVIRONMENT=local-docker
+      - APPLICATION=htme_claimant
+      - APP_VERSION=latest-dev
+      - COMPONENT=jar_file
+      - CORRELATION_ID=htme-claimant
 
   snapshot-sender:
     image: snapshot-sender
@@ -148,6 +162,8 @@ services:
       - dks-standalone-https
       - mock-nifi
     command: >-
+      --logging.level.root=DEBUG
+      --spring.main.banner-mode=off
       --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,dummyS3Client
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
@@ -165,6 +181,12 @@ services:
       --identity.store.password=changeit
       --trust.keystore=snapshot-sender-truststore.jks
       --trust.store.password=changeit
+    environment:
+      - ENVIRONMENT=local-docker
+      - APPLICATION=snapshot_sender
+      - APP_VERSION=latest-dev
+      - COMPONENT=jar_file
+      - CORRELATION_ID=sender-1
 
   dks-standalone-http:
     image: dks-standalone-http
@@ -175,6 +197,8 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-http
+    command:
+      --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
@@ -187,6 +211,8 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-https
+    command:
+      --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-dks-secure.properties
