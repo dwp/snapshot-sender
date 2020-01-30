@@ -28,7 +28,6 @@ class HttpKeyService(
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
-
         // Will retry at 1s, 2s, 4s, 8s, 16s then give up (after a total of 31 secs)
         const val maxAttempts = 5
         const val initialBackoffMillis = 1000L
@@ -69,10 +68,10 @@ class HttpKeyService(
                             }
                             400 ->
                                 throw DataKeyDecryptionException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status code '$statusCode'")
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status_code: '$statusCode'")
                             else ->
                                 throw DataKeyServiceUnavailableException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status code '$statusCode'")
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status_code: '$statusCode'")
                         }
                     }
                 }
