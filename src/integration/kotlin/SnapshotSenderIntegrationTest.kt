@@ -31,7 +31,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     private val nifiRootFolder = System.getenv("NIFI_ROOT_FOLDER") ?: "/data/output"
 
     //matched triplets of file name, timestamp and line count
-    private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV") ?: "db.core.addressDeclaration-000001.txt.bz2,db.quartz.claimantEvent-000001.txt.bz2"
+    private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV")
+        ?: "db.core.addressDeclaration-000001.txt.bz2,db.quartz.claimantEvent-000001.txt.bz2"
     private val nifiLineCountsCSV = System.getenv("NIFI_LINE_COUNTS_CSV") ?: "7,1"
     private val nifiTimestampsCSV = System.getenv("NIFI_TIME_STAMPS_CSV") ?: "10,1"
 
@@ -120,19 +121,19 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             logger.info("exporterKeys: $exporterKeys")
 
             val exporterKeysToMatchNifi = exporterKeys
-                    .asSequence()
-                    .map { it.replace(s3SourceExporterFolder, "") }
-                    .map { it.replace(".enc", "") }
-                    .map { it.replace(Regex("^/"), "") }
-                    .map {
-                        Pair(File(it).name
-                                .replace(Regex("-.*$"), "")
-                                .replace(Regex("^.*/"), ""), it)
-                    }
-                    .map {(collection, filename) ->
-                        "$nifiRootFolder/$collection/$filename"
-                    }
-                    .toList()
+                .asSequence()
+                .map { it.replace(s3SourceExporterFolder, "") }
+                .map { it.replace(".enc", "") }
+                .map { it.replace(Regex("^/"), "") }
+                .map {
+                    Pair(File(it).name
+                        .replace(Regex("-.*$"), "")
+                        .replace(Regex("^.*/"), ""), it)
+                }
+                .map { (collection, filename) ->
+                    "$nifiRootFolder/$collection/$filename"
+                }
+                .toList()
 
             logger.info("exporterKeysToMatchNifi: $exporterKeysToMatchNifi")
 

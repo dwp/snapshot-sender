@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @Qualifier("filter")
-class FinishedFilterProcessor(private val amazonS3: AmazonS3, private val s3utils: S3Utils): ItemProcessor<EncryptedStream, EncryptedStream> {
+class FinishedFilterProcessor(private val amazonS3: AmazonS3, private val s3utils: S3Utils) : ItemProcessor<EncryptedStream, EncryptedStream> {
 
     override fun process(item: EncryptedStream) =
         if (fileAlreadyProcessed(item.fullPath)) {
@@ -23,7 +23,7 @@ class FinishedFilterProcessor(private val amazonS3: AmazonS3, private val s3util
         }
 
     private fun fileAlreadyProcessed(s3Key: String) =
-            amazonS3.doesObjectExist(s3bucket, s3utils.getFinishedStatusKeyName(s3Key))
+        amazonS3.doesObjectExist(s3bucket, s3utils.getFinishedStatusKeyName(s3Key))
 
     @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
     lateinit var s3bucket: String

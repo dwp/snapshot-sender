@@ -20,7 +20,8 @@ class S3Utils {
         val prefix = env.getProperty("s3.prefix.folder")!!
         if (prefix.endsWith("/")) {
             prefix
-        } else {
+        }
+        else {
             "$prefix/"
         }
     }
