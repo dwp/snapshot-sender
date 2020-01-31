@@ -31,6 +31,7 @@ dependencies {
 	implementation("org.apache.httpcomponents:httpclient:4.5.10")
 	implementation("com.google.code.gson:gson:2.8.5")
 	implementation("org.apache.commons:commons-compress:1.5")
+	implementation("org.apache.commons:commons-text:1.8")
 
 	// sdk v1
 	implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
