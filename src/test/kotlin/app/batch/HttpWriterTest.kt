@@ -94,11 +94,11 @@ class HttpWriterTest {
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, Mockito.times(5)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
-        assertEquals("\"Writing: '1' items\"", formattedMessages[0])
-        assertEquals("\"Checking: 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc'\"", formattedMessages[1])
-        assertEquals("\"Found collection: 'db.core.addressDeclaration' from fileName of 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc'\"", formattedMessages[2])
-        assertEquals("\"Posting: 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc' to 'db.core.addressDeclaration'.\"", formattedMessages[3])
-        assertEquals("\"Successfully posted 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc': response '200'\"", formattedMessages[4])
+        assertEquals("Writing: '1' items", formattedMessages[0])
+        assertEquals("Checking: 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc'", formattedMessages[1])
+        assertEquals("Found collection: 'db.core.addressDeclaration' from fileName of 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc'", formattedMessages[2])
+        assertEquals("Posting: 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc' to 'db.core.addressDeclaration'.", formattedMessages[3])
+        assertEquals("Successfully posted 'exporter-output/job01/db.core.addressDeclaration-000001.txt.bz2.enc': response '200'", formattedMessages[4])
     }
 
     @Test
@@ -161,11 +161,11 @@ class HttpWriterTest {
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, Mockito.times(5)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
-        assertEquals("\"Writing: '1' items\"", formattedMessages[0])
-        assertEquals("\"Checking: 'exporter-output/job01/db.a.b-01.enc'\"", formattedMessages[1])
-        assertEquals("\"Found collection: 'db.a.b' from fileName of 'exporter-output/job01/db.a.b-01.enc'\"", formattedMessages[2])
-        assertEquals("\"Posting: 'exporter-output/job01/db.a.b-01.enc' to 'db.a.b'.\"", formattedMessages[3])
-        assertEquals("\"Failed to post 'exporter-output/job01/db.a.b-01.enc': post returned status code 400\"", formattedMessages[4])
+        assertEquals("Writing: '1' items", formattedMessages[0])
+        assertEquals("Checking: 'exporter-output/job01/db.a.b-01.enc'", formattedMessages[1])
+        assertEquals("Found collection: 'db.a.b' from fileName of 'exporter-output/job01/db.a.b-01.enc'", formattedMessages[2])
+        assertEquals("Posting: 'exporter-output/job01/db.a.b-01.enc' to 'db.a.b'.", formattedMessages[3])
+        assertEquals("Failed to post 'exporter-output/job01/db.a.b-01.enc': post returned status code 400", formattedMessages[4])
     }
 
     @Test
