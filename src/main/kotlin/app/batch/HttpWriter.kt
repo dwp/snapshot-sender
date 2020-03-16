@@ -7,13 +7,12 @@ import app.exceptions.WriterException
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 @Profile("httpWriter")
@@ -25,7 +24,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
     val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
 
     override fun write(items: MutableList<out DecryptedStream>) {
-        logger.info("Writing: '${items.size}' items")
+        logger.info("Writing: '${items.size}' items", "items size" to items.size.toString(), "items size2" to items.size.toString())
         items.forEach { item ->
             logger.info("Checking: '${item.fullPath}'")
             val match = filenameRe.find(item.fileName)
@@ -69,10 +68,10 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
         }
     }
 
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpWriter::class.toString())
-    }
-
     @Value("\${nifi.url}")
     private lateinit var nifiUrl: String
+
+    companion object {
+        val logger = DataworksLogger.getLogger(FinishedFilterProcessor::class.toString())
+    }
 }
