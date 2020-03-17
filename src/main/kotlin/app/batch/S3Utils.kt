@@ -15,13 +15,11 @@ class S3Utils {
     @Autowired
     lateinit var s3Client: AmazonS3
 
-
     val s3PrefixFolder: String by lazy {
         val prefix = env.getProperty("s3.prefix.folder")!!
         if (prefix.endsWith("/")) {
             prefix
-        }
-        else {
+        } else {
             "$prefix/"
         }
     }

@@ -24,26 +24,26 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
     val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
 
     override fun write(items: MutableList<out DecryptedStream>) {
-        logger.info("Writing: '${items.size}' items", "items size" to items.size.toString(), "items size2" to items.size.toString())
+        logger.info("Writing items to S3", "number_of_items" to items.size.toString())
         items.forEach { item ->
-            logger.info("Checking: '${item.fullPath}'")
+            logger.info("Checking item to  write", "file_name" to item.fullPath)
             val match = filenameRe.find(item.fileName)
             if (match == null) {
+                logger.error("Rejecting item to write due to name not matching expected", "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
                 val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
-                logger.error(errorMessage)
                 throw MetadataException(errorMessage)
             }
 
             val lastDashIndex = item.fileName.lastIndexOf("-")
             if (lastDashIndex < 0) {
+                logger.error("Rejecting item to write due to name not containing '-' to find number", "file_name" to item.fullPath)
                 val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
-                logger.error(errorMessage)
                 throw MetadataException(errorMessage)
             }
             val fullCollection = item.fileName.substring(0 until (lastDashIndex))
-            logger.info("Found collection: '${fullCollection}' from fileName of '${item.fullPath}'")
+            logger.info("Found collection of file name", "collection" to fullCollection, "file_name" to item.fullPath)
 
-            logger.info("Posting: '${item.fullPath}' to '$fullCollection'.")
+            logger.info("Posting file name to collection", "collection" to fullCollection, "file_name" to item.fullPath)
             httpClientProvider.client().use {
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
@@ -54,12 +54,12 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 it.execute(post).use { response ->
                     when (response.statusLine.statusCode) {
                         200 -> {
-                            logger.info("Successfully posted '${item.fullPath}': response '${response.statusLine.statusCode}'")
+                            logger.info("Successfully posted file", "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
                             s3StatusFileWriter.writeStatus(item.fullPath)
                         }
                         else -> {
+                            logger.error("Failed to post the provided item", "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
                             val message = "Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}"
-                            logger.error(message)
                             throw WriterException(message)
                         }
                     }
@@ -72,6 +72,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
     private lateinit var nifiUrl: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(FinishedFilterProcessor::class.toString())
+        val logger = DataworksLogger.getLogger(HttpWriter::class.toString())
     }
 }

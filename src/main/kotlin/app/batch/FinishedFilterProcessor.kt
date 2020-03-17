@@ -14,7 +14,7 @@ class FinishedFilterProcessor(private val amazonS3: AmazonS3, private val s3util
 
     override fun process(item: EncryptedStream) =
             if (fileAlreadyProcessed(item.fullPath)) {
-                logger.info("Skipping '${item.fullPath}' due to already being processed.")
+                logger.info("Skipping processing of item as already processed", "file_name" to item.fullPath)
                 null
             } else {
                 item

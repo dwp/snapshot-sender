@@ -3,10 +3,9 @@ package app.batch
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.security.Key
 import java.security.Security
 import java.util.*
@@ -27,6 +26,7 @@ class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
 
     override fun process(item: EncryptedStream): DecryptedStream? {
         logger.info("Processing '${item.fullPath}'")
+        logger.info("Processing Decryption on item", "file_name" to item.fullPath)
         val dataKey = item.encryptionMetadata.plaintext
         val iv = item.encryptionMetadata.initializationVector
         val inputStream = item.inputStream
@@ -36,11 +36,10 @@ class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
         }
 
         return DecryptedStream(CipherInputStream(inputStream, cipher),
-            item.fileName.replace(decryptionRegEx, ""), item.fullPath)
+                item.fileName.replace(decryptionRegEx, ""), item.fullPath)
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DecryptionProcessor::class.toString())
+        val logger = DataworksLogger.getLogger(DecryptionProcessor::class.toString())
     }
-
 }
