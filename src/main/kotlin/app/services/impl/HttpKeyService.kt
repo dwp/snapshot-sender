@@ -1,6 +1,5 @@
 package app.services.impl
 
-import app.batch.S3StatusFileWriter
 import app.configuration.HttpClientProvider
 import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
@@ -12,8 +11,6 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable

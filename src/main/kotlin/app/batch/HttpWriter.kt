@@ -29,16 +29,18 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
             logger.info("Checking item to  write", "file_name" to item.fullPath)
             val match = filenameRe.find(item.fileName)
             if (match == null) {
-                logger.error("Rejecting item to write due to name not matching expected", "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
                 val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
-                throw MetadataException(errorMessage)
+                val exception = MetadataException(errorMessage)
+                logger.error("Rejecting item to write", exception, "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
+                throw exception
             }
 
             val lastDashIndex = item.fileName.lastIndexOf("-")
             if (lastDashIndex < 0) {
-                logger.error("Rejecting item to write due to name not containing '-' to find number", "file_name" to item.fullPath)
                 val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
-                throw MetadataException(errorMessage)
+                val exception = MetadataException(errorMessage)
+                logger.error("Rejecting item to write", exception, "file_name" to item.fullPath)
+                throw exception
             }
             val fullCollection = item.fileName.substring(0 until (lastDashIndex))
             logger.info("Found collection of file name", "collection" to fullCollection, "file_name" to item.fullPath)
@@ -58,9 +60,10 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                             s3StatusFileWriter.writeStatus(item.fullPath)
                         }
                         else -> {
-                            logger.error("Failed to post the provided item", "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
                             val message = "Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}"
-                            throw WriterException(message)
+                            val exception = WriterException(message)
+                            logger.error("Failed to post the provided item", exception, "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
+                            throw exception
                         }
                     }
                 }

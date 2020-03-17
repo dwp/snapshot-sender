@@ -25,7 +25,6 @@ class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
     private val cipherAlgorithm = "AES/CTR/NoPadding"
 
     override fun process(item: EncryptedStream): DecryptedStream? {
-        logger.info("Processing '${item.fullPath}'")
         logger.info("Processing Decryption on item", "file_name" to item.fullPath)
         val dataKey = item.encryptionMetadata.plaintext
         val iv = item.encryptionMetadata.initializationVector

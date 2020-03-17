@@ -26,7 +26,6 @@ import java.io.ByteArrayInputStream
     "s3.status.folder=status",
     "s3.htme.root.folder=test"
 ])
-
 class FinishedFilterProcessorTest {
 
     @MockBean

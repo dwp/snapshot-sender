@@ -81,8 +81,8 @@ class S3StatusFileWriterTest {
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(2)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
-        assertEquals("Writing status file 'sender-status/myfilename.enc.finished' for 'exporter-output/myfilename.enc'", formattedMessages[0])
-        assertEquals("Written status file 'sender-status/myfilename.enc.finished' for 'exporter-output/myfilename.enc'", formattedMessages[1])
+        assertEquals("Writing S3 status file\", \"file_name\":\"exporter-output\\/myfilename.enc\", \"status_file_name\":\"sender-status\\/myfilename.enc.finished\"", formattedMessages[0])
+        assertEquals("Writing S3 status file\", \"file_name\":\"exporter-output\\/myfilename.enc\", \"status_file_name\":\"sender-status\\/myfilename.enc.finished\"", formattedMessages[1])
     }
 
     @Test
@@ -102,8 +102,8 @@ class S3StatusFileWriterTest {
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(2)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
-        assertEquals("Writing status file 'sender-status/myfilename.enc.finished' for 'exporter-output/myfilename.enc'", formattedMessages[0])
-        assertEquals("AmazonServiceException processing 'exporter-output/myfilename.enc': boom (Service: null; Status Code: 0; Error Code: null; Request ID: null)", formattedMessages[1])
+        assertEquals("Writing S3 status file\", \"file_name\":\"exporter-output\\/myfilename.enc\", \"status_file_name\":\"sender-status\\/myfilename.enc.finished\"", formattedMessages[0])
+        assertEquals("AmazonServiceException processing\", \"file_name\":\"exporter-output\\/myfilename.enc\"", formattedMessages[1])
     }
 
     @Test
@@ -123,8 +123,8 @@ class S3StatusFileWriterTest {
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(2)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
-        assertEquals("Writing status file 'sender-status/myfilename.enc.finished' for 'exporter-output/myfilename.enc'", formattedMessages[0])
-        assertEquals("SdkClientException processing 'exporter-output/myfilename.enc': boom", formattedMessages[1])
+        assertEquals("Writing S3 status file\", \"file_name\":\"exporter-output\\/myfilename.enc\", \"status_file_name\":\"sender-status\\/myfilename.enc.finished\"", formattedMessages[0])
+        assertEquals("SdkClientException processing\", \"file_name\":\"exporter-output\\/myfilename.enc\"", formattedMessages[1])
     }
 
     private fun assertCorrectPutObject(awsCaptor: KArgumentCaptor<PutObjectRequest>) {
