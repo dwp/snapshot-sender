@@ -33,7 +33,7 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
             val inputStream = getS3ObjectInputStream(next, s3Client, s3BucketName)
             val metadata = getS3ObjectMetadata(next, s3Client, s3BucketName)
             logger.info("Returning s3 object from directory", "file_name" to next.key,
-                    "metadata" to metadata.map { it.key to it.value }.toTypedArray().toString())
+                    "metadata" to metadata.toString())
             encryptedStream(metadata, next.key, inputStream)
         } else {
             null
