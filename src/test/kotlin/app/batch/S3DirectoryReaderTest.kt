@@ -265,7 +265,7 @@ class S3DirectoryReaderTest {
                 "cipherText" to "CIPHER_TEXT")
         }
 
-        given(mockS3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+        given(mockS3Client.getObjectMetadata(anyString(), anyString()))
             .willReturn(objectMetadata)
 
         s3DirectorReader.read()
@@ -306,7 +306,7 @@ class S3DirectoryReaderTest {
                 "cipherText" to "CIPHER_TEXT")
         }
 
-        given(mockS3Client.getObjectMetadata(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+        given(mockS3Client.getObjectMetadata(anyString(), anyString()))
             .willReturn(objectMetadata)
 
         s3DirectorReader.read()
@@ -318,7 +318,7 @@ class S3DirectoryReaderTest {
 
     private fun mockS3Object() =
         mock<S3Object> {
-            on { objectContent } doReturn mock<S3ObjectInputStream>()
+            on { objectContent } doReturn mock()
         }
 
     private fun mockS3ObjectSummary(objectKey: String) =
@@ -332,7 +332,7 @@ class S3DirectoryReaderTest {
 
     private fun assertObjectContent(objectContent: String, actualStream: InputStream?) {
         val textBuilder = StringBuilder()
-        BufferedReader(InputStreamReader(actualStream, Charset.forName(StandardCharsets.UTF_8.name()))).use { reader ->
+        BufferedReader(InputStreamReader(actualStream!!, Charset.forName(StandardCharsets.UTF_8.name()))).use { reader ->
             var c = 0
             while (c != -1) {
                 c = reader.read()

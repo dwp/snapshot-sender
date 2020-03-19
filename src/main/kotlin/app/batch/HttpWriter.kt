@@ -7,13 +7,12 @@ import app.exceptions.WriterException
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 @Profile("httpWriter")
@@ -25,26 +24,28 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
     val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
 
     override fun write(items: MutableList<out DecryptedStream>) {
-        logger.info("Writing: '${items.size}' items")
+        logger.info("Writing items to S3", "number_of_items" to items.size.toString())
         items.forEach { item ->
-            logger.info("Checking: '${item.fullPath}'")
+            logger.info("Checking item to  write", "file_name" to item.fullPath)
             val match = filenameRe.find(item.fileName)
             if (match == null) {
                 val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
-                logger.error(errorMessage)
-                throw MetadataException(errorMessage)
+                val exception = MetadataException(errorMessage)
+                logger.error("Rejecting item to write", exception, "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
+                throw exception
             }
 
             val lastDashIndex = item.fileName.lastIndexOf("-")
             if (lastDashIndex < 0) {
                 val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
-                logger.error(errorMessage)
-                throw MetadataException(errorMessage)
+                val exception = MetadataException(errorMessage)
+                logger.error("Rejecting item to write", exception, "file_name" to item.fullPath)
+                throw exception
             }
             val fullCollection = item.fileName.substring(0 until (lastDashIndex))
-            logger.info("Found collection: '${fullCollection}' from fileName of '${item.fullPath}'")
+            logger.info("Found collection of file name", "collection" to fullCollection, "file_name" to item.fullPath)
 
-            logger.info("Posting: '${item.fullPath}' to '$fullCollection'.")
+            logger.info("Posting file name to collection", "collection" to fullCollection, "file_name" to item.fullPath)
             httpClientProvider.client().use {
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
@@ -55,13 +56,14 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 it.execute(post).use { response ->
                     when (response.statusLine.statusCode) {
                         200 -> {
-                            logger.info("Successfully posted '${item.fullPath}': response '${response.statusLine.statusCode}'")
+                            logger.info("Successfully posted file", "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
                             s3StatusFileWriter.writeStatus(item.fullPath)
                         }
                         else -> {
                             val message = "Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}"
-                            logger.error(message)
-                            throw WriterException(message)
+                            val exception = WriterException(message)
+                            logger.error("Failed to post the provided item", exception, "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
+                            throw exception
                         }
                     }
                 }
@@ -69,10 +71,10 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
         }
     }
 
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpWriter::class.toString())
-    }
-
     @Value("\${nifi.url}")
     private lateinit var nifiUrl: String
+
+    companion object {
+        val logger = DataworksLogger.getLogger(HttpWriter::class.toString())
+    }
 }

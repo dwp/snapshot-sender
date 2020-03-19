@@ -8,12 +8,11 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request
 import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 @Profile("S3SourceData")
@@ -27,17 +26,16 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
     @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
     lateinit var s3BucketName: String
 
-
     override fun read(): EncryptedStream? {
         val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
         return if (iterator.hasNext()) {
             val next = iterator.next()
             val inputStream = getS3ObjectInputStream(next, s3Client, s3BucketName)
             val metadata = getS3ObjectMetadata(next, s3Client, s3BucketName)
-            logger.info("Returning s3 object for '${next.key}' with metadata '$metadata'")
+            logger.info("Returning s3 object from directory", "file_name" to next.key,
+                    "metadata" to metadata.toString())
             encryptedStream(metadata, next.key, inputStream)
-        }
-        else {
+        } else {
             null
         }
     }
@@ -50,19 +48,18 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummary> {
         if (null == iterator) {
-            var results: ListObjectsV2Result? = null
+            var results: ListObjectsV2Result?
             val objectSummaries: MutableList<S3ObjectSummary> = mutableListOf()
             val request = ListObjectsV2Request().apply {
                 withBucketName(bucketName)
                 withPrefix(s3Utils.s3PrefixFolder)
             }
             do {
-                logger.info("Getting paginated results.")
+                logger.info("Getting paginated object summaries result.")
                 results = s3Client.listObjectsV2(request)
                 objectSummaries.addAll(results.objectSummaries)
                 request.continuationToken = results.nextContinuationToken
-            }
-            while (results != null && results.isTruncated)
+            } while (results != null && results.isTruncated)
 
             iterator = objectSummaries.listIterator()
         }
@@ -86,14 +83,12 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
             val fileSplitArr = filePath.split("/")
             val fileName = fileSplitArr[fileSplitArr.size - 1]
             return EncryptedStream(inputStream, fileName, filePath, encryptionMetadata)
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             throw DataKeyDecryptionException("Couldn't get the metadata for '$filePath'")
         }
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(S3DirectoryReader::class.toString())
+        val logger = DataworksLogger.getLogger(S3DirectoryReader::class.toString())
     }
-
 }
