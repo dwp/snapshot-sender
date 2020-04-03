@@ -49,6 +49,10 @@ ignore:
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-560762:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
+        expires: 2020-05-16T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-560766:
+    - '*':
+        reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
         expires: 2020-05-16T00:00:00.000ZSNYK-JAVA-COMFASTERXMLJACKSONCORE-560766:
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-561362:
     - '*':

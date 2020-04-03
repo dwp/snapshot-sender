@@ -23,7 +23,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
 
-    val filenameRe = Regex("""\w+\.([\w-]+)\.([\w-]+)""")
+    val filenameRe = Regex("""^\w+\.([\w-]+)\.([\w-]+)""")
 
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing items to S3", "number_of_items" to items.size.toString())
@@ -45,7 +45,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 throw exception
             }
             val database = match.groupValues[1]
-            val collection = match.groupValues[2]
+            val collection = match.groupValues[2].replace(Regex("""-\d+$"""), "")
             val fullCollection = item.fileName.substring(0 until (lastDashIndex))
             logger.info("Found collection of file name", "collection" to fullCollection, "file_name" to item.fullPath)
 
