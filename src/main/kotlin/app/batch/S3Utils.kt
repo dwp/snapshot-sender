@@ -15,14 +15,9 @@ class S3Utils {
     @Autowired
     lateinit var s3Client: AmazonS3
 
-    val s3PrefixFolder: String by lazy {
-        val prefix = env.getProperty("s3.prefix.folder")!!
-        if (prefix.endsWith("/")) {
-            prefix
-        } else {
-            "$prefix/"
-        }
-    }
+
+    @Value("\${s3.prefix.folder}")
+    lateinit var s3PrefixFolder: String
 
     @Value("\${s3.status.folder}") //where the sender records its progress i.e. "business-sender-status"
     lateinit var s3StatusFolder: String
