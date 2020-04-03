@@ -47,7 +47,7 @@ dependencies {
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
     testImplementation("org.apache.httpcomponents:fluent-hc:4.5.10")
 
-    implementation("com.github.dwp:dataworks-common-logging:0.0.4")
+    implementation("com.github.dwp:dataworks-common-logging:0.0.5")
 }
 
 tasks.withType<KotlinCompile> {
