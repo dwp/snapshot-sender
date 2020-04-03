@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Component
 @Profile("httpWriter")
@@ -21,12 +23,12 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
 
-    val filenameRe = Regex("""^\w+\.(?:\w|-)+\.((?:\w|-)+)""")
+    val filenameRe = Regex("""^\w+\.([\w-]+)\.([\w-]+)""")
 
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing items to S3", "number_of_items" to items.size.toString())
         items.forEach { item ->
-            logger.info("Checking item to  write", "file_name" to item.fullPath)
+            logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
             val match = filenameRe.find(item.fileName)
             if (match == null) {
                 val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
@@ -42,15 +44,26 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 logger.error("Rejecting item to write", exception, "file_name" to item.fullPath)
                 throw exception
             }
+            val database = match.groupValues[1]
+            val collection = match.groupValues[2].replace(Regex("""-\d+$"""), "")
             val fullCollection = item.fileName.substring(0 until (lastDashIndex))
             logger.info("Found collection of file name", "collection" to fullCollection, "file_name" to item.fullPath)
 
-            logger.info("Posting file name to collection", "collection" to fullCollection, "file_name" to item.fullPath)
+            logger.info("Posting file name to collection",
+                    "database" to database,
+                    "collection" to collection,
+                    "topic" to fullCollection,
+                    "file_name" to item.fileName,
+                    "full_path" to item.fullPath)
             httpClientProvider.client().use {
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
                     setHeader("filename", item.fileName)
-                    setHeader("collection", fullCollection)
+                    setHeader("environment", "aws/${System.getProperty("environment")}")
+                    setHeader("date", SimpleDateFormat("yyyy-MM-dd").format(Date()))
+                    setHeader("database", database)
+                    setHeader("collection", collection)
+                    setHeader("topic", fullCollection)
                 }
 
                 it.execute(post).use { response ->

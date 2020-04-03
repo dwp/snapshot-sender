@@ -60,6 +60,7 @@ class HttpWriterTest {
 
     @Before
     fun before() {
+        System.setProperty("environment", "test")
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         root.addAppender(mockAppender)
         Mockito.reset(mockAppender)
@@ -85,20 +86,22 @@ class HttpWriterTest {
         val httpCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, once()).execute(httpCaptor.capture())
         assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
-        assertEquals(2, httpCaptor.firstValue.allHeaders.size)
+        assertEquals(6, httpCaptor.firstValue.allHeaders.size)
         assertEquals("filename: db.core.addressDeclaration-000001.txt.bz2.enc", httpCaptor.firstValue.allHeaders[0].toString())
-        assertEquals("collection: db.core.addressDeclaration", httpCaptor.firstValue.allHeaders[1].toString())
+        assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
+        assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
+        assertEquals("collection: addressDeclaration", httpCaptor.firstValue.allHeaders[4].toString())
 
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, Mockito.times(5)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
-        assertEquals("Writing items to S3\", \"number_of_items\":\"1\"", formattedMessages[0])
-        assertEquals("Checking item to  write\", \"file_name\":\"exporter-output\\/job01\\/db.core.addressDeclaration-000001.txt.bz2.enc\"", formattedMessages[1])
-        assertEquals("Found collection of file name\", \"collection\":\"db.core.addressDeclaration\", \"file_name\":\"exporter-output\\/job01\\/db.core.addressDeclaration-000001.txt.bz2.enc\"", formattedMessages[2])
-        assertEquals("Posting file name to collection\", \"collection\":\"db.core.addressDeclaration\", \"file_name\":\"exporter-output\\/job01\\/db.core.addressDeclaration-000001.txt.bz2.enc\"", formattedMessages[3])
-        assertEquals("Successfully posted file\", \"file_name\":\"exporter-output\\/job01\\/db.core.addressDeclaration-000001.txt.bz2.enc\", \"response\":\"200\"", formattedMessages[4])
+        assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
+        assertEquals("""Checking item to  write", "file_name":"db.core.addressDeclaration-000001.txt.bz2.enc", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[1])
+        assertEquals("""Found collection of file name", "collection":"db.core.addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[2])
+        assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-000001.txt.bz2.enc", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[3])
+        assertEquals("""Successfully posted file", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc", "response":"200"""", formattedMessages[4])
     }
 
     @Test
@@ -161,11 +164,11 @@ class HttpWriterTest {
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, Mockito.times(5)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
-        assertEquals("Writing items to S3\", \"number_of_items\":\"1\"", formattedMessages[0])
-        assertEquals("Checking item to  write\", \"file_name\":\"exporter-output\\/job01\\/db.a.b-01.enc\"", formattedMessages[1])
-        assertEquals("Found collection of file name\", \"collection\":\"db.a.b\", \"file_name\":\"exporter-output\\/job01\\/db.a.b-01.enc\"", formattedMessages[2])
-        assertEquals("Posting file name to collection\", \"collection\":\"db.a.b\", \"file_name\":\"exporter-output\\/job01\\/db.a.b-01.enc\"", formattedMessages[3])
-        assertEquals("Failed to post the provided item\", \"file_name\":\"exporter-output\\/job01\\/db.a.b-01.enc\", \"response\":\"400\"", formattedMessages[4])
+        assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
+        assertEquals("""Checking item to  write", "file_name":"db.a.b-01.enc", "full_path":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[1])
+        assertEquals("""Found collection of file name", "collection":"db.a.b", "file_name":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[2])
+        assertEquals("""Posting file name to collection", "database":"a", "collection":"b", "topic":"db.a.b", "file_name":"db.a.b-01.enc", "full_path":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[3])
+        assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.enc", "response":"400"""", formattedMessages[4])
     }
 
     @Test
@@ -178,7 +181,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001.txt' as fileName does not match '^\\w+\\.(?:\\w|-)+\\.((?:\\w|-)+)'", ex.message)
+            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001.txt' as fileName does not match '^\w+\.([\w-]+)\.([\w-]+)'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }

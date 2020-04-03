@@ -55,7 +55,8 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
                 withPrefix(s3Utils.s3PrefixFolder)
             }
             do {
-                logger.info("Getting paginated object summaries result.")
+                logger.info("Getting paginated object summaries result.",
+                        "bucket_name" to bucketName, "s3_prefix_folder" to s3Utils.s3PrefixFolder)
                 results = s3Client.listObjectsV2(request)
                 objectSummaries.addAll(results.objectSummaries)
                 request.continuationToken = results.nextContinuationToken
