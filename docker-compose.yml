@@ -67,7 +67,7 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
-      --logging.level.root=INFO
+      --logging.level.root=${LOGGING_LEVEL}
       --spring.main.banner-mode=off
       --aws.region=eu-west-2
       --column.family=topic
@@ -81,7 +81,6 @@ services:
       --identity.keystore=htme-keystore.jks
       --identity.store.alias=cid
       --identity.store.password=changeit
-      --logging.level.root=INFO
       --output.batch.size.max.bytes=10000
       --s3.access.key=DummyKey
       --s3.bucket=demobucket
@@ -115,7 +114,7 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
-      --logging.level.root=INFO
+      --logging.level.root=${LOGGING_LEVEL}
       --spring.main.banner-mode=off
       --aws.region=eu-west-2
       --column.family=topic
@@ -129,7 +128,6 @@ services:
       --identity.keystore=htme-keystore.jks
       --identity.store.alias=cid
       --identity.store.password=changeit
-      --logging.level.root=INFO
       --output.batch.size.max.bytes=10000
       --s3.access.key=DummyKey
       --s3.bucket=demobucket
@@ -159,7 +157,7 @@ services:
       - dks-standalone-https
       - mock-nifi
     command: >-
-      --logging.level.root=INFO
+      --logging.level.root=${LOGGING_LEVEL}
       --spring.main.banner-mode=off
       --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,dummyS3Client
       --aws.region=eu-west-2
