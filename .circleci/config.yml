@@ -99,6 +99,9 @@ jobs:
 
             docker-compose up s3-bucket-provision
             sleep 10
+            docker exec -i hbase hbase shell \<<< "create_namespace 'claimant_advances'"
+            docker exec -i hbase hbase shell \<<< "create_namespace 'core'"
+            docker exec -i hbase hbase shell \<<< "create_namespace 'quartz'"
             docker-compose up hbase-populate
             sleep 10
             docker-compose up hbase-to-mongo-export

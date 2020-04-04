@@ -75,6 +75,9 @@ up: ## Run the ecosystem of containers
 			echo "Waiting for s3-dummy..."; \
 			sleep 2; \
 		done; \
+		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
+		docker exec -i hbase hbase shell <<< "create_namespace 'core'"; \
+		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up hbase-populate s3-bucket-provision; \
 		docker-compose up hbase-to-mongo-export; \
 		docker-compose up hbase-to-mongo-export-claimant-event; \

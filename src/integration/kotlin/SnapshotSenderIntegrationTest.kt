@@ -32,7 +32,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
     //matched triplets of file name, timestamp and line count
     private val nifiFileNamesCSV = System.getenv("NIFI_FILE_NAMES_CSV")
-        ?: "db.core.addressDeclaration-000001.txt.bz2,db.quartz.claimantEvent-000001.txt.bz2"
+        ?: "db.core.addressDeclaration-045-050-000001.txt.gz,db.quartz.claimantEvent-045-050-000001.txt.gz"
     private val nifiLineCountsCSV = System.getenv("NIFI_LINE_COUNTS_CSV") ?: "7,1"
     private val nifiTimestampsCSV = System.getenv("NIFI_TIME_STAMPS_CSV") ?: "10,1"
 
@@ -73,11 +73,11 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         "Verify for every source collection a finished file was written to s3" {
             logger.info("Checking $bucketUri ...")
 
-            //s3 in:  test/output/db.core.addressDeclaration-000001.txt.bz2.enc
-            //s3 out: test/status/db.core.addressDeclaration-000001.txt.bz2.enc.finished
+            //s3 in:  test/output/db.core.addressDeclaration-000001.txt.gz.enc
+            //s3 out: test/status/db.core.addressDeclaration-000001.txt.gz.enc.finished
 
-            // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.bz2.enc.finished
-            // ...should have content = "Finished test/output/db.core.addressDeclaration-000001.txt.bz2.enc"
+            // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.txt.gz.enc.finished
+            // ...should have content = "Finished test/output/db.core.addressDeclaration-000001.txt.gz.enc"
 
             val bucketResultsXml = getS3Content(bucketUri)
             val fileKeys = getXmlNodesByTagName("Key", bucketResultsXml)
@@ -108,11 +108,10 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             }
         }
 
-        "Verify for every source collection an output file was sent to nifi as bz2" {
+        "Verify for every source collection an output file was sent to nifi as gz" {
             logger.info("Check collections vs nifi")
-
-            //s3 in:    test/output/db.core.addressDeclaration-000001.txt.bz2.enc
-            //nifi out: /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2
+            //s3 in:    test/output/db.core.addressDeclaration-000001.txt.gz.enc
+            //nifi out: /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.gz
 
             val bucketResultsXml = getS3Content(bucketUri)
             val fileKeys = getXmlNodesByTagName("Key", bucketResultsXml)
@@ -139,7 +138,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
             val actualNifiFiles = File(nifiRootFolder).walkTopDown()
                 .map { it.absolutePath }
-                .filter { it.contains("db.") && it.contains(".txt.bz2") }
+                .filter { it.contains("db.") && it.contains(".txt.gz") }
                 .toList()
             logger.info("actualNifiFiles: $actualNifiFiles")
 
@@ -149,13 +148,13 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
         "Verify nifi output files have a valid json per line at expected timestamp with specified line count" {
             logger.info("Check nifi outputs")
-            // Verify "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.bz2 \
+            // Verify "-file /data/output/db.core.addressDeclaration/db.core.addressDeclaration-000001.txt.gz \
             //              -linecount 7"
             //              -timestamp 10 \
 
             val actualNifiFiles = File(nifiRootFolder).walkTopDown()
                 .map { it.absolutePath }
-                .filter { it.contains("db.") && it.contains(".txt.bz2") }
+                .filter { it.contains("db.") && it.contains(".txt.gz") }
                 .toList()
             logger.info("actualNifiFiles: $actualNifiFiles")
 
@@ -171,7 +170,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
                 val streamIn = FileInputStream(fullPath)
                 val dataStream = CompressorStreamFactory()
-                    .createCompressorInputStream(CompressorStreamFactory.BZIP2, BufferedInputStream(streamIn))
+                    .createCompressorInputStream(CompressorStreamFactory.GZIP, BufferedInputStream(streamIn))
                 val dataReader = BufferedReader(InputStreamReader(dataStream, "UTF-8"))
 
                 var linesDone = 0
@@ -244,7 +243,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
     }
 
     private fun deriveCollection(fileName: String): String {
-        //s3 in:    test/output/db.core.addressDeclaration-000001.txt.bz2.enc
+        //s3 in:    test/output/db.core.addressDeclaration-045-050-000001.txt.gz.enc
         //out       db.core.addressDeclaration
 
         val lastSlashIndex = fileName.lastIndexOf("/")
@@ -255,8 +254,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         if (lastDashIndex < 0) {
             fail("Rejecting: '$fileName' as fileName does not contain '-' to find collection")
         }
-        val fullCollection = fileName.substring((lastSlashIndex + 1) until (lastDashIndex))
-        logger.info("Found collection: '${fullCollection}' from fileName of '$fileName'")
+        val fullCollection = fileName.substring((lastSlashIndex + 1) until (lastDashIndex)).replace(Regex("""-\d{3}-\d{3}$"""), "")
+        logger.info("Derived collection: '${fullCollection}' from fileName of '$fileName'")
         return fullCollection
     }
 }
