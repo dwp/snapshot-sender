@@ -99,7 +99,7 @@ class HttpWriterTest {
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
         assertEquals("""Checking item to  write", "file_name":"db.core.addressDeclaration-000001.txt.bz2.enc", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[1])
-        assertEquals("""Found collection of file name", "collection":"db.core.addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[2])
+        assertEquals("""Found collection of file name", "collection":"addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[2])
         assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-000001.txt.bz2.enc", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[3])
         assertEquals("""Successfully posted file", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc", "response":"200"""", formattedMessages[4])
     }
@@ -166,7 +166,7 @@ class HttpWriterTest {
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
         assertEquals("""Checking item to  write", "file_name":"db.a.b-01.enc", "full_path":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[1])
-        assertEquals("""Found collection of file name", "collection":"db.a.b", "file_name":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[2])
+        assertEquals("""Found collection of file name", "collection":"b", "file_name":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[2])
         assertEquals("""Posting file name to collection", "database":"a", "collection":"b", "topic":"db.a.b", "file_name":"db.a.b-01.enc", "full_path":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[3])
         assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.enc", "response":"400"""", formattedMessages[4])
     }

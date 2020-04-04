@@ -45,14 +45,13 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 throw exception
             }
             val database = match.groupValues[1]
-            val collection = match.groupValues[2].replace(Regex("""-\d+$"""), "")
-            val fullCollection = item.fileName.substring(0 until (lastDashIndex))
-            logger.info("Found collection of file name", "collection" to fullCollection, "file_name" to item.fullPath)
-
+            val collection = match.groupValues[2].replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
+            val topic = "db.$database.$collection"
+            logger.info("Found collection of file name", "collection" to collection, "file_name" to item.fullPath)
             logger.info("Posting file name to collection",
                     "database" to database,
                     "collection" to collection,
-                    "topic" to fullCollection,
+                    "topic" to topic,
                     "file_name" to item.fileName,
                     "full_path" to item.fullPath)
             httpClientProvider.client().use {
@@ -63,7 +62,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                     setHeader("date", SimpleDateFormat("yyyy-MM-dd").format(Date()))
                     setHeader("database", database)
                     setHeader("collection", collection)
-                    setHeader("topic", fullCollection)
+                    setHeader("topic", topic)
                 }
 
                 it.execute(post).use { response ->
