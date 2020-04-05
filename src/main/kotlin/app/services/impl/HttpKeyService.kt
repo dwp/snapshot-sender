@@ -41,7 +41,7 @@ class HttpKeyService(
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
 
         val dksCorrelationId = uuidGenerator.randomUUID()
-        logger.info("Performing decryption on privded encryption key", "encrypted_key" to encryptedKey, "encrypted_key_id" to encryptionKeyId, "correlation_id" to dksCorrelationId)
+        logger.info("Performing decryption on provided encryption key", "encrypted_key" to encryptedKey, "encrypted_key_id" to encryptionKeyId, "correlation_id" to dksCorrelationId)
 
         val cacheKey = "$encryptedKey/$encryptionKeyId"
         try {

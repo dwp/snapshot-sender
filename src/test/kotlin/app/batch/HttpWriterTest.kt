@@ -69,7 +69,7 @@ class HttpWriterTest {
     @Test
     fun test_will_write_to_nifi_when_valid_file() {
         //given
-        val filename = "db.core.addressDeclaration-000001.txt.bz2.enc"
+        val filename = "db.core.addressDeclaration-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -87,7 +87,7 @@ class HttpWriterTest {
         verify(httpClient, once()).execute(httpCaptor.capture())
         assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
         assertEquals(6, httpCaptor.firstValue.allHeaders.size)
-        assertEquals("filename: db.core.addressDeclaration-000001.txt.bz2.enc", httpCaptor.firstValue.allHeaders[0].toString())
+        assertEquals("filename: db.core.addressDeclaration-000001.json.gz", httpCaptor.firstValue.allHeaders[0].toString())
         assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
         assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
         assertEquals("collection: addressDeclaration", httpCaptor.firstValue.allHeaders[4].toString())
@@ -95,18 +95,17 @@ class HttpWriterTest {
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, Mockito.times(5)).doAppend(logCaptor.capture())
+        verify(mockAppender, Mockito.times(4)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
-        assertEquals("""Checking item to  write", "file_name":"db.core.addressDeclaration-000001.txt.bz2.enc", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[1])
-        assertEquals("""Found collection of file name", "collection":"addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[2])
-        assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-000001.txt.bz2.enc", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc"""", formattedMessages[3])
-        assertEquals("""Successfully posted file", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.bz2.enc", "response":"200"""", formattedMessages[4])
+        assertEquals("""Checking item to  write", "file_name":"db.core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz"""", formattedMessages[1])
+        assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.core.addressDeclaration-000001.json.gz"""", formattedMessages[2])
+        assertEquals("""Successfully posted file", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy"""", formattedMessages[3])
     }
 
     @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_dbname() {
-        val filename = "db.core-with-hyphen.addressDeclaration-000001.txt.bz2.enc"
+        val filename = "db.core-with-hyphen.addressDeclaration-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -124,7 +123,7 @@ class HttpWriterTest {
 
     @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_collection() {
-        val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.bz2.enc"
+        val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -142,7 +141,7 @@ class HttpWriterTest {
 
     @Test
     fun test_will_raise_error_when_file_cannot_be_sent() {
-        val filename = "db.a.b-01.enc"
+        val filename = "db.a.b-01.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
@@ -157,18 +156,17 @@ class HttpWriterTest {
             fail("Expected WriterException")
         }
         catch (ex: WriterException) {
-            assertEquals("Failed to post 'exporter-output/job01/db.a.b-01.enc': post returned status code 400", ex.message)
+            assertEquals("Failed to post 'exporter-output/job01/db.a.b-01.txt.gz': post returned status code 400", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, Mockito.times(5)).doAppend(logCaptor.capture())
+        verify(mockAppender, Mockito.times(4)).doAppend(logCaptor.capture())
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
-        assertEquals("""Checking item to  write", "file_name":"db.a.b-01.enc", "full_path":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[1])
-        assertEquals("""Found collection of file name", "collection":"b", "file_name":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[2])
-        assertEquals("""Posting file name to collection", "database":"a", "collection":"b", "topic":"db.a.b", "file_name":"db.a.b-01.enc", "full_path":"exporter-output\/job01\/db.a.b-01.enc"""", formattedMessages[3])
-        assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.enc", "response":"400"""", formattedMessages[4])
+        assertEquals("""Checking item to  write", "file_name":"db.a.b-01.txt.gz", "full_path":"exporter-output\/job01\/db.a.b-01.txt.gz"""", formattedMessages[1])
+        assertEquals("""Posting file name to collection", "database":"a", "collection":"b", "topic":"db.a.b", "file_name":"db.a.b-01.txt.gz", "full_path":"exporter-output\/job01\/db.a.b-01.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.a.b-01.json.gz"""", formattedMessages[2])
+        assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.txt.gz", "response":"400", "nifi_url":"nifi:8091\/dummy"""", formattedMessages[3])
     }
 
     @Test
