@@ -2,13 +2,12 @@ package app.configuration
 
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
-import app.exceptions.DataKeyDecryptionException
-import app.exceptions.WriterException
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
 import org.springframework.batch.core.launch.support.RunIdIncrementer
+import org.springframework.batch.core.step.tasklet.TaskletStep
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
@@ -20,6 +19,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.retry.policy.SimpleRetryPolicy
 
 @Configuration
 @EnableBatchProcessing
@@ -35,14 +35,14 @@ class JobConfiguration {
             .build()
 
     @Bean
-    fun step() =
-        stepBuilderFactory.get("step")
+    fun step() = stepBuilderFactory.get("step")
             .chunk<EncryptedStream, DecryptedStream>(10)
             .reader(itemReader)
             .faultTolerant()
-            .skip(DataKeyDecryptionException::class.java)
-            .skip(WriterException::class.java)
-            .skipLimit(Integer.MAX_VALUE)
+            .retry(Exception::class.java)
+            .retryPolicy(SimpleRetryPolicy().apply {
+                maxAttempts = 10
+            })
             .processor(itemProcessor())
             .writer(itemWriter)
             .taskExecutor(taskExecutor())

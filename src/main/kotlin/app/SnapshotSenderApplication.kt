@@ -14,5 +14,6 @@ class SnapshotSenderApplication
 
 fun main(args: Array<String>) {
     LogFields.put("SQS_MESSAGE_ID", "sqs_message_id", "NOT_SET")
+    LogFields.put("TOPIC_NAME", "topic_name", "NOT_SET")
     exitProcess(SpringApplication.exit(runApplication<SnapshotSenderApplication>(*args)))
 }
