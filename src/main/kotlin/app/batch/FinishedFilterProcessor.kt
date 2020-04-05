@@ -13,10 +13,14 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 class FinishedFilterProcessor(private val amazonS3: AmazonS3, private val s3utils: S3Utils) : ItemProcessor<EncryptedStream, EncryptedStream> {
 
     override fun process(item: EncryptedStream) =
-            if (fileAlreadyProcessed(item.fullPath)) {
+            if (reprocessFiles.toBoolean()) {
+                item
+            }
+            else if (fileAlreadyProcessed(item.fullPath)) {
                 logger.info("Skipping processing of item as already processed", "file_name" to item.fullPath)
                 null
-            } else {
+            }
+            else {
                 item
             }
 
@@ -25,6 +29,9 @@ class FinishedFilterProcessor(private val amazonS3: AmazonS3, private val s3util
 
     @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
     private lateinit var s3bucket: String
+
+    @Value("\${reprocess.files:false}")
+    private lateinit var reprocessFiles: String
 
     companion object {
         val logger = DataworksLogger.getLogger(FinishedFilterProcessor::class.toString())
