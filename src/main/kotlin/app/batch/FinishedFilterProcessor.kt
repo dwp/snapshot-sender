@@ -13,10 +13,7 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 class FinishedFilterProcessor(private val amazonS3: AmazonS3, private val s3utils: S3Utils) : ItemProcessor<EncryptedStream, EncryptedStream> {
 
     override fun process(item: EncryptedStream) =
-            if (reprocessFiles.toBoolean()) {
-                item
-            }
-            else if (fileAlreadyProcessed(item.fullPath)) {
+            if ( !reprocessFiles.toBoolean() && fileAlreadyProcessed(item.fullPath)) {
                 logger.info("Skipping processing of item as already processed", "file_name" to item.fullPath)
                 null
             }
