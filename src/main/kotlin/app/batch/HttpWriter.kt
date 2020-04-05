@@ -6,6 +6,9 @@ import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.impl.HttpKeyService
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.S3ObjectInputStream
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -38,9 +41,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
         }
     }
 
-    @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     private fun postItem(item: DecryptedStream) {
         logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
         val match = filenameRe.find(item.fileName)
@@ -109,10 +109,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())
-        // Will retry at 1s, 2s, 4s, 8s, 16s ...
-        const val maxAttempts = 10
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 
 }
