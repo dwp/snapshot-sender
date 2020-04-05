@@ -47,13 +47,13 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
             val database = match.groupValues[1]
             val collection = match.groupValues[2].replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
             val topic = "db.$database.$collection"
-            logger.info("Found collection of file name", "collection" to collection, "file_name" to item.fullPath)
             logger.info("Posting file name to collection",
                     "database" to database,
                     "collection" to collection,
                     "topic" to topic,
                     "file_name" to item.fileName,
-                    "full_path" to item.fullPath)
+                    "full_path" to item.fullPath,
+                    "nifi_url" to nifiUrl)
             httpClientProvider.client().use {
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
@@ -68,13 +68,19 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 it.execute(post).use { response ->
                     when (response.statusLine.statusCode) {
                         200 -> {
-                            logger.info("Successfully posted file", "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
+                            logger.info("Successfully posted file",
+                                    "file_name" to item.fullPath,
+                                    "response" to response.statusLine.statusCode.toString(),
+                                    "nifi_url" to nifiUrl)
                             s3StatusFileWriter.writeStatus(item.fullPath)
                         }
                         else -> {
                             val message = "Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}"
                             val exception = WriterException(message)
-                            logger.error("Failed to post the provided item", exception, "file_name" to item.fullPath, "response" to response.statusLine.statusCode.toString())
+                            logger.error("Failed to post the provided item", exception,
+                                    "file_name" to item.fullPath,
+                                    "response" to response.statusLine.statusCode.toString(),
+                                    "nifi_url" to nifiUrl)
                             throw exception
                         }
                     }
