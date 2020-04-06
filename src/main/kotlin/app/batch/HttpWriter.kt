@@ -77,7 +77,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
                 setHeader("filename", filenameHeader)
                 setHeader("environment", "aws/${System.getProperty("environment")}")
-                setHeader("date", SimpleDateFormat("yyyy-MM-dd").format(Date()))
+                setHeader("exported_date", SimpleDateFormat("yyyy-MM-dd").format(Date()))
                 setHeader("database", database)
                 setHeader("collection", collection)
                 setHeader("topic", topic)
