@@ -16,6 +16,7 @@ class BufferingProcessor() : ItemProcessor<EncryptedStream, EncryptedStream> {
     override fun process(item: EncryptedStream): EncryptedStream? {
         val outputStream = ByteArrayOutputStream()
         item.inputStream.copyTo(outputStream)
+        item.inputStream.close()
         item.inputStream = ByteArrayInputStream(outputStream.toByteArray())
         return item
     }
