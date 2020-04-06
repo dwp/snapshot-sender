@@ -20,6 +20,7 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,6 +35,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
 
     val filenameRe = Regex("""^\w+\.([\w-]+)\.([\w-]+)""")
 
+    @Throws(Exception::class)
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing items to S3", "number_of_items" to items.size.toString())
         items.forEach { item ->
