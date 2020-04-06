@@ -7,6 +7,6 @@ data class EncryptionMetadata(val initializationVector: String,
                               val cipherText: String,
                               var plaintext: String)
 
-data class EncryptedStream(val inputStream: InputStream, val fileName: String, val fullPath: String, val encryptionMetadata: EncryptionMetadata)
+data class EncryptedStream(var inputStream: InputStream, val fileName: String, val fullPath: String, val encryptionMetadata: EncryptionMetadata)
 data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKey: String, val ciphertextDataKey: String)
 data class DecryptedStream(val inputStream: InputStream, val fileName: String, val fullPath: String)

@@ -20,6 +20,6 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
     }
 
     companion object {
-        val logger = DataworksLogger.getLogger(FinishedFilterProcessor::class.toString())
+        val logger = DataworksLogger.getLogger(DataKeyProcessor::class.toString())
     }
 }

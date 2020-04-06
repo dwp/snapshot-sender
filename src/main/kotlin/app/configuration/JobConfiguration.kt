@@ -36,15 +36,15 @@ class JobConfiguration {
 
     @Bean
     fun step() = stepBuilderFactory.get("step")
-            .chunk<EncryptedStream, DecryptedStream>(10)
+            .chunk<EncryptedStream, DecryptedStream>(chunkSize.toInt())
             .reader(itemReader)
+            .processor(itemProcessor())
+            .writer(itemWriter)
             .faultTolerant()
             .retry(Exception::class.java)
             .retryPolicy(SimpleRetryPolicy().apply {
-                maxAttempts = 10
+                maxAttempts = maxRetries.toInt()
             })
-            .processor(itemProcessor())
-            .writer(itemWriter)
             .taskExecutor(taskExecutor())
             .build()
 
@@ -55,7 +55,7 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<EncryptedStream, DecryptedStream> =
         CompositeItemProcessor<EncryptedStream, DecryptedStream>().apply {
-            setDelegates(listOf(finishedFilterProcessor, datakeyProcessor, decryptionProcessor))
+            setDelegates(listOf(finishedFilterProcessor, bufferingProcessor, datakeyProcessor, decryptionProcessor))
         }
 
     @Value("\${thread.count:10}")
@@ -73,6 +73,10 @@ class JobConfiguration {
     lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
+    @Qualifier("buffer")
+    lateinit var bufferingProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+
+    @Autowired
     lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
 
     @Autowired
@@ -83,4 +87,11 @@ class JobConfiguration {
 
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
+
+
+    @Value("\${s3.max.retries:100}")
+    private lateinit var maxRetries: String
+
+    @Value("\${chunk.size:1}")
+    private lateinit var chunkSize: String
 }
