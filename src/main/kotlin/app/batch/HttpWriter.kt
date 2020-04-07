@@ -77,7 +77,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
                 setHeader("filename", filenameHeader)
                 setHeader("environment", "aws/${System.getProperty("environment")}")
-                setHeader("export_date", SimpleDateFormat("yyyy-MM-dd").format(Date()))
+                setHeader("export_date", exportDate)
                 setHeader("database", database)
                 setHeader("collection", collection)
                 setHeader("topic", topic)
@@ -108,6 +108,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
 
     @Value("\${nifi.url}")
     private lateinit var nifiUrl: String
+
+    @Value("\${export.date}")
+    private lateinit var exportDate: String
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())
