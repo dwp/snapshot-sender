@@ -29,6 +29,7 @@ import org.springframework.test.context.junit4.SpringRunner
 @TestPropertySource(properties = [
     "data.key.service.url=datakey.service:8090",
     "nifi.url=nifi:8091/dummy",
+    "export.date=2019-01-01",
     "s3.bucket=bucket1",
     "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
