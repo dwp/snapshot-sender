@@ -93,13 +93,11 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                         s3StatusFileWriter.writeStatus(item.fullPath)
                     }
                     else -> {
-                        val message = "Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}"
-                        val exception = WriterException(message)
-                        logger.error("Failed to post the provided item", exception,
+                        logger.warn("Failed to post the provided item",
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
                                 "nifi_url" to nifiUrl)
-                        throw exception
+                        throw WriterException("Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}")
                     }
                 }
             }
