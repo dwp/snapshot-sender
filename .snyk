@@ -5,47 +5,47 @@ ignore:
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-540500:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469676:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469674:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-472980:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467014:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467015:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467016:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-548451:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-559094:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-559106:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
-        expires: 2020-04-16T00:00:00.000Z
+        expires: 2020-05-16T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-560762:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
