@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 
 plugins {
-    id("org.springframework.boot") version "2.1.8.RELEASE"
+    id("org.springframework.boot") version "2.2.0.RELEASE"
     id("io.spring.dependency-management") version "1.0.8.RELEASE"
     kotlin("jvm") version "1.3.21"
     kotlin("plugin.spring") version "1.3.21"
@@ -30,7 +30,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
     implementation("org.apache.httpcomponents:httpclient:4.5.10")
     implementation("com.google.code.gson:gson:2.8.5")
-    implementation("org.apache.commons:commons-compress:1.8")
+    implementation("org.apache.commons:commons-compress:1.20")
     implementation("org.apache.commons:commons-text:1.8")
 
     // sdk v1
@@ -43,7 +43,6 @@ dependencies {
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     testImplementation("com.beust", "klaxon", "4.0.2")
     // integration tests
-    testImplementation("org.apache.commons:commons-compress:1.5")
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
     testImplementation("org.apache.httpcomponents:fluent-hc:4.5.10")
 

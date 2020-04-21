@@ -2,13 +2,8 @@ package app.batch
 
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
-import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
-import app.services.impl.HttpKeyService
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.S3ObjectInputStream
-import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -16,13 +11,9 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.lang.Exception
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Component
 @Profile("httpWriter")
@@ -93,13 +84,17 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                         s3StatusFileWriter.writeStatus(item.fullPath)
                     }
                     else -> {
-                        val message = "Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}"
-                        val exception = WriterException(message)
-                        logger.error("Failed to post the provided item", exception,
+
+                        val headers = mutableListOf<Pair<String, String>>()
+                        response.allHeaders.forEach {
+                            headers.add(it.name to it.value)
+                        }
+
+                        logger.warn("Failed to post the provided item",
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
-                                "nifi_url" to nifiUrl)
-                        throw exception
+                                "nifi_url" to nifiUrl, *headers.toTypedArray())
+                        throw WriterException("Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}")
                     }
                 }
             }
