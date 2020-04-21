@@ -8,6 +8,7 @@ import app.exceptions.WriterException
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.argumentCaptor
+import org.apache.http.Header
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpPost
@@ -152,6 +153,10 @@ class HttpWriterTest {
         given(statusLine.statusCode).willReturn(400)
         given(httpResponse.statusLine).willReturn((statusLine))
 
+        val header = Mockito.mock(Header::class.java)
+        given(header.name).willReturn("HEADER_NAME")
+        given(header.value).willReturn("HEADER_VALUE")
+        given(httpResponse.allHeaders).willReturn(arrayOf(header))
         try {
             httpWriter.write(mutableListOf(decryptedStream))
             fail("Expected WriterException")
@@ -167,7 +172,7 @@ class HttpWriterTest {
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
         assertEquals("""Checking item to  write", "file_name":"db.a.b-01.txt.gz", "full_path":"exporter-output\/job01\/db.a.b-01.txt.gz"""", formattedMessages[1])
         assertEquals("""Posting file name to collection", "database":"a", "collection":"b", "topic":"db.a.b", "file_name":"db.a.b-01.txt.gz", "full_path":"exporter-output\/job01\/db.a.b-01.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.a.b-01.json.gz"""", formattedMessages[2])
-        assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.txt.gz", "response":"400", "nifi_url":"nifi:8091\/dummy"""", formattedMessages[3])
+        assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.txt.gz", "response":"400", "nifi_url":"nifi:8091\/dummy", "HEADER_NAME":"HEADER_VALUE"""", formattedMessages[3])
     }
 
     @Test
