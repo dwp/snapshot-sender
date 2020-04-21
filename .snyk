@@ -74,4 +74,8 @@ ignore:
     - '*':
         reason: Issue is still present in the latest aws-java-sdk-core (1.11.706)
         expires: 2020-05-16T00:00:00.000Z
+  SNYK-JAVA-ORGYAML-537645:
+    - '*':
+        reason: Transitive dependency with no direct upgrade patch.
+        expires: 2020-05-16T00:00:00.000Z
 patch: {}
