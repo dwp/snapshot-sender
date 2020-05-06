@@ -62,6 +62,10 @@ class S3DirectoryReader(private val s3Client: AmazonS3, private val s3Utils: S3U
                 request.continuationToken = results.nextContinuationToken
             } while (results != null && results.isTruncated)
 
+            logger.info("S3 object count",
+                    "bucket_name" to bucketName,
+                    "s3_prefix_folder" to s3Utils.s3PrefixFolder, "object_count" to objectSummaries.count().toString())
+
             iterator = objectSummaries.listIterator()
         }
         return iterator!!

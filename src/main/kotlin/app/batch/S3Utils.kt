@@ -3,18 +3,13 @@ package app.batch
 import com.amazonaws.services.s3.AmazonS3
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 
 @Component
 class S3Utils {
 
     @Autowired
-    lateinit var env: Environment
-
-    @Autowired
     lateinit var s3Client: AmazonS3
-
 
     @Value("\${s3.prefix.folder}")
     lateinit var s3PrefixFolder: String
