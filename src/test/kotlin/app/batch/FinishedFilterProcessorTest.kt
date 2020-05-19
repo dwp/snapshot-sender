@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [FinishedFilterProcessor::class, S3Utils::class])
@@ -44,11 +43,10 @@ class FinishedFilterProcessorTest {
         val datakeyEncryptionKeyId = "datakeyEncryptionKeyId"
         val cipherText = "cipherText"
         val plaintext = "plaintext"
-        val inputStream = ByteArrayInputStream("inputstream".toByteArray())
         val encryptionMetadata = EncryptionMetadata(initializationVector, datakeyEncryptionKeyId, cipherText, plaintext)
         val fileName = "db.core.addressDeclaration-000001.txt.bz2.enc"
         val fullpath = "${s3utils.s3PrefixFolder}$fileName"
-        val encryptedStream = EncryptedStream(inputStream, fileName, fullpath, encryptionMetadata)
+        val encryptedStream = EncryptedStream("inputstream".toByteArray(), fileName, fullpath, encryptionMetadata)
         val finishedFlag = s3utils.getFinishedStatusKeyName(fullpath)
         logger.info("finishedFlag: '$finishedFlag'.")
         given(amazonS3.doesObjectExist(s3bucket, finishedFlag)).willReturn(false)
@@ -62,11 +60,10 @@ class FinishedFilterProcessorTest {
         val datakeyEncryptionKeyId = "datakeyEncryptionKeyId"
         val cipherText = "cipherText"
         val plaintext = "plaintext"
-        val inputStream = ByteArrayInputStream("inputstream".toByteArray())
         val encryptionMetadata = EncryptionMetadata(initializationVector, datakeyEncryptionKeyId, cipherText, plaintext)
         val fileName = "db.core.addressDeclaration-000001.txt.bz2.enc"
         val fullpath = "${s3utils.s3PrefixFolder}$fileName"
-        val encryptedStream = EncryptedStream(inputStream, fileName, fullpath, encryptionMetadata)
+        val encryptedStream = EncryptedStream("inputstream".toByteArray(), fileName, fullpath, encryptionMetadata)
         val finishedFlag = s3utils.getFinishedStatusKeyName(fullpath)
         logger.info("finishedFlag: '$finishedFlag'.")
         given(amazonS3.doesObjectExist(s3bucket, finishedFlag)).willReturn(true)

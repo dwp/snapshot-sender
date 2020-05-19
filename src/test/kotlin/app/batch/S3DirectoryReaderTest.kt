@@ -6,6 +6,7 @@ import app.domain.EncryptionMetadata
 import app.exceptions.DataKeyDecryptionException
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.*
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
@@ -76,6 +77,9 @@ class S3DirectoryReaderTest {
     @MockBean
     private lateinit var mockS3Client: AmazonS3
 
+    @MockBean
+    private lateinit var s3Utils: S3Utils
+
     @Before
     fun setUp() {
 
@@ -86,11 +90,13 @@ class S3DirectoryReaderTest {
         s3ObjectSummary1.bucketName = BUCKET_NAME1
         s3ObjectSummary1.key = KEY1
 
+        val s3ObjectInputStream1 = mock<S3ObjectInputStream>()
 
-        s3Object1 = S3Object()
-        s3Object1.bucketName = BUCKET_NAME1
-        s3Object1.key = KEY1
-        s3Object1.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT1.toByteArray()), HttpGet())
+        s3Object1 = mock<S3Object> {
+            on { bucketName } doReturn BUCKET_NAME1
+            on { key } doReturn KEY1
+            on { objectContent } doReturn s3ObjectInputStream1
+        }
 
         objectMetadata1 = ObjectMetadata()
         objectMetadata1.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
@@ -119,6 +125,9 @@ class S3DirectoryReaderTest {
         objectMetadata3 = ObjectMetadata()
         objectMetadata3.userMetadata = mapOf(IV to IV, DATAENCRYPTION_KEY to DATAENCRYPTION_KEY, CIPHER_TEXT to CIPHER_TEXT)
 
+        given(s3Utils.objectContents(s3Object1)).willReturn(OBJECT_CONTENT1.toByteArray())
+        given(s3Utils.objectContents(s3Object2)).willReturn(OBJECT_CONTENT2.toByteArray())
+
         s3DirectorReader.reset()
         Mockito.reset(mockS3Client)
     }
@@ -135,7 +144,7 @@ class S3DirectoryReaderTest {
 
         //when it is read
         val encryptedStream1 = s3DirectorReader.read()
-        val actualStream1 = encryptedStream1?.inputStream
+        val actualStream1 = encryptedStream1?.contents ?: ByteArray(0)
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
 
         //then
@@ -145,7 +154,7 @@ class S3DirectoryReaderTest {
         verifyNoMoreInteractions(mockS3Client)
 
         assertObjectMetadata(objectMetadata1, actualMetadata1)
-        assertObjectContent(OBJECT_CONTENT1, actualStream1)
+        assertEquals(OBJECT_CONTENT1, String(actualStream1))
         assertFileNameEndsWith(KEY1, encryptedStream1!!)
         assertEquals("file1", encryptedStream1.fileName)
     }
@@ -177,16 +186,16 @@ class S3DirectoryReaderTest {
         verifyNoMoreInteractions(mockS3Client)
 
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
-        val actualStream1 = encryptedStream1?.inputStream
+        val actualStream1 = encryptedStream1?.contents ?: ByteArray(0)
 
         val actualMetadata2 = encryptedStream2?.encryptionMetadata
-        val actualStream2 = encryptedStream2?.inputStream
+        val actualStream2 = encryptedStream2?.contents ?: ByteArray(0)
 
         assertObjectMetadata(objectMetadata1, actualMetadata1)
         assertObjectMetadata(objectMetadata2, actualMetadata2)
 
-        assertObjectContent(OBJECT_CONTENT1, actualStream1)
-        assertObjectContent(OBJECT_CONTENT2, actualStream2)
+        assertEquals(OBJECT_CONTENT1, String(actualStream1))
+        assertEquals(OBJECT_CONTENT2, String(actualStream2))
 
         assertFileNameEndsWith(KEY1, encryptedStream1!!)
         assertFileNameEndsWith(KEY2, encryptedStream2!!)
@@ -268,6 +277,8 @@ class S3DirectoryReaderTest {
         given(mockS3Client.getObjectMetadata(anyString(), anyString()))
             .willReturn(objectMetadata)
 
+        given(s3Utils.objectContents(any())).willReturn("TEXT".toByteArray())
+
         s3DirectorReader.read()
 
         verify(mockS3Client, times(2))
@@ -309,6 +320,8 @@ class S3DirectoryReaderTest {
         given(mockS3Client.getObjectMetadata(anyString(), anyString()))
             .willReturn(objectMetadata)
 
+        given(s3Utils.objectContents(any())).willReturn("TEXT".toByteArray())
+
         s3DirectorReader.read()
 
         verify(mockS3Client, times(1))
@@ -316,10 +329,12 @@ class S3DirectoryReaderTest {
 
     }
 
-    private fun mockS3Object() =
-        mock<S3Object> {
-            on { objectContent } doReturn mock()
+    private fun mockS3Object(): S3Object {
+        val inputStream = mock<S3ObjectInputStream>()
+        return mock<S3Object> {
+            on { objectContent } doReturn inputStream
         }
+    }
 
     private fun mockS3ObjectSummary(objectKey: String) =
         mock<S3ObjectSummary> {

@@ -1,9 +1,11 @@
 package app.batch
 
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.S3Object
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.io.ByteArrayOutputStream
 
 @Component
 class S3Utils {
@@ -28,4 +30,15 @@ class S3Utils {
         val senderKey = htmeExportKey.replace(htmeRootFolder, statusFolder)
         return "$senderKey.finished"
     }
+
+    fun objectContents(from: S3Object?): ByteArray {
+
+        val outputStream = ByteArrayOutputStream()
+        from?.objectContent.use {
+            it?.copyTo(outputStream)
+        }
+
+        return outputStream.toByteArray()
+    }
+
 }
