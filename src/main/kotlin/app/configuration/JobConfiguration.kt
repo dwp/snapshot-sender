@@ -54,7 +54,7 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<EncryptedStream, DecryptedStream> =
         CompositeItemProcessor<EncryptedStream, DecryptedStream>().apply {
-            setDelegates(listOf(finishedFilterProcessor, bufferingProcessor, datakeyProcessor, decryptionProcessor))
+            setDelegates(listOf(finishedFilterProcessor, datakeyProcessor, decryptionProcessor))
         }
 
     @Value("\${thread.count:10}")
@@ -70,10 +70,6 @@ class JobConfiguration {
     @Autowired
     @Qualifier("datakey")
     lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
-
-    @Autowired
-    @Qualifier("buffer")
-    lateinit var bufferingProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
     lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
