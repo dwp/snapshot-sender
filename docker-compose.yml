@@ -195,8 +195,11 @@ services:
     container_name: dks-standalone-http
     command:
       --spring.main.banner-mode=off
+      --logging.level.root=INFO
+      --s3.service.endpoint=http://s3-dummy:4572
+      --server.environment_name=local
     environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
+      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
 
   dks-standalone-https:
     image: dks-standalone-https
@@ -209,8 +212,11 @@ services:
     container_name: dks-standalone-https
     command:
       --spring.main.banner-mode=off
+      --logging.level.root=INFO
+      --s3.service.endpoint=http://s3-dummy:4572
+      --server.environment_name=local
     environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
+      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE,LocalAWS
       - SPRING_CONFIG_LOCATION=application-dks-secure.properties
 
   mock-nifi:

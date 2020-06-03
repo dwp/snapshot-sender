@@ -89,7 +89,7 @@ jobs:
             ./gradlew build
 
             docker-compose build hbase hbase-populate dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi s3-dummy s3-bucket-provision snapshot-sender sender-integration-test
-            docker-compose up -d hbase dks-standalone-http dks-standalone-https mock-nifi s3-dummy
+            docker-compose up -d hbase mock-nifi s3-dummy
 
             S3_READY_REGEX=^Ready\.$
             while ! docker logs s3-dummy 2> /dev/null | grep -q $S3_READY_REGEX; do
@@ -98,12 +98,17 @@ jobs:
             done
 
             docker-compose up s3-bucket-provision
-            sleep 10
+            docker-compose up -d dks-standalone-http dks-standalone-https
+
+            while ! docker exec dks-standalone-http cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do
+              echo "Waiting for dks"
+              sleep 2
+            done
+
             docker exec -i hbase hbase shell \<<< "create_namespace 'claimant_advances'"
             docker exec -i hbase hbase shell \<<< "create_namespace 'core'"
             docker exec -i hbase hbase shell \<<< "create_namespace 'quartz'"
             docker-compose up hbase-populate
-            sleep 10
             docker-compose up hbase-to-mongo-export
             docker-compose up hbase-to-mongo-export-claimant-event
             docker-compose up snapshot-sender

@@ -23,5 +23,10 @@ echo ""
 
 echo "--s3 bucket ${S3_BUCKET} done--"
 
+echo Creating crl bucket
+aws --endpoint-url="${S3_SERVICE_ENDPOINT}" s3 mb "s3://dw-local-crl" --region "${AWS_REGION}"
+aws --endpoint-url="${S3_SERVICE_ENDPOINT}" s3api put-bucket-acl --bucket "dw-local-crl" --acl public-read
+aws --endpoint-url="${S3_SERVICE_ENDPOINT}" s3api put-object --bucket "dw-local-crl" --key crl/
+
 # it only works with 18.03 + docker engine
 # https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach
