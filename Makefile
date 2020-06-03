@@ -69,7 +69,7 @@ build-images: build-base-images ## Build all ecosystem of images
 .PHONY: up
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https mock-nifi; \
+		docker-compose up -d hbase s3-dummy; \
 		echo "Waiting for services"; \
 		while ! docker logs s3-dummy 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 			echo "Waiting for s3-dummy..."; \
@@ -78,7 +78,15 @@ up: ## Run the ecosystem of containers
 		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'core'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
-		docker-compose up hbase-populate s3-bucket-provision; \
+		docker-compose up s3-bucket-provision; \
+		docker-compose up -d dks-standalone-http ; \
+		docker-compose up -d dks-standalone-https ; \
+		docker-compose up -d mock-nifi; \
+		while ! docker exec dks-standalone-http cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do \
+		  echo "Waiting for dks"; \
+		  sleep 2; \
+		done; \
+		docker-compose up hbase-populate; \
 		docker-compose up hbase-to-mongo-export; \
 		docker-compose up hbase-to-mongo-export-claimant-event; \
 		docker-compose up snapshot-sender; \
