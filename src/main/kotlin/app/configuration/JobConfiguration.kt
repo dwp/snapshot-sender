@@ -18,7 +18,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.core.task.TaskExecutor
 import org.springframework.retry.policy.SimpleRetryPolicy
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Configuration
 @EnableBatchProcessing
@@ -48,10 +50,12 @@ class JobConfiguration {
             .build()
 
     @Bean
-    fun taskExecutor() = SimpleAsyncTaskExecutor("snapshot_sender").apply {
-        concurrencyLimit = Integer.parseInt(threadCount)
+    fun taskExecutor(): TaskExecutor {
+        logger.info("Task executor thread count", "thread_count" to threadCount)
+        return SimpleAsyncTaskExecutor("snapshot_sender").apply {
+            concurrencyLimit = Integer.parseInt(threadCount)
+        }
     }
-
     fun itemProcessor(): ItemProcessor<EncryptedStream, DecryptedStream> =
         CompositeItemProcessor<EncryptedStream, DecryptedStream>().apply {
             setDelegates(listOf(finishedFilterProcessor, datakeyProcessor, decryptionProcessor))
@@ -89,4 +93,9 @@ class JobConfiguration {
 
     @Value("\${chunk.size:1}")
     private lateinit var chunkSize: String
+
+    companion object {
+        val logger = DataworksLogger.getLogger(JobConfiguration::class.toString())
+    }
+
 }
