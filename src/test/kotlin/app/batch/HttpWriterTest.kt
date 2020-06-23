@@ -259,7 +259,7 @@ class HttpWriterTest {
 
 
         val payload = put.entity.content.readBytes()
-        assertEquals(0, payload.size)
+        assertEquals(20, payload.size)
     }
 
     @Test

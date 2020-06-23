@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 @Component
@@ -44,7 +43,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider) : ItemWrite
                 val collection = match.groups["collection"]?.value ?: ""
                 val fileName = "_${database}_${collection}_successful.gz"
                 logger.info("Writing success indicator to crown", "file_name" to fileName)
-                val inputStream = GZIPInputStream(ByteArrayInputStream(zeroBytesCompressed()))
+                val inputStream = ByteArrayInputStream(zeroBytesCompressed())
                 httpClientProvider.client().use {
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(inputStream, -1, ContentType.DEFAULT_BINARY)
