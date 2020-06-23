@@ -8,6 +8,9 @@ import app.exceptions.WriterException
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.times
 import org.apache.http.Header
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -24,13 +27,17 @@ import org.mockito.BDDMockito.never
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.slf4j.LoggerFactory
+import org.springframework.batch.core.ExitStatus
+import org.springframework.batch.core.StepExecution
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
+import java.net.URI
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("httpDataKeyService", "unitTest", "httpWriter")
@@ -49,6 +56,7 @@ class HttpWriterTest {
     @MockBean
     private lateinit var mockS3StatusFileWriter: S3StatusFileWriter
 
+    @SpyBean
     @Autowired
     private lateinit var httpWriter: HttpWriter
 
@@ -66,6 +74,7 @@ class HttpWriterTest {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         root.addAppender(mockAppender)
         Mockito.reset(mockAppender)
+        Mockito.reset(httpClientProvider)
     }
 
     @Test
@@ -203,5 +212,63 @@ class HttpWriterTest {
             assertEquals("Rejecting: 'exporter-output/job01/db.core.address01.txt' as fileName does not contain '-' to find number", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
+    }
+
+    @Test
+    fun willWriteSuccessIndicatorOnSuccessfulCompletion() {
+        System.setProperty("topic_name", "db.core.toDo")
+        val stepExecution = mock<StepExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+
+        val status = mock<StatusLine> {
+            on { statusCode } doReturn 200
+        }
+
+        val response = mock<CloseableHttpResponse> {
+            on { statusLine } doReturn status
+        }
+
+        val httpClient = mock<CloseableHttpClient> {
+            on { execute(any()) } doReturn response
+        }
+
+        given(httpClientProvider.client()).willReturn(httpClient)
+        httpWriter.afterStep(stepExecution)
+        verify(httpWriter, times(1)).postSuccessIndicator()
+        verify(httpClientProvider, times(1)).client()
+        val captor = argumentCaptor<HttpPost>()
+        verify(httpClient, times(1)).execute(captor.capture())
+
+        val put = captor.firstValue
+        assertEquals(put.uri, URI("nifi:8091/dummy"))
+
+        val filenameHeader = put.getHeaders("filename")[0].value
+        val environmentHeader = put.getHeaders("environment")[0].value
+        val exportDateHeader = put.getHeaders("export_date")[0].value
+        val databaseHeader = put.getHeaders("database")[0].value
+        val collectionHeader = put.getHeaders("collection")[0].value
+        val topicHeader = put.getHeaders("topic")[0].value
+
+        assertEquals("_core_toDo_successful.gz", filenameHeader)
+        assertEquals("aws/test", environmentHeader)
+        assertEquals("2019-01-01", exportDateHeader)
+        assertEquals("core", databaseHeader)
+        assertEquals("toDo", collectionHeader)
+        assertEquals("db.core.toDo", topicHeader)
+
+
+        val payload = put.entity.content.readBytes()
+        assertEquals(0, payload.size)
+    }
+
+    @Test
+    fun willNotWriteSuccessIndicatorOnUnsuccessfulCompletion() {
+        System.setProperty("topic_name", "db.core.toDo")
+        val stepExecution = mock<StepExecution> {
+            on { exitStatus } doReturn ExitStatus.FAILED
+        }
+        httpWriter.afterStep(stepExecution)
+        verify(httpWriter, times(0)).postSuccessIndicator()
     }
 }
