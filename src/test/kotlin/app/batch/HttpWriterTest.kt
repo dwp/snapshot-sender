@@ -5,6 +5,7 @@ import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
+import app.services.SuccessService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -37,7 +38,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
-import java.net.URI
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("httpDataKeyService", "unitTest", "httpWriter")
@@ -62,6 +62,9 @@ class HttpWriterTest {
 
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
+
+    @MockBean
+    private lateinit var successService: SuccessService
 
     val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
 
@@ -220,46 +223,8 @@ class HttpWriterTest {
         val stepExecution = mock<StepExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
-
-        val status = mock<StatusLine> {
-            on { statusCode } doReturn 200
-        }
-
-        val response = mock<CloseableHttpResponse> {
-            on { statusLine } doReturn status
-        }
-
-        val httpClient = mock<CloseableHttpClient> {
-            on { execute(any()) } doReturn response
-        }
-
-        given(httpClientProvider.client()).willReturn(httpClient)
         httpWriter.afterStep(stepExecution)
-        verify(httpWriter, times(1)).postSuccessIndicator()
-        verify(httpClientProvider, times(1)).client()
-        val captor = argumentCaptor<HttpPost>()
-        verify(httpClient, times(1)).execute(captor.capture())
-
-        val put = captor.firstValue
-        assertEquals(put.uri, URI("nifi:8091/dummy"))
-
-        val filenameHeader = put.getHeaders("filename")[0].value
-        val environmentHeader = put.getHeaders("environment")[0].value
-        val exportDateHeader = put.getHeaders("export_date")[0].value
-        val databaseHeader = put.getHeaders("database")[0].value
-        val collectionHeader = put.getHeaders("collection")[0].value
-        val topicHeader = put.getHeaders("topic")[0].value
-
-        assertEquals("_core_toDo_successful.gz", filenameHeader)
-        assertEquals("aws/test", environmentHeader)
-        assertEquals("2019-01-01", exportDateHeader)
-        assertEquals("core", databaseHeader)
-        assertEquals("toDo", collectionHeader)
-        assertEquals("db.core.toDo", topicHeader)
-
-
-        val payload = put.entity.content.readBytes()
-        assertEquals(20, payload.size)
+        verify(successService, times(1)).postSuccessIndicator()
     }
 
     @Test
@@ -269,6 +234,6 @@ class HttpWriterTest {
             on { exitStatus } doReturn ExitStatus.FAILED
         }
         httpWriter.afterStep(stepExecution)
-        verify(httpWriter, times(0)).postSuccessIndicator()
+        verify(successService, times(0)).postSuccessIndicator()
     }
 }
