@@ -68,8 +68,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
 
     private fun zeroBytesCompressed(): ByteArray {
         val outputStream = ByteArrayOutputStream()
-        val compressedOutputStream = GZIPOutputStream(outputStream)
-        compressedOutputStream.close()
+        GZIPOutputStream(outputStream).close()
         return outputStream.toByteArray()
     }
 
