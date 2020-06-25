@@ -74,6 +74,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 "nifi_url" to nifiUrl,
                 "filename_header" to filenameHeader)
         httpClientProvider.client().use {
+
             val post = HttpPost(nifiUrl).apply {
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
                 setHeader("filename", filenameHeader)
