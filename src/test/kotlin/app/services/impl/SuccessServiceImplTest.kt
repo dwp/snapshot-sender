@@ -20,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
+import java.net.SocketTimeoutException
 import java.net.URI
 
 @RunWith(SpringRunner::class)
@@ -90,7 +91,7 @@ class SuccessServiceImplTest {
     }
 
     @Test
-    fun testRetriesUntilSuccessful() {
+    fun testRetriesOnNotOkResponseUntilSuccessful() {
         System.setProperty("topic_name", "db.core.toDo")
 
         val statusOk = mock<StatusLine> {
@@ -120,5 +121,31 @@ class SuccessServiceImplTest {
         given(httpClientProvider.client()).willReturn(failureClient).willReturn(failureClient).willReturn(successfulClient)
         successService.postSuccessIndicator()
         verify(successService, times(3)).postSuccessIndicator()
+    }
+
+    @Test
+    fun testRetriesOnTimeoutUntilSuccessful() {
+        System.setProperty("topic_name", "db.core.toDo")
+
+        val statusOk = mock<StatusLine> {
+            on { statusCode } doReturn 200
+        }
+
+
+        val okResponse = mock<CloseableHttpResponse> {
+            on { statusLine } doReturn statusOk
+        }
+
+        val successfulClient = mock<CloseableHttpClient> {
+            on { execute(ArgumentMatchers.any()) } doReturn okResponse
+        }
+
+        val failureClient = mock<CloseableHttpClient> {
+            on { execute(ArgumentMatchers.any()) } doThrow SocketTimeoutException("TIMEOUT")
+        }
+
+        given(httpClientProvider.client()).willReturn(failureClient).willReturn(successfulClient)
+        successService.postSuccessIndicator()
+        verify(successService, times(2)).postSuccessIndicator()
     }
 }
