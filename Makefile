@@ -62,23 +62,23 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 .PHONY: build-images
 build-images: build-base-images ## Build all ecosystem of images
 	@{ \
-		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi; \
+		docker-compose build hbase hbase-populate aws aws-init dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi; \
 		docker-compose build --no-cache snapshot-sender; \
 	}
 
 .PHONY: up
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase s3-dummy; \
+		docker-compose up -d hbase aws; \
 		echo "Waiting for services"; \
-		while ! docker logs s3-dummy 2> /dev/null | grep -q $(S3_READY_REGEX); do \
-			echo "Waiting for s3-dummy..."; \
+		while ! docker logs aws 2> /dev/null | grep -q $(S3_READY_REGEX); do \
+			echo "Waiting for aws..."; \
 			sleep 2; \
 		done; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'core'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
-		docker-compose up s3-bucket-provision; \
+		docker-compose up aws-init; \
 		docker-compose up -d dks-standalone-http ; \
 		docker-compose up -d dks-standalone-https ; \
 		docker-compose up -d mock-nifi; \

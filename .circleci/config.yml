@@ -88,16 +88,16 @@ jobs:
             docker build --tag dwp-gradle:latest --file resources/Dockerfile_gradle .
             ./gradlew build
 
-            docker-compose build hbase hbase-populate dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi s3-dummy s3-bucket-provision snapshot-sender sender-integration-test
-            docker-compose up -d hbase mock-nifi s3-dummy
+            docker-compose build hbase hbase-populate dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi aws aws-init snapshot-sender sender-integration-test
+            docker-compose up -d hbase mock-nifi aws
 
             S3_READY_REGEX=^Ready\.$
-            while ! docker logs s3-dummy 2> /dev/null | grep -q $S3_READY_REGEX; do
-                echo Waiting for s3-dummy.
+            while ! docker logs aws 2> /dev/null | grep -q $S3_READY_REGEX; do
+                echo Waiting for aws.
                 sleep 2
             done
 
-            docker-compose up s3-bucket-provision
+            docker-compose up aws-init
             docker-compose up -d dks-standalone-http dks-standalone-https
 
             while ! docker exec dks-standalone-http cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do

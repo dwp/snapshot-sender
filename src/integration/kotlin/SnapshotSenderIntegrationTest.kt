@@ -76,7 +76,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             //s3 in:  test/output/db.core.addressDeclaration-000001.json.gz.enc
             //s3 out: test/status/db.core.addressDeclaration-000001.json.gz.enc.finished
 
-            // fetch http://s3-dummy:4572/demobucket/status/output/db.core.addressDeclaration-000001.json.gz.enc.finished
+            // fetch http://aws:4572/demobucket/status/output/db.core.addressDeclaration-000001.json.gz.enc.finished
             // ...should have content = "Finished test/output/db.core.addressDeclaration-000001.json.gz.enc"
 
             val bucketResultsXml = getS3Content(bucketUri)
