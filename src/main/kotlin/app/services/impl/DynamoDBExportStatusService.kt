@@ -25,12 +25,15 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
     @Retryable(value = [Exception::class],
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    override fun setSentStatus() {
+    override fun setSentStatus(): Boolean =
         if (collectionIsComplete()) {
             val result = dynamoDB.updateItem(setStatusSentRequest())
             logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]}")
+            true
         }
-    }
+        else {
+            false
+        }
 
     private fun collectionIsComplete(): Boolean {
         val (currentStatus, filesExported, filesSent) = currentStatusAndCounts()

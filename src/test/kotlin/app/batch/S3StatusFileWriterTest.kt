@@ -1,6 +1,7 @@
 package app.batch
 
 import app.TestUtils.Companion.once
+import app.services.ExportStatusService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.amazonaws.AmazonServiceException
@@ -48,6 +49,9 @@ class S3StatusFileWriterTest {
 
     @MockBean
     private lateinit var mockS3Client: AmazonS3
+
+    @MockBean
+    private lateinit var exportStatusService: ExportStatusService
 
     val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
 

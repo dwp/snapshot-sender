@@ -28,8 +28,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     @AfterStep
     fun afterStep(stepExecution: StepExecution): ExitStatus {
         if (stepExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
-            exportStatusService.setSentStatus()
-            successService.postSuccessIndicator()
+            if (exportStatusService.setSentStatus()) {
+                successService.postSuccessIndicator()
+            }
         }
         return stepExecution.exitStatus
     }
