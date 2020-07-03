@@ -252,7 +252,7 @@ class HttpWriterTest {
 
     @Test
     fun willIncrementFilesSentCountOnSuccessfullPost() {
-        val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.gz"
+        val filename = "db.database.collection-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         val okStatusLine = mock<StatusLine> {
@@ -273,17 +273,18 @@ class HttpWriterTest {
     }
 
 
-    @Test
+    @Test(expected = WriterException::class)
     fun willNotIncrementFilesSentCountOnFailedPost() {
-        val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.gz"
+        val filename = "db.database.collection-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         val okStatusLine = mock<StatusLine> {
-            on { statusCode } doReturn 200
+            on { statusCode } doReturn 503
         }
 
         val response = mock<CloseableHttpResponse> {
             on { statusLine } doReturn okStatusLine
+            on { allHeaders } doReturn arrayOf(mock<Header>())
         }
 
         val httpClient = mock<CloseableHttpClient>() {
@@ -292,6 +293,6 @@ class HttpWriterTest {
 
         given(httpClientProvider.client()).willReturn(httpClient)
         httpWriter.write(mutableListOf(decryptedStream))
-        verify(exportStatusService, once()).incrementSentCount()
+        verifyZeroInteractions(exportStatusService)
     }
 }

@@ -26,14 +26,20 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun setSentStatus(): Boolean =
-        if (collectionIsComplete()) {
-            val result = dynamoDB.updateItem(setStatusSentRequest())
-            logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]}")
-            true
-        }
-        else {
-            false
-        }
+            try {
+                if (collectionIsComplete()) {
+                    val result = dynamoDB.updateItem(setStatusSentRequest())
+                    logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]}")
+                    true
+                }
+                else {
+                    false
+                }
+            }
+            catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
 
     private fun collectionIsComplete(): Boolean {
         val (currentStatus, filesExported, filesSent) = currentStatusAndCounts()
@@ -63,7 +69,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             UpdateItemRequest().apply {
                 tableName = statusTableName
                 key = primaryKey
-                updateExpression = "SET CollectionStatus :x"
+                updateExpression = "SET CollectionStatus = :x"
                 expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = "Sent" })
                 returnValues = "ALL_NEW"
             }

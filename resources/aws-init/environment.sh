@@ -31,7 +31,6 @@ create_crl_bucket() {
     aws_local s3api put-object --bucket dw-local-crl --key crl/
 }
 
-
 create_uc_ecc_table() {
     local existing_tables=$(aws_local dynamodb list-tables --query "TableNames")
     if [[ ! $existing_tables =~ UCExportToCrownStatus ]]; then
@@ -47,29 +46,27 @@ create_uc_ecc_table() {
                   --billing-mode PAY_PER_REQUEST
     fi
 
+}
+
+add_status_item() {
     aws_local dynamodb delete-item \
           --table-name "UCExportToCrownStatus" \
           --key \
-            "{\"CorrelationId\":{\"S\":\"123\"},\"CollectionName\":{\"S\":\"db.core.toDo\"}}" \
+            '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.toDo"}}' \
           --return-values "ALL_OLD"
 
     aws_local dynamodb update-item \
           --table-name "UCExportToCrownStatus" \
           --key \
-            "{\"CorrelationId\":{\"S\":\"123\"},\"CollectionName\":{\"S\":\"db.core.toDo\"}}" \
+            '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.toDo"}}' \
           --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
           --return-values "ALL_NEW" \
-          --expression-attribute-values "{\":cs\": {\"S\":\"Exported\"}, \":fe\": {\"N\":\"2\"}, \":fs\": {\"N\":\"0\"}}"
-
-
-
+          --expression-attribute-values '{":cs": {"S":"Exported"}, ":fe": {"N":"2"}, ":fs": {"N":"0"}}'
 }
 
-main() {
-    init
-    create_export_bucket
-    create_crl_bucket
-    create_uc_ecc_table
+get_status_item() {
+    aws_local dynamodb get-item \
+          --table-name "UCExportToCrownStatus" \
+          --key \
+            '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.toDo"}}'
 }
-
-main
