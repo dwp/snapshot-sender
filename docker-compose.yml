@@ -22,16 +22,12 @@ services:
   aws-init:
     image: aws-init
     build:
-      context: resources
-      dockerfile: Dockerfile_s3_bucket_provision
+      context: resources/aws-init
     container_name: aws-init
     depends_on:
       - aws
     environment:
-      - S3_SERVICE_ENDPOINT=http://aws:4566
-      - AWS_DEFAULT_REGION=eu-west-2
-      - AWS_ACCESS_KEY_ID=DummyKey
-      - AWS_SECRET_ACCESS_KEY=DummySecret
+      - AWS_DEFAULT_REGION=
       - S3_BUCKET=demobucket
 
   hbase-populate:

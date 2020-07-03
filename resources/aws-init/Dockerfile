@@ -1,9 +1,9 @@
 FROM dwp-python-preinstall:latest
 
-COPY s3dummy/*.sh ./
+COPY aws-init.sh ./
 
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 
 USER $SERVICE_USER
 
-ENTRYPOINT ["./provision-s3.sh"]
+ENTRYPOINT ["./aws-init.sh"]
