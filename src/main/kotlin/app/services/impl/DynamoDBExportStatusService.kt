@@ -18,26 +18,28 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun incrementSentCount() {
-        val result = dynamoDB.updateItem(incrementFilesSentRequest())
-        logger.info("Update FilesSent: ${result.attributes["FilesSent"]}")
+        try {
+            val result = dynamoDB.updateItem(incrementFilesSentRequest())
+            logger.info("Update FilesSent: ${result.attributes["FilesSent"]}")
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
     }
 
     @Retryable(value = [Exception::class],
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun setSentStatus(): Boolean =
-            try {
-                if (collectionIsComplete()) {
-                    val result = dynamoDB.updateItem(setStatusSentRequest())
-                    logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]}")
-                    true
-                }
-                else {
-                    false
-                }
+            if (collectionIsComplete()) {
+                val req = setStatusSentRequest()
+                logger.info("reg: $req")
+                val result = dynamoDB.updateItem(req)
+                logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]}")
+                true
             }
-            catch (e: Exception) {
-                e.printStackTrace()
+            else {
                 false
             }
 
@@ -81,28 +83,16 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         }
 
     private val primaryKey by lazy {
-        val correlationIdAttributeValue = AttributeValue().apply {
-            s = correlationId
-        }
-
-        val collectionNameAttributeValue = AttributeValue().apply {
-            s = topicName
-        }
-
-        mapOf("CorrelationId" to correlationIdAttributeValue,
-              "CollectionName" to collectionNameAttributeValue)
+        val correlationIdAttributeValue = AttributeValue().apply { s = correlationId }
+        val collectionNameAttributeValue = AttributeValue().apply { s = topicName }
+        mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
     }
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
 
-    private val correlationId by lazy {
-        System.getProperty("correlation_id")
-    }
-
-    private val topicName by lazy {
-        System.getProperty("topic_name")
-    }
+    private val correlationId by lazy { System.getProperty("correlation_id") }
+    private val topicName by lazy { System.getProperty("topic_name") }
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())

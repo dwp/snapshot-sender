@@ -1,3 +1,12 @@
+
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.Protocol
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.client.builder.AwsClientBuilder
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import io.kotlintest.fail
@@ -147,6 +156,31 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
             actualNifiFiles.shouldContainAll(exporterKeysToMatchNifi)
             actualNifiFiles.size.shouldBe(exporterKeysToMatchNifi.size)
+        }
+
+        "Export status is sent" {
+            val dynamoDB = AmazonDynamoDBClientBuilder.standard()
+                    .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration("http://aws:4566/",
+                            "eu-west-2"))
+                    .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+                    .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials("access-key", "secret-key")))
+                    .build()
+            val correlationIdAttributeValue = AttributeValue().apply { s = "123" }
+            val collectionNameAttributeValue = AttributeValue().apply { s = "db.core.toDo" }
+            val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
+
+            val getItemRequest = GetItemRequest().apply {
+                tableName = "UCExportToCrownStatus"
+                key = primaryKey
+            }
+            val result = dynamoDB.getItem(getItemRequest)
+            val item = result.item
+            val status = item["CollectionStatus"]
+            val filesExported = item["FilesExported"]
+            val filesSent = item["FilesSent"]
+            status?.s shouldBe "Sent"
+            filesExported?.n shouldBe "2"
+            filesSent?.n shouldBe "2"
         }
 
         "Verify nifi output files have a valid json per line at expected timestamp with specified line count" {

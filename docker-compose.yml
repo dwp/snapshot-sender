@@ -76,10 +76,10 @@ services:
       --identity.store.alias=cid
       --identity.store.password=changeit
       --output.batch.size.max.bytes=10000
-      --s3.access.key=DummyKey
+      --s3.access.key=access-key
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
-      --s3.secret.key=DummySecret
+      --s3.secret.key=secret-key
       --s3.service.endpoint=http://aws:4572
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
       --topic.name=db.core.addressDeclaration
@@ -123,10 +123,10 @@ services:
       --identity.store.alias=cid
       --identity.store.password=changeit
       --output.batch.size.max.bytes=10000
-      --s3.access.key=DummyKey
+      --s3.access.key=access-key
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
-      --s3.secret.key=DummySecret
+      --s3.secret.key=secret-key
       --s3.service.endpoint=http://aws:4572
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
       --topic.name=db.quartz.claimantEvent
@@ -153,16 +153,16 @@ services:
     command: >-
       --logging.level.root=${LOGGING_LEVEL}
       --spring.main.banner-mode=off
-      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,dummyS3Client
+      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,localStackConfiguration
       --aws.region=eu-west-2
       --data.key.service.url=https://dks-standalone-https:8443
       --nifi.url=https://mock-nifi:5443/collections
-      --s3.access.key=DummyKey
+      --s3.access.key=access-key
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output/
       --s3.htme.root.folder=test
       --s3.status.folder=status
-      --s3.secret.key=DummyKey
+      --s3.secret.key=access-key
       --s3.service.endpoint=http://aws:4572
       --identity.key.password=changeit
       --identity.keystore=snapshot-sender-keystore.jks
@@ -176,7 +176,7 @@ services:
       - APPLICATION=snapshot_sender
       - APP_VERSION=latest-dev
       - COMPONENT=jar_file
-      - CORRELATION_ID=sender-1
+      - CORRELATION_ID=123
 
   dks-standalone-http:
     image: dks-standalone-http
