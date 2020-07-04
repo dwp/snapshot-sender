@@ -90,7 +90,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
-        // Will retry at 1s, 2s, 4s, 8s, 16s then give up (after a total of 31 secs)
         const val maxAttempts = 5
         const val initialBackoffMillis = 1000L
         const val backoffMultiplier = 2.0
