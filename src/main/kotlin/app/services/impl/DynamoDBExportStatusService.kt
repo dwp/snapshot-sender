@@ -18,14 +18,8 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun incrementSentCount() {
-        try {
-            val result = dynamoDB.updateItem(incrementFilesSentRequest())
-            logger.info("Update FilesSent: ${result.attributes["FilesSent"]}")
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            throw e
-        }
+        val result = dynamoDB.updateItem(incrementFilesSentRequest())
+        logger.info("Update FilesSent: ${result.attributes["FilesSent"]}")
     }
 
     @Retryable(value = [Exception::class],
