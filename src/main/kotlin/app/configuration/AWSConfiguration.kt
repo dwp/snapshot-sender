@@ -28,7 +28,8 @@ class AWSConfiguration {
                 .build()
 
     @Bean
-    fun amazonDynamoDb(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard()
+    fun amazonDynamoDb(): AmazonDynamoDB =
+            AmazonDynamoDBClientBuilder.standard()
             .withCredentials(DefaultAWSCredentialsProviderChain())
             .withRegion(awsRegion)
             .build()
@@ -37,7 +38,7 @@ class AWSConfiguration {
         Regions.valueOf(region.toUpperCase().replace("-", "_"))
     }
 
-    @Value("\${aws.region}")
+    @Value("\${aws.region:eu-west-2}")
     private lateinit var region: String
 
     @Value("\${aws.s3.max.connections:50}")
