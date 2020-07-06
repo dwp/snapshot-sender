@@ -55,7 +55,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             UpdateItemRequest().apply {
                 tableName = statusTableName
                 key = primaryKey
-                updateExpression = "ADD FilesSent :x"
+                updateExpression = "SET FilesSent = FilesSent + :x"
                 expressionAttributeValues = mapOf(":x" to AttributeValue().apply { n = "1" })
                 returnValues = "ALL_NEW"
             }
