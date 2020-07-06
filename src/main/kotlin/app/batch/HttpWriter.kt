@@ -4,6 +4,7 @@ import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
+import app.services.ExportStatusService
 import app.services.SuccessService
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -21,12 +22,15 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Component
 @Profile("httpWriter")
 class HttpWriter(private val httpClientProvider: HttpClientProvider,
-                 private val successService: SuccessService) : ItemWriter<DecryptedStream> {
+                 private val successService: SuccessService,
+                 private val exportStatusService: ExportStatusService) : ItemWriter<DecryptedStream> {
 
     @AfterStep
     fun afterStep(stepExecution: StepExecution): ExitStatus {
         if (stepExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
-            successService.postSuccessIndicator()
+            if (exportStatusService.setSentStatus()) {
+                successService.postSuccessIndicator()
+            }
         }
         return stepExecution.exitStatus
     }
@@ -92,6 +96,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
                                 "nifi_url" to nifiUrl)
+                        exportStatusService.incrementSentCount()
                         s3StatusFileWriter.writeStatus(item.fullPath)
                     }
                     else -> {

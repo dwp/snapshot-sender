@@ -5,13 +5,11 @@ import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
+import app.services.ExportStatusService
 import app.services.SuccessService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.*
 import org.apache.http.Header
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -53,12 +51,15 @@ import java.io.ByteArrayInputStream
 ])
 class HttpWriterTest {
 
-    @MockBean
-    private lateinit var mockS3StatusFileWriter: S3StatusFileWriter
-
     @SpyBean
     @Autowired
     private lateinit var httpWriter: HttpWriter
+
+    @MockBean
+    private lateinit var mockS3StatusFileWriter: S3StatusFileWriter
+
+    @MockBean
+    private lateinit var exportStatusService: ExportStatusService
 
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
@@ -218,13 +219,25 @@ class HttpWriterTest {
     }
 
     @Test
-    fun willWriteSuccessIndicatorOnSuccessfulCompletion() {
+    fun willWriteSuccessIndicatorOnSuccessfulCompletionAndAllFilesSent() {
         System.setProperty("topic_name", "db.core.toDo")
         val stepExecution = mock<StepExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
+        given(exportStatusService.setSentStatus()).willReturn(true)
         httpWriter.afterStep(stepExecution)
         verify(successService, times(1)).postSuccessIndicator()
+    }
+
+    @Test
+    fun willNotWriteSuccessIndicatorOnSuccessfulCompletionAndNotAllFilesSent() {
+        System.setProperty("topic_name", "db.core.toDo")
+        val stepExecution = mock<StepExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        given(exportStatusService.setSentStatus()).willReturn(false)
+        httpWriter.afterStep(stepExecution)
+        verifyZeroInteractions(successService)
     }
 
     @Test
@@ -234,6 +247,52 @@ class HttpWriterTest {
             on { exitStatus } doReturn ExitStatus.FAILED
         }
         httpWriter.afterStep(stepExecution)
-        verify(successService, times(0)).postSuccessIndicator()
+        verifyZeroInteractions(successService)
+    }
+
+    @Test
+    fun willIncrementFilesSentCountOnSuccessfullPost() {
+        val filename = "db.database.collection-000001.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val okStatusLine = mock<StatusLine> {
+            on { statusCode } doReturn 200
+        }
+
+        val response = mock<CloseableHttpResponse> {
+            on { statusLine } doReturn okStatusLine
+        }
+
+        val httpClient = mock<CloseableHttpClient>() {
+            on { execute(any()) } doReturn response
+        }
+
+        given(httpClientProvider.client()).willReturn(httpClient)
+        httpWriter.write(mutableListOf(decryptedStream))
+        verify(exportStatusService, once()).incrementSentCount()
+    }
+
+
+    @Test(expected = WriterException::class)
+    fun willNotIncrementFilesSentCountOnFailedPost() {
+        val filename = "db.database.collection-000001.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val okStatusLine = mock<StatusLine> {
+            on { statusCode } doReturn 503
+        }
+
+        val response = mock<CloseableHttpResponse> {
+            on { statusLine } doReturn okStatusLine
+            on { allHeaders } doReturn arrayOf(mock<Header>())
+        }
+
+        val httpClient = mock<CloseableHttpClient>() {
+            on { execute(any()) } doReturn response
+        }
+
+        given(httpClientProvider.client()).willReturn(httpClient)
+        httpWriter.write(mutableListOf(decryptedStream))
+        verifyZeroInteractions(exportStatusService)
     }
 }

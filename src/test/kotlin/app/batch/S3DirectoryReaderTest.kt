@@ -4,6 +4,7 @@ import app.TestUtils.Companion.once
 import app.domain.EncryptedStream
 import app.domain.EncryptionMetadata
 import app.exceptions.DataKeyDecryptionException
+import app.services.ExportStatusService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.*
 import com.nhaarman.mockitokotlin2.any
@@ -81,6 +82,9 @@ class S3DirectoryReaderTest {
 
     @MockBean
     private lateinit var s3Utils: S3Utils
+
+    @MockBean
+    private lateinit var exportStatusService: ExportStatusService
 
     @Before
     fun setUp() {

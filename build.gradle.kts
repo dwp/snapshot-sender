@@ -34,6 +34,7 @@ dependencies {
     implementation("org.apache.commons:commons-text:1.8")
 
     // sdk v1
+    implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.603")
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
     implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
 
