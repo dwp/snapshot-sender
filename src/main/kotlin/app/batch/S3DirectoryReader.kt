@@ -26,6 +26,7 @@ class S3DirectoryReader(private val s3Client: AmazonS3,
     @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
     lateinit var s3BucketName: String
 
+    @Synchronized
     override fun read(): EncryptedStream? {
         val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
         return if (iterator.hasNext()) {
