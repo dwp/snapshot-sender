@@ -247,7 +247,7 @@ services:
       S3_PREFIX_FOLDER: "test/output"
       S3_HTME_ROOT_FOLDER: "test"
       S3_STATUS_FOLDER: "status"
-      S3_SERVICE_ENDPOINT: "http://aws:4566"
+      S3_SERVICE_ENDPOINT: "http://aws:4572"
       NIFI_ROOT_FOLDER: "/data/output" # see the shared-volume above
       NIFI_FILE_NAMES_CSV: "db.core.addressDeclaration-045-050-000001.json.gz,db.quartz.claimantEvent-045-050-000001.json.gz"
       NIFI_TIME_STAMPS_CSV: "10,1"
