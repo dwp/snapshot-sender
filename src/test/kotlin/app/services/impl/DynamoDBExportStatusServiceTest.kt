@@ -31,6 +31,8 @@ class DynamoDBExportStatusServiceTest {
 
     @Before
     fun before() {
+        System.setProperty("correlation_id", "123")
+        System.setProperty("topic_name", "topic")
         reset(amazonDynamoDB)
     }
 
@@ -40,8 +42,8 @@ class DynamoDBExportStatusServiceTest {
                 .willThrow(SdkClientException(""))
                 .willThrow(SdkClientException(""))
                 .willReturn(mock<UpdateItemResult>())
-        exportStatusService.incrementSentCount()
-        verify(exportStatusService, times(3)).incrementSentCount()
+        exportStatusService.incrementSentCount("")
+        verify(exportStatusService, times(3)).incrementSentCount("")
     }
 
     @Test

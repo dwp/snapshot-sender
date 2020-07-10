@@ -17,9 +17,11 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
     @Retryable(value = [Exception::class],
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    override fun incrementSentCount() {
+    override fun incrementSentCount(fileSent: String) {
         val result = dynamoDB.updateItem(incrementFilesSentRequest())
-        logger.info("Update FilesSent: ${result.attributes["FilesSent"]}")
+        logger.info("Incremented files sent",
+                "file_sent" to fileSent,
+                "files_sent" to "${result.attributes["FilesSent"]?.n}")
     }
 
     @Retryable(value = [Exception::class],
@@ -77,10 +79,11 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         }
 
     private val primaryKey by lazy {
-        val correlationIdAttributeValue = AttributeValue().apply { s = correlationId }
-        val collectionNameAttributeValue = AttributeValue().apply { s = topicName }
-        mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
+        mapOf("CorrelationId" to stringAttribute(correlationId),
+                "CollectionName" to stringAttribute(topicName))
     }
+
+    private fun stringAttribute(value: String) = AttributeValue().apply { s = value }
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String

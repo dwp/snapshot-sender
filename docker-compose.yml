@@ -80,7 +80,7 @@ services:
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
       --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
       --topic.name=db.core.addressDeclaration
       --trust.keystore=htme-truststore.jks
@@ -127,7 +127,7 @@ services:
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
       --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
       --topic.name=db.quartz.claimantEvent
       --trust.keystore=htme-truststore.jks
@@ -163,7 +163,7 @@ services:
       --s3.htme.root.folder=test
       --s3.status.folder=status
       --s3.secret.key=access-key
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --identity.key.password=changeit
       --identity.keystore=snapshot-sender-keystore.jks
       --identity.store.alias=cid
@@ -190,7 +190,7 @@ services:
     command:
       --spring.main.banner-mode=off
       --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --server.environment_name=local
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
@@ -207,7 +207,7 @@ services:
     command:
       --spring.main.banner-mode=off
       --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --server.environment_name=local
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE,LocalAWS
@@ -247,7 +247,7 @@ services:
       S3_PREFIX_FOLDER: "test/output"
       S3_HTME_ROOT_FOLDER: "test"
       S3_STATUS_FOLDER: "status"
-      S3_SERVICE_ENDPOINT: "http://aws:4572"
+      S3_SERVICE_ENDPOINT: "http://aws:4566"
       NIFI_ROOT_FOLDER: "/data/output" # see the shared-volume above
       NIFI_FILE_NAMES_CSV: "db.core.addressDeclaration-045-050-000001.json.gz,db.quartz.claimantEvent-045-050-000001.json.gz"
       NIFI_TIME_STAMPS_CSV: "10,1"
