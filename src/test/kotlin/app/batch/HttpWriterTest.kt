@@ -269,7 +269,7 @@ class HttpWriterTest {
 
         given(httpClientProvider.client()).willReturn(httpClient)
         httpWriter.write(mutableListOf(decryptedStream))
-        verify(exportStatusService, once()).incrementSentCount()
+        verify(exportStatusService, once()).incrementSentCount(filename)
     }
 
 

@@ -80,7 +80,7 @@ services:
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
       --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
       --topic.name=db.core.addressDeclaration
       --trust.keystore=htme-truststore.jks
@@ -127,7 +127,7 @@ services:
       --s3.bucket=demobucket
       --s3.prefix.folder=test/output
       --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
       --topic.name=db.quartz.claimantEvent
       --trust.keystore=htme-truststore.jks
@@ -163,7 +163,7 @@ services:
       --s3.htme.root.folder=test
       --s3.status.folder=status
       --s3.secret.key=access-key
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --identity.key.password=changeit
       --identity.keystore=snapshot-sender-keystore.jks
       --identity.store.alias=cid
@@ -190,7 +190,7 @@ services:
     command:
       --spring.main.banner-mode=off
       --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --server.environment_name=local
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
@@ -207,7 +207,7 @@ services:
     command:
       --spring.main.banner-mode=off
       --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --server.environment_name=local
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE,LocalAWS

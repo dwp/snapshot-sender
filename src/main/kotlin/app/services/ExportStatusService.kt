@@ -1,6 +1,6 @@
 package app.services
 
 interface ExportStatusService {
-    fun incrementSentCount()
+    fun incrementSentCount(fileSent: String)
     fun setSentStatus(): Boolean
 }

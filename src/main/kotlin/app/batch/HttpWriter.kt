@@ -96,7 +96,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
                                 "nifi_url" to nifiUrl)
-                        exportStatusService.incrementSentCount()
+                        exportStatusService.incrementSentCount(item.fileName)
                         s3StatusFileWriter.writeStatus(item.fullPath)
                     }
                     else -> {
