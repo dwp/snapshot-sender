@@ -172,6 +172,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val getItemRequest = GetItemRequest().apply {
                 tableName = "UCExportToCrownStatus"
                 key = primaryKey
+                consistentRead = true
             }
             val result = dynamoDB.getItem(getItemRequest)
             val item = result.item
