@@ -217,9 +217,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                     println(line)
                     if (line != null) {
                         linesDone++
-                        logger.info("Checking line $linesDone/$expectedLineCount in $expectedFile")
-                        val jsonLine = parseJson(line)
-                        jsonLine["timestamp"].shouldBe(expectedTimestamp)
                     }
                     else if (linesDone == expectedLineCount) {
                         logger.info("Skipping blank line at EOF as should be end of file: have processed $linesDone/$expectedLineCount in $expectedFile")
