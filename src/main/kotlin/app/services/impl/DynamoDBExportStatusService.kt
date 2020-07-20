@@ -32,7 +32,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
                 val req = setStatusSentRequest()
                 logger.info("reg: $req")
                 val result = dynamoDB.updateItem(req)
-                logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]}")
+                logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]?.s}")
                 true
             }
             else {
@@ -41,7 +41,12 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     private fun collectionIsComplete(): Boolean {
         val (currentStatus, filesExported, filesSent) = currentStatusAndCounts()
-        return currentStatus == "Exported" && filesExported == filesSent && filesExported > 0
+        val isComplete = currentStatus == "Exported" && filesExported == filesSent && filesExported > 0
+        logger.info("Collection status", "current_status" to currentStatus,
+                "files_exported" to "$filesExported",
+                "files_sent" to "$filesSent",
+                "is_complete" to "$isComplete")
+        return isComplete
     }
 
     private fun currentStatusAndCounts(): Triple<String, Int, Int> {
@@ -76,6 +81,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         GetItemRequest().apply {
             tableName = statusTableName
             key = primaryKey
+            consistentRead = true
         }
 
     private val primaryKey by lazy {

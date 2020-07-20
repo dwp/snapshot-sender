@@ -81,7 +81,12 @@ services:
       --s3.prefix.folder=test/output
       --s3.secret.key=secret-key
       --s3.service.endpoint=http://aws:4566
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
+      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
+      --snapshot.sender.reprocess.files=true
+      --snapshot.sender.shutdown.flag=false
+      --snapshot.sender.export.date=2020-01-01
+      --trigger.snapshot.sender=false
       --topic.name=db.core.addressDeclaration
       --trust.keystore=htme-truststore.jks
       --trust.store.password=changeit
@@ -128,7 +133,12 @@ services:
       --s3.prefix.folder=test/output
       --s3.secret.key=secret-key
       --s3.service.endpoint=http://aws:4566
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
+      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
+      --snapshot.sender.reprocess.files=true
+      --snapshot.sender.shutdown.flag=false
+      --snapshot.sender.export.date=2020-01-01
+      --trigger.snapshot.sender=false
       --topic.name=db.quartz.claimantEvent
       --trust.keystore=htme-truststore.jks
       --trust.store.password=changeit
