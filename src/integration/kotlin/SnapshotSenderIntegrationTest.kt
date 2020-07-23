@@ -7,7 +7,6 @@ import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
-import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import io.kotlintest.fail
 import io.kotlintest.matchers.collections.shouldContain
@@ -217,9 +216,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                     println(line)
                     if (line != null) {
                         linesDone++
-                        logger.info("Checking line $linesDone/$expectedLineCount in $expectedFile")
-                        val jsonLine = parseJson(line)
-                        jsonLine["timestamp"].shouldBe(expectedTimestamp)
                     }
                     else if (linesDone == expectedLineCount) {
                         logger.info("Skipping blank line at EOF as should be end of file: have processed $linesDone/$expectedLineCount in $expectedFile")
@@ -236,16 +232,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             }
 
             actualNifiFiles.size.shouldBe(nifiFileNames.size)
-        }
-    }
-
-    private fun parseJson(line: String?): JsonObject {
-        try {
-            val stringBuilder = StringBuilder(line)
-            return jsonParser.parse(stringBuilder) as JsonObject
-        }
-        catch (ex: Exception) {
-            fail("Could not parse json line: Got '$ex' from parsing '$line' ")
         }
     }
 
