@@ -2,6 +2,7 @@ package app.batch
 
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
+import app.exceptions.BlockedTopicException
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
@@ -49,26 +50,21 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     }
 
     private fun postItem(item: DecryptedStream) {
-        logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
-        val match = filenameRe.find(item.fileName)
-        if (match == null) {
-            val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
-            val exception = MetadataException(errorMessage)
-            logger.error("Rejecting item to write", exception, "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
-            throw exception
-        }
 
-        val lastDashIndex = item.fileName.lastIndexOf("-")
-        if (lastDashIndex < 0) {
-            val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
-            val exception = MetadataException(errorMessage)
-            logger.error("Rejecting item to write", exception, "file_name" to item.fullPath)
-            throw exception
-        }
-        val database = match.groupValues[1]
+        logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
+
+        val match = filenameRe.find(item.fileName)
+        checkFilenameMatchesRegex(match, item)
+        checkFileNameHasDashNumberSeparator(item)
+
+        val database = match!!.groupValues[1]
         val collection = match.groupValues[2].replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
+
         val topic = "db.$database.$collection"
+        checkIfTopicIsBlocked(topic, item)
+
         val filenameHeader = item.fileName.replace(Regex("""\.txt\.gz$"""), ".json.gz")
+
         logger.info("Posting file name to collection",
                 "database" to database,
                 "collection" to collection,
@@ -77,8 +73,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 "full_path" to item.fullPath,
                 "nifi_url" to nifiUrl,
                 "filename_header" to filenameHeader)
-        httpClientProvider.client().use {
 
+        httpClientProvider.client().use { it ->
             val post = HttpPost(nifiUrl).apply {
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
                 setHeader("filename", filenameHeader)
@@ -100,7 +96,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                         s3StatusFileWriter.writeStatus(item.fullPath)
                     }
                     else -> {
-
                         val headers = mutableListOf<Pair<String, String>>()
                         response.allHeaders.forEach {
                             headers.add(it.name to it.value)
@@ -110,10 +105,39 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
                                 "nifi_url" to nifiUrl, *headers.toTypedArray())
+
                         throw WriterException("Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}")
                     }
                 }
             }
+        }
+    }
+
+    private fun checkFilenameMatchesRegex(match: MatchResult?, item: DecryptedStream) {
+        if (match == null) {
+            val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
+            val exception = MetadataException(errorMessage)
+            logger.error("Rejecting item to write", exception, "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
+            throw exception
+        }
+    }
+
+    private fun checkFileNameHasDashNumberSeparator(item: DecryptedStream) {
+        val lastDashIndex = item.fileName.lastIndexOf("-")
+        if (lastDashIndex < 0) {
+            val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
+            val exception = MetadataException(errorMessage)
+            logger.error("Rejecting item to write", exception, "file_name" to item.fullPath)
+            throw exception
+        }
+    }
+
+    private fun checkIfTopicIsBlocked(topic: String, item: DecryptedStream) {
+        if (blockedTopics.contains(topic)) {
+            val errorMessage = "Provided topic is blocked so cannot be processed: '$topic'"
+            val exception = BlockedTopicException(errorMessage)
+            logger.error("Provided topic is blocked", exception, "topic_name" to topic, "file_name" to item.fullPath)
+            throw exception
         }
     }
 
@@ -123,8 +147,10 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     @Value("\${export.date}")
     private lateinit var exportDate: String
 
+    @Value("\${blocked.topics:NOT_SET}")
+    lateinit var blockedTopics: String
+
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())
     }
-
 }

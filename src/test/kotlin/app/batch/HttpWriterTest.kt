@@ -3,6 +3,7 @@ package app.batch
 import app.TestUtils.Companion.once
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
+import app.exceptions.BlockedTopicException
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
@@ -10,6 +11,8 @@ import app.services.SuccessService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.*
+import io.kotlintest.shouldBe
+import io.kotlintest.shouldThrow
 import org.apache.http.Header
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -47,7 +50,8 @@ import java.io.ByteArrayInputStream
     "s3.bucket=bucket1",
     "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
-    "s3.htme.root.folder=exporter-output"
+    "s3.htme.root.folder=exporter-output",
+    "blocked.topics=db.crypto.unencrypted"
 ])
 class HttpWriterTest {
 
@@ -67,7 +71,7 @@ class HttpWriterTest {
     @MockBean
     private lateinit var successService: SuccessService
 
-    val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
+    val mockAppender: Appender<ILoggingEvent> = mock()
 
     val byteArray = "hello, world".toByteArray()
     val s3Path = "exporter-output/job01" //should match the test properties above
@@ -251,7 +255,7 @@ class HttpWriterTest {
     }
 
     @Test
-    fun willIncrementFilesSentCountOnSuccessfullPost() {
+    fun willIncrementFilesSentCountOnSuccessfulPost() {
         val filename = "db.database.collection-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
@@ -263,7 +267,7 @@ class HttpWriterTest {
             on { statusLine } doReturn okStatusLine
         }
 
-        val httpClient = mock<CloseableHttpClient>() {
+        val httpClient = mock<CloseableHttpClient> {
             on { execute(any()) } doReturn response
         }
 
@@ -272,8 +276,7 @@ class HttpWriterTest {
         verify(exportStatusService, once()).incrementSentCount(filename)
     }
 
-
-    @Test(expected = WriterException::class)
+    @Test
     fun willNotIncrementFilesSentCountOnFailedPost() {
         val filename = "db.database.collection-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
@@ -287,12 +290,53 @@ class HttpWriterTest {
             on { allHeaders } doReturn arrayOf(mock<Header>())
         }
 
-        val httpClient = mock<CloseableHttpClient>() {
+        val httpClient = mock<CloseableHttpClient> {
             on { execute(any()) } doReturn response
         }
 
         given(httpClientProvider.client()).willReturn(httpClient)
-        httpWriter.write(mutableListOf(decryptedStream))
+
+        val exception = shouldThrow<WriterException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Failed to post 'exporter-output/job01/db.database.collection-000001.txt.gz': post returned status code 503"
+        verifyZeroInteractions(exportStatusService)
+    }
+
+    @Test
+    fun shouldThrowMetadataExceptionWhenFileNameDoesNotMatchRegex() {
+        val filename = "bad_filename-000001.txt"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val exception = shouldThrow<MetadataException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Rejecting: 'exporter-output/job01/bad_filename-000001.txt' as fileName does not match '^\\w+\\.([\\w-]+)\\.([\\w-]+)'"
+        verifyZeroInteractions(exportStatusService)
+    }
+
+    @Test
+    fun shouldThrowMetadataExceptionWhenTopicNameIsInBlockedList() {
+        val filename = "db.type.nonum.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val exception = shouldThrow<MetadataException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Rejecting: 'exporter-output/job01/db.type.nonum.txt.gz' as fileName does not contain '-' to find number"
+        verifyZeroInteractions(exportStatusService)
+    }
+
+    @Test
+    fun shouldThrowBlockedTopicExceptionWhenTopicNameIsInBlockedList() {
+        val filename = "db.crypto.unencrypted-000001.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val exception = shouldThrow<BlockedTopicException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"
+
         verifyZeroInteractions(exportStatusService)
     }
 }
