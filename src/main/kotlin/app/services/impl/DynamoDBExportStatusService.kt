@@ -29,10 +29,9 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun setSentStatus(): Boolean =
             if (collectionIsComplete()) {
-                val req = setStatusSentRequest()
-                logger.info("reg: $req")
-                val result = dynamoDB.updateItem(req)
-                logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]?.s}")
+                val result = dynamoDB.updateItem(setStatusSentRequest())
+                logger.info("Collection status after update",
+                        "collection status" to "${result.attributes["CollectionStatus"]?.s}")
                 true
             }
             else {
