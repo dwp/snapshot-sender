@@ -276,7 +276,7 @@ class HttpWriterTest {
         verify(exportStatusService, once()).incrementSentCount(filename)
     }
 
-    @Test(expected = WriterException::class)
+    @Test
     fun willNotIncrementFilesSentCountOnFailedPost() {
         val filename = "db.database.collection-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
@@ -295,7 +295,11 @@ class HttpWriterTest {
         }
 
         given(httpClientProvider.client()).willReturn(httpClient)
-        httpWriter.write(mutableListOf(decryptedStream))
+
+        val exception = shouldThrow<WriterException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Failed to post 'exporter-output/job01/db.database.collection-000001.txt.gz': post returned status code 503"
         verifyZeroInteractions(exportStatusService)
     }
 
