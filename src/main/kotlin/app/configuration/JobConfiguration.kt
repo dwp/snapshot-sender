@@ -1,5 +1,6 @@
 package app.configuration
 
+import app.batch.JobCompletionNotificationListener
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import org.springframework.batch.core.Step
@@ -28,9 +29,10 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 class JobConfiguration {
 
     @Bean
-    fun importUserJob(step: Step) =
+    fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
         jobBuilderFactory.get("snapshotSenderJob")
             .incrementer(RunIdIncrementer())
+            .listener(listener)
             .flow(step)
             .end()
             .build()
