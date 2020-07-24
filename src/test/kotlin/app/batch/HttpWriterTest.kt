@@ -11,6 +11,8 @@ import app.services.SuccessService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.*
+import io.kotlintest.shouldBe
+import io.kotlintest.shouldThrow
 import org.apache.http.Header
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -297,12 +299,40 @@ class HttpWriterTest {
         verifyZeroInteractions(exportStatusService)
     }
 
-    @Test(expected = BlockedTopicException::class)
-    fun willFailWhenTopicNameIsInBlockedList() {
+    @Test
+    fun shouldThrowMetadataExceptionWhenFileNameDoesNotMatchRegex() {
+        val filename = "bad_filename-000001.txt"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val exception = shouldThrow<MetadataException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Rejecting: 'exporter-output/job01/bad_filename-000001.txt' as fileName does not match '^\\w+\\.([\\w-]+)\\.([\\w-]+)'"
+        verifyZeroInteractions(exportStatusService)
+    }
+
+    @Test
+    fun shouldThrowMetadataExceptionWhenTopicNameIsInBlockedList() {
+        val filename = "db.type.nonum.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val exception = shouldThrow<MetadataException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Rejecting: 'exporter-output/job01/db.type.nonum.txt.gz' as fileName does not contain '-' to find number"
+        verifyZeroInteractions(exportStatusService)
+    }
+
+    @Test
+    fun shouldThrowBlockedTopicExceptionWhenTopicNameIsInBlockedList() {
         val filename = "db.crypto.unencrypted-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
-        httpWriter.write(mutableListOf(decryptedStream))
+        val exception = shouldThrow<BlockedTopicException> {
+            httpWriter.write(mutableListOf(decryptedStream))
+        }
+        exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"
+
         verifyZeroInteractions(exportStatusService)
     }
 }

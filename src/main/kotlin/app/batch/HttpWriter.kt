@@ -54,16 +54,14 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
 
         val match = filenameRe.find(item.fileName)
-        checkMatchIsNotNull(match, item)
-
-        val lastDashIndex = item.fileName.lastIndexOf("-")
-        checkLastDashIndexIsPositive(lastDashIndex, item)
+        checkFilenameMatchesRegex(match, item)
+        checkFileNameHasDashNumberSeparator(item)
 
         val database = match!!.groupValues[1]
         val collection = match.groupValues[2].replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
 
         val topic = "db.$database.$collection"
-        isTopicBlocked(topic, item)
+        checkIfTopicIsBlocked(topic, item)
 
         val filenameHeader = item.fileName.replace(Regex("""\.txt\.gz$"""), ".json.gz")
 
@@ -115,7 +113,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         }
     }
 
-    private fun checkMatchIsNotNull(match: MatchResult?, item: DecryptedStream) {
+    private fun checkFilenameMatchesRegex(match: MatchResult?, item: DecryptedStream) {
         if (match == null) {
             val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
             val exception = MetadataException(errorMessage)
@@ -124,7 +122,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         }
     }
 
-    private fun checkLastDashIndexIsPositive(lastDashIndex: Int, item: DecryptedStream) {
+    private fun checkFileNameHasDashNumberSeparator(item: DecryptedStream) {
+        val lastDashIndex = item.fileName.lastIndexOf("-")
         if (lastDashIndex < 0) {
             val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
             val exception = MetadataException(errorMessage)
@@ -133,7 +132,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         }
     }
 
-    private fun isTopicBlocked(topic: String, item: DecryptedStream) {
+    private fun checkIfTopicIsBlocked(topic: String, item: DecryptedStream) {
         if (blockedTopics.contains(topic)) {
             val errorMessage = "Provided topic is blocked so cannot be processed: '$topic'"
             val exception = BlockedTopicException(errorMessage)
