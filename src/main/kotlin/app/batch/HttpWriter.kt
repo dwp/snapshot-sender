@@ -5,13 +5,9 @@ import app.domain.DecryptedStream
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
-import app.services.SuccessService
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
-import org.springframework.batch.core.ExitStatus
-import org.springframework.batch.core.StepExecution
-import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -22,18 +18,7 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Component
 @Profile("httpWriter")
 class HttpWriter(private val httpClientProvider: HttpClientProvider,
-                 private val successService: SuccessService,
                  private val exportStatusService: ExportStatusService) : ItemWriter<DecryptedStream> {
-
-    @AfterStep
-    fun afterStep(stepExecution: StepExecution): ExitStatus {
-        if (stepExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
-            if (exportStatusService.setSentStatus()) {
-                successService.postSuccessIndicator()
-            }
-        }
-        return stepExecution.exitStatus
-    }
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter

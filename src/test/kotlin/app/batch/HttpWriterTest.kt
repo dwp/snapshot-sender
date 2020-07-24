@@ -9,7 +9,10 @@ import app.services.ExportStatusService
 import app.services.SuccessService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import org.apache.http.Header
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -26,8 +29,6 @@ import org.mockito.BDDMockito.never
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.slf4j.LoggerFactory
-import org.springframework.batch.core.ExitStatus
-import org.springframework.batch.core.StepExecution
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -216,38 +217,6 @@ class HttpWriterTest {
             assertEquals("Rejecting: 'exporter-output/job01/db.core.address01.txt' as fileName does not contain '-' to find number", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
-    }
-
-    @Test
-    fun willWriteSuccessIndicatorOnSuccessfulCompletionAndAllFilesSent() {
-        System.setProperty("topic_name", "db.core.toDo")
-        val stepExecution = mock<StepExecution> {
-            on { exitStatus } doReturn ExitStatus.COMPLETED
-        }
-        given(exportStatusService.setSentStatus()).willReturn(true)
-        httpWriter.afterStep(stepExecution)
-        verify(successService, times(1)).postSuccessIndicator()
-    }
-
-    @Test
-    fun willNotWriteSuccessIndicatorOnSuccessfulCompletionAndNotAllFilesSent() {
-        System.setProperty("topic_name", "db.core.toDo")
-        val stepExecution = mock<StepExecution> {
-            on { exitStatus } doReturn ExitStatus.COMPLETED
-        }
-        given(exportStatusService.setSentStatus()).willReturn(false)
-        httpWriter.afterStep(stepExecution)
-        verifyZeroInteractions(successService)
-    }
-
-    @Test
-    fun willNotWriteSuccessIndicatorOnUnsuccessfulCompletion() {
-        System.setProperty("topic_name", "db.core.toDo")
-        val stepExecution = mock<StepExecution> {
-            on { exitStatus } doReturn ExitStatus.FAILED
-        }
-        httpWriter.afterStep(stepExecution)
-        verifyZeroInteractions(successService)
     }
 
     @Test
