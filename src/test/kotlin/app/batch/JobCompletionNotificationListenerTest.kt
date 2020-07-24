@@ -3,6 +3,7 @@ package app.batch
 import app.services.ExportStatusService
 import app.services.SuccessService
 import com.nhaarman.mockitokotlin2.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.batch.core.ExitStatus
@@ -27,9 +28,13 @@ class JobCompletionNotificationListenerTest {
     @MockBean
     private lateinit var successService: SuccessService
 
+    @Before
+    fun setUp() {
+        System.setProperty("topic_name", "db.core.toDo")
+    }
+
     @Test
     fun willWriteSuccessIndicatorOnSuccessfulCompletionAndAllFilesSent() {
-        System.setProperty("topic_name", "db.core.toDo")
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
@@ -40,7 +45,6 @@ class JobCompletionNotificationListenerTest {
 
     @Test
     fun willNotWriteSuccessIndicatorOnSuccessfulCompletionAndNotAllFilesSent() {
-        System.setProperty("topic_name", "db.core.toDo")
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
@@ -51,7 +55,6 @@ class JobCompletionNotificationListenerTest {
 
     @Test
     fun willNotWriteSuccessIndicatorOnUnsuccessfulCompletion() {
-        System.setProperty("topic_name", "db.core.toDo")
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
         }
