@@ -73,7 +73,6 @@ class HttpWriterTest {
 
     val byteArray = "hello, world".toByteArray()
     val s3Path = "exporter-output/job01" //should match the test properties above
-    val blockedTopicName = "db.crypto.unencrypted"
 
     @Before
     fun before() {
@@ -254,7 +253,7 @@ class HttpWriterTest {
     }
 
     @Test
-    fun willIncrementFilesSentCountOnSuccessfullPost() {
+    fun willIncrementFilesSentCountOnSuccessfulPost() {
         val filename = "db.database.collection-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
@@ -266,7 +265,7 @@ class HttpWriterTest {
             on { statusLine } doReturn okStatusLine
         }
 
-        val httpClient = mock<CloseableHttpClient>() {
+        val httpClient = mock<CloseableHttpClient> {
             on { execute(any()) } doReturn response
         }
 
@@ -289,7 +288,7 @@ class HttpWriterTest {
             on { allHeaders } doReturn arrayOf(mock<Header>())
         }
 
-        val httpClient = mock<CloseableHttpClient>() {
+        val httpClient = mock<CloseableHttpClient> {
             on { execute(any()) } doReturn response
         }
 
@@ -303,20 +302,6 @@ class HttpWriterTest {
         val filename = "db.crypto.unencrypted-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
-        val okStatusLine = mock<StatusLine> {
-            on { statusCode } doReturn 503
-        }
-
-        val response = mock<CloseableHttpResponse> {
-            on { statusLine } doReturn okStatusLine
-            on { allHeaders } doReturn arrayOf(mock<Header>())
-        }
-
-        val httpClient = mock<CloseableHttpClient>() {
-            on { execute(any()) } doReturn response
-        }
-
-        given(httpClientProvider.client()).willReturn(httpClient)
         httpWriter.write(mutableListOf(decryptedStream))
         verifyZeroInteractions(exportStatusService)
     }
