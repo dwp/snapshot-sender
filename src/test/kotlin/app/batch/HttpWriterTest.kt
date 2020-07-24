@@ -3,6 +3,7 @@ package app.batch
 import app.TestUtils.Companion.once
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
+import app.exceptions.BlockedTopicException
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
@@ -47,7 +48,8 @@ import java.io.ByteArrayInputStream
     "s3.bucket=bucket1",
     "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
-    "s3.htme.root.folder=exporter-output"
+    "s3.htme.root.folder=exporter-output",
+    "blocked.topics=db.crypto.unencrypted"
 ])
 class HttpWriterTest {
 
@@ -67,10 +69,11 @@ class HttpWriterTest {
     @MockBean
     private lateinit var successService: SuccessService
 
-    val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
+    val mockAppender: Appender<ILoggingEvent> = mock()
 
     val byteArray = "hello, world".toByteArray()
     val s3Path = "exporter-output/job01" //should match the test properties above
+    val blockedTopicName = "db.crypto.unencrypted"
 
     @Before
     fun before() {
@@ -272,10 +275,32 @@ class HttpWriterTest {
         verify(exportStatusService, once()).incrementSentCount(filename)
     }
 
-
     @Test(expected = WriterException::class)
     fun willNotIncrementFilesSentCountOnFailedPost() {
         val filename = "db.database.collection-000001.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+        val okStatusLine = mock<StatusLine> {
+            on { statusCode } doReturn 503
+        }
+
+        val response = mock<CloseableHttpResponse> {
+            on { statusLine } doReturn okStatusLine
+            on { allHeaders } doReturn arrayOf(mock<Header>())
+        }
+
+        val httpClient = mock<CloseableHttpClient>() {
+            on { execute(any()) } doReturn response
+        }
+
+        given(httpClientProvider.client()).willReturn(httpClient)
+        httpWriter.write(mutableListOf(decryptedStream))
+        verifyZeroInteractions(exportStatusService)
+    }
+
+    @Test(expected = BlockedTopicException::class)
+    fun willFailWhenTopicNameIsInBlockedList() {
+        val filename = "db.crypto.unencrypted-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         val okStatusLine = mock<StatusLine> {
