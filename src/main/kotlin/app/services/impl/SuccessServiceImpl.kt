@@ -41,6 +41,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                         setHeader("export_date", exportDate)
                         setHeader("database", database)
                         setHeader("collection", collection)
+                        setHeader("snapshot_type", snapshotType)
                         setHeader("topic", topic)
                     }
 
@@ -50,13 +51,23 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                                 logger.info("Successfully posted success indicator",
                                         "file_name" to fileName,
                                         "response" to response.statusLine.statusCode.toString(),
-                                        "nifi_url" to nifiUrl)
+                                        "nifi_url" to nifiUrl,
+                                        "database" to database,
+                                        "collection" to collection,
+                                        "topic" to topic,
+                                        "export_date" to exportDate,
+                                        "snapshot_type" to snapshotType)
                             }
                             else -> {
                                 logger.warn("Failed to post success indicator",
                                         "file_name" to fileName,
                                         "response" to response.statusLine.statusCode.toString(),
-                                        "nifi_url" to nifiUrl)
+                                        "nifi_url" to nifiUrl,
+                                        "database" to database,
+                                        "collection" to collection,
+                                        "topic" to topic,
+                                        "export_date" to exportDate,
+                                        "snapshot_type" to snapshotType)
                                 throw SuccessException("Failed to post success indicator $fileName, response: ${response.statusLine.statusCode}")
                             }
                         }
@@ -77,6 +88,9 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
 
     @Value("\${export.date}")
     private lateinit var exportDate: String
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())

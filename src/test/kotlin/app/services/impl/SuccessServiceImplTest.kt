@@ -28,7 +28,8 @@ import java.net.URI
 @SpringBootTest(classes = [SuccessServiceImpl::class])
 @TestPropertySource(properties = [
     "nifi.url=https://nifi:8091/dummy",
-    "export.date=2019-01-01"
+    "export.date=2019-01-01",
+    "snapshot.type=incremental"
 ])
 class SuccessServiceImplTest {
 
@@ -77,6 +78,7 @@ class SuccessServiceImplTest {
         val databaseHeader = put.getHeaders("database")[0].value
         val collectionHeader = put.getHeaders("collection")[0].value
         val topicHeader = put.getHeaders("topic")[0].value
+        val snapshotTypeHeader = put.getHeaders("snapshot_type")[0].value
 
         assertEquals("_core_toDo_successful.gz", filenameHeader)
         assertEquals("aws/test", environmentHeader)
@@ -84,7 +86,7 @@ class SuccessServiceImplTest {
         assertEquals("core", databaseHeader)
         assertEquals("toDo", collectionHeader)
         assertEquals("db.core.toDo", topicHeader)
-
+        assertEquals("incremental", snapshotTypeHeader)
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)

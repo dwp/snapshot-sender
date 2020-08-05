@@ -57,7 +57,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 "file_name" to item.fileName,
                 "full_path" to item.fullPath,
                 "nifi_url" to nifiUrl,
-                "filename_header" to filenameHeader)
+                "filename_header" to filenameHeader,
+                "export_date" to exportDate,
+                "snapshot_type" to snapshotType)
 
         httpClientProvider.client().use { it ->
             val post = HttpPost(nifiUrl).apply {
@@ -67,6 +69,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 setHeader("export_date", exportDate)
                 setHeader("database", database)
                 setHeader("collection", collection)
+                setHeader("snapshot_type", snapshotType)
                 setHeader("topic", topic)
             }
 
@@ -131,6 +134,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${export.date}")
     private lateinit var exportDate: String
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
 
     @Value("\${blocked.topics:NOT_SET}")
     lateinit var blockedTopics: String
