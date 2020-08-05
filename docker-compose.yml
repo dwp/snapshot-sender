@@ -181,6 +181,7 @@ services:
       --trust.keystore=snapshot-sender-truststore.jks
       --trust.store.password=changeit
       --export.date=2019-01-01
+      --snapshot.type=full
     environment:
       - ENVIRONMENT=local-docker
       - APPLICATION=snapshot_sender

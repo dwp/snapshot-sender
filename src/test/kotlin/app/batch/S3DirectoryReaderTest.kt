@@ -45,7 +45,8 @@ import java.nio.charset.StandardCharsets
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
     "nifi.url=http://nifi:9090",
-    "export.date=2019-01-01"
+    "export.date=2019-01-01",
+    "snapshot.type=full"
 ])
 class S3DirectoryReaderTest {
 
