@@ -65,7 +65,11 @@ class S3DirectoryReader(private val s3Client: AmazonS3,
 
             logger.info("S3 object count",
                     "bucket_name" to bucketName,
-                    "s3_prefix_folder" to s3Utils.s3PrefixFolder, "object_count" to objectSummaries.count().toString())
+                    "s3_prefix_folder" to s3Utils.s3PrefixFolder, 
+                    "object_count" to objectSummaries.count().toString(),
+                    "export_date" to exportDate,
+                    "snapshot_type" to snapshotType
+            )
 
             iterator = objectSummaries.listIterator()
         }
@@ -89,6 +93,12 @@ class S3DirectoryReader(private val s3Client: AmazonS3,
             throw DataKeyDecryptionException("Couldn't get the metadata for '$filePath'")
         }
     }
+
+    @Value("\${export.date}")
+    private lateinit var exportDate: String
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
 
     companion object {
         val logger = DataworksLogger.getLogger(S3DirectoryReader::class.toString())
