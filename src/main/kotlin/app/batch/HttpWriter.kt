@@ -77,9 +77,16 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 when (response.statusLine.statusCode) {
                     200 -> {
                         logger.info("Successfully posted file",
+                                "database" to database,
+                                "collection" to collection,
+                                "topic" to topic,
                                 "file_name" to item.fullPath,
+                                "full_path" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
-                                "nifi_url" to nifiUrl)
+                                "nifi_url" to nifiUrl,
+                                "filename_header" to filenameHeader,
+                                "export_date" to exportDate,
+                                "snapshot_type" to snapshotType)
                         exportStatusService.incrementSentCount(item.fileName)
                         s3StatusFileWriter.writeStatus(item.fullPath)
                     }
