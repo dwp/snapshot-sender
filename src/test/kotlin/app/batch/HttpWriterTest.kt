@@ -8,13 +8,11 @@ import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.services.SuccessService
+import app.utils.FilterBlockedTopicsUtils
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
+import com.nhaarman.mockitokotlin2.*
 
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldThrow
 import org.apache.http.Header
@@ -53,7 +51,6 @@ import java.io.ByteArrayInputStream
     "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
-    "blocked.topics=db.crypto.unencrypted",
     "snapshot.type=incremental"
 ])
 class HttpWriterTest {
@@ -73,6 +70,9 @@ class HttpWriterTest {
 
     @MockBean
     private lateinit var successService: SuccessService
+
+    @MockBean
+    private lateinit var filterBlockedTopicsUtils: FilterBlockedTopicsUtils
 
     val mockAppender: Appender<ILoggingEvent> = mock()
 
@@ -302,12 +302,17 @@ class HttpWriterTest {
 
     @Test
     fun shouldThrowBlockedTopicExceptionWhenTopicNameIsInBlockedList() {
+
         val filename = "db.crypto.unencrypted-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+
+
+        whenever(filterBlockedTopicsUtils.checkIfTopicIsBlocked("db.crypto.unencrypted", decryptedStream.fullPath)).doThrow(BlockedTopicException("Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"))
 
         val exception = shouldThrow<BlockedTopicException> {
             httpWriter.write(mutableListOf(decryptedStream))
         }
+
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"
 
         verifyZeroInteractions(exportStatusService)

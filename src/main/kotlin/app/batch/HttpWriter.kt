@@ -2,10 +2,10 @@ package app.batch
 
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
-import app.exceptions.BlockedTopicException
 import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
+import app.utils.FilterBlockedTopicsUtils
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -19,7 +19,8 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Component
 @Profile("httpWriter")
 class HttpWriter(private val httpClientProvider: HttpClientProvider,
-                 private val exportStatusService: ExportStatusService) : ItemWriter<DecryptedStream> {
+                 private val exportStatusService: ExportStatusService,
+                 private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemWriter<DecryptedStream> {
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
@@ -46,7 +47,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         val collection = match.groupValues[2].replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
 
         val topic = "db.$database.$collection"
-        checkIfTopicIsBlocked(topic, item)
+        filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
 
         val filenameHeader = item.fileName.replace(Regex("""\.txt\.gz$"""), ".json.gz")
 
@@ -125,15 +126,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         }
     }
 
-    private fun checkIfTopicIsBlocked(topic: String, item: DecryptedStream) {
-        if (blockedTopics.contains(topic)) {
-            val errorMessage = "Provided topic is blocked so cannot be processed: '$topic'"
-            val exception = BlockedTopicException(errorMessage)
-            logger.error("Provided topic is blocked", exception, "topic_name" to topic, "file_name" to item.fullPath)
-            throw exception
-        }
-    }
-
     @Value("\${nifi.url}")
     private lateinit var nifiUrl: String
 
@@ -142,9 +134,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
-
-    @Value("\${blocked.topics:NOT_SET}")
-    lateinit var blockedTopics: String
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())
