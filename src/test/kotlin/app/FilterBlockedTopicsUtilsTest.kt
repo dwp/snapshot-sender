@@ -11,11 +11,14 @@ import org.springframework.test.util.ReflectionTestUtils
 
 class FilterBlockedTopicsUtilsTest {
 
+    companion object {
+        val fullPath = "some path"
+    }
+
     @Test
     fun shouldNotThrowExceptionWhenBlockedTopicsNotSet() {
 
         val topic = "some.topic"
-        val fullPath = "some path"
 
         val util = FilterBlockedTopicsUtils()
 
@@ -23,6 +26,7 @@ class FilterBlockedTopicsUtilsTest {
             util.checkIfTopicIsBlocked(topic, fullPath)
             success()
         }
+
         assert(exception.success().isSuccess())
     }
 
@@ -30,7 +34,6 @@ class FilterBlockedTopicsUtilsTest {
     fun shouldNotThrowExceptionWhenTopicDoesNotMatchBlockedTopicList() {
 
         val topic = "good.topic"
-        val fullPath = "some path"
 
         val blockedTopic = "blocked.topic,another.blocked.topic"
 
@@ -42,6 +45,7 @@ class FilterBlockedTopicsUtilsTest {
             util.checkIfTopicIsBlocked(topic, fullPath)
             success()
         }
+
         assert(exception.success().isSuccess())
     }
 
@@ -49,7 +53,6 @@ class FilterBlockedTopicsUtilsTest {
     fun shouldNotThrowExceptionWhenTopicIsADifferentCaseToABlockedTopicForSingleBlockedTopic() {
 
         val topic = "topic.string"
-        val fullPath = "some path"
 
         val blockedTopic = "Topic.string"
 
@@ -61,6 +64,7 @@ class FilterBlockedTopicsUtilsTest {
             util.checkIfTopicIsBlocked(topic, fullPath)
             success()
         }
+
         assert(exception.success().isSuccess())
     }
 
@@ -68,7 +72,6 @@ class FilterBlockedTopicsUtilsTest {
     fun shouldNotThrowExceptionWhenTopicIsADifferentCaseToABlockedTopicForMultipleBlockedTopics() {
 
         val topic = "topic.String"
-        val fullPath = "some path"
 
         val blockedTopic = "topic.string,another.topic.string"
 
@@ -80,6 +83,7 @@ class FilterBlockedTopicsUtilsTest {
             util.checkIfTopicIsBlocked(topic, fullPath)
             success()
         }
+
         assert(exception.success().isSuccess())
     }
 
@@ -87,7 +91,6 @@ class FilterBlockedTopicsUtilsTest {
     fun shouldNotThrowExceptionWhenTopicIsASubstringOfABlockedTopicForSingleBlockedTopic() {
 
         val topic = "topic.string"
-        val fullPath = "some path"
 
         val blockedTopic = "topic.string.full"
 
@@ -99,6 +102,7 @@ class FilterBlockedTopicsUtilsTest {
             util.checkIfTopicIsBlocked(topic, fullPath)
             success()
         }
+
         assert(exception.success().isSuccess())
     }
 
@@ -106,7 +110,6 @@ class FilterBlockedTopicsUtilsTest {
     fun shouldNotThrowExceptionWhenTopicIsASubstringOfABlockedTopicForMultipleBlockedTopic() {
 
         val topic = "topic.string"
-        val fullPath = "some path"
 
         val blockedTopic = "blocked.topic,topic.string.full"
 
@@ -118,6 +121,7 @@ class FilterBlockedTopicsUtilsTest {
             util.checkIfTopicIsBlocked(topic, fullPath)
             success()
         }
+
         assert(exception.success().isSuccess())
     }
 
@@ -125,7 +129,6 @@ class FilterBlockedTopicsUtilsTest {
     fun shouldThrowBlockedTopicExceptionWhenTopicIsInSingularBlockedList() {
 
         val topic = "blocked.topic"
-        val fullPath = "some path"
 
         val blockedTopic = "blocked.topic"
 
@@ -136,6 +139,7 @@ class FilterBlockedTopicsUtilsTest {
         val exception = shouldThrow<BlockedTopicException> {
             util.checkIfTopicIsBlocked(topic, fullPath)
         }
+
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'blocked.topic'"
     }
 
@@ -143,7 +147,6 @@ class FilterBlockedTopicsUtilsTest {
     fun shouldThrowBlockedTopicExceptionWhenTopicIsInBlockedList() {
 
         val topic = "blocked.topic"
-        val fullPath = "some path"
 
         val blockedTopic = "blocked.topic,another.blocked.topic"
 
@@ -154,6 +157,7 @@ class FilterBlockedTopicsUtilsTest {
         val exception = shouldThrow<BlockedTopicException> {
             util.checkIfTopicIsBlocked(topic, fullPath)
         }
+
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'blocked.topic'"
     }
 }
