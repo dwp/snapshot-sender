@@ -31,7 +31,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             if (collectionIsComplete()) {
                 val result = dynamoDB.updateItem(setStatusSentRequest())
                 logger.info("Collection status after update",
-                        "collection status" to "${result.attributes["CollectionStatus"]?.s}")
+                        "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
                 true
             }
             else {
