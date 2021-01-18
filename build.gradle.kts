@@ -28,7 +28,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
-    implementation("org.apache.httpcomponents:httpclient:4.5.10")
+    implementation("org.apache.httpcomponents:httpclient:4.5.13")
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.commons:commons-compress:1.20")
     implementation("org.apache.commons:commons-text:1.8")
@@ -45,7 +45,7 @@ dependencies {
     testImplementation("com.beust", "klaxon", "4.0.2")
     // integration tests
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
-    testImplementation("org.apache.httpcomponents:fluent-hc:4.5.10")
+    testImplementation("org.apache.httpcomponents:fluent-hc:4.5.13")
 
     implementation("com.github.dwp:dataworks-common-logging:0.0.5")
 }
