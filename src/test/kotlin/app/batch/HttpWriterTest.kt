@@ -225,7 +225,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001.txt' as fileName does not match '^\w+\.([\w-]+)\.([\w-]+)'""", ex.message)
+            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001' as fileName does not match '^\w+\.([\w-]+)\.([\w-]+)'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
@@ -302,7 +302,7 @@ class HttpWriterTest {
         val exception = shouldThrow<MetadataException> {
             httpWriter.write(mutableListOf(decryptedStream))
         }
-        exception.message shouldBe "Rejecting: 'exporter-output/job01/bad_filename-000001.txt' as fileName does not match '^\\w+\\.([\\w-]+)\\.([\\w-]+)'"
+        exception.message shouldBe "Rejecting: 'exporter-output/job01/bad_filename-000001' as fileName does not match '^\\w+\\.([\\w-]+)\\.([\\w-]+)'"
         verifyZeroInteractions(exportStatusService)
     }
 
