@@ -146,6 +146,24 @@ class HttpWriterTest {
     }
 
     @Test
+    fun test_will_write_to_nifi_when_valid_file_with_no_prefix() {
+        val filename = "core-with-hyphen.addressDeclaration-000001.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+        val httpClient = Mockito.mock(CloseableHttpClient::class.java)
+        given(httpClientProvider.client()).willReturn(httpClient)
+        val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val statusLine = Mockito.mock(StatusLine::class.java)
+        given(statusLine.statusCode).willReturn(200)
+        given(httpResponse.statusLine).willReturn((statusLine))
+
+        httpWriter.write(mutableListOf(decryptedStream))
+
+        verify(httpClient, once()).execute(any(HttpPost::class.java))
+        verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
+    }
+
+    @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_collection() {
         val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")

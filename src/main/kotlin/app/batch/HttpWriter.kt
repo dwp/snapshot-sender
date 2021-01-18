@@ -25,7 +25,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
 
-    val filenameRe = Regex("""^\w+\.([\w-]+)\.([\w-]+)""")
+    val filenameRe = Regex("""^(?:\w+\.)?([\w-]+)\.([\w-]+)""")
 
     @Throws(Exception::class)
     override fun write(items: MutableList<out DecryptedStream>) {

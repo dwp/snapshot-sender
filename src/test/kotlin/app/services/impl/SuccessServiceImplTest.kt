@@ -93,6 +93,52 @@ class SuccessServiceImplTest {
     }
 
     @Test
+    fun willPostPayloadWithAppropriateHeadersWhenNoPrefixForTopic() {
+        System.setProperty("topic_name", "core.toDo")
+
+        val status = mock<StatusLine> {
+            on { statusCode } doReturn 200
+        }
+
+        val response = mock<CloseableHttpResponse> {
+            on { statusLine } doReturn status
+        }
+
+        val httpClient = mock<CloseableHttpClient> {
+            on { execute(ArgumentMatchers.any()) } doReturn response
+        }
+
+        given(httpClientProvider.client()).willReturn(httpClient)
+        successService.postSuccessIndicator()
+        verify(successService, times(1)).postSuccessIndicator()
+        verify(httpClientProvider, times(1)).client()
+        val captor = argumentCaptor<HttpPost>()
+        Mockito.verify(httpClient, times(1)).execute(captor.capture())
+
+        val put = captor.firstValue
+        assertEquals(put.uri, URI("https://nifi:8091/dummy"))
+
+        val filenameHeader = put.getHeaders("filename")[0].value
+        val environmentHeader = put.getHeaders("environment")[0].value
+        val exportDateHeader = put.getHeaders("export_date")[0].value
+        val databaseHeader = put.getHeaders("database")[0].value
+        val collectionHeader = put.getHeaders("collection")[0].value
+        val topicHeader = put.getHeaders("topic")[0].value
+        val snapshotTypeHeader = put.getHeaders("snapshot_type")[0].value
+
+        assertEquals("_core_toDo_successful.gz", filenameHeader)
+        assertEquals("aws/test", environmentHeader)
+        assertEquals("2019-01-01", exportDateHeader)
+        assertEquals("core", databaseHeader)
+        assertEquals("toDo", collectionHeader)
+        assertEquals("db.core.toDo", topicHeader)
+        assertEquals("incremental", snapshotTypeHeader)
+
+        val payload = put.entity.content.readBytes()
+        assertEquals(20, payload.size)
+    }
+
+    @Test
     fun testRetriesOnNotOkResponseUntilSuccessful() {
         System.setProperty("topic_name", "db.core.toDo")
 

@@ -25,7 +25,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
     override fun postSuccessIndicator() {
         val topic = System.getProperty("topic_name")
         if (StringUtils.isNotBlank(topic)) {
-            val topicRegex = Regex("""^\w+\.(?<database>[\w-]+)\.(?<collection>[\w-]+)""")
+            val topicRegex = Regex("""^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)""")
             val match = topicRegex.find(topic)
             if (match != null) {
                 val database = match.groups["database"]?.value ?: ""
