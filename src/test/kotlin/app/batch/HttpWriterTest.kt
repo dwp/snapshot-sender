@@ -146,6 +146,24 @@ class HttpWriterTest {
     }
 
     @Test
+    fun test_will_write_to_nifi_when_valid_file_with_no_prefix() {
+        val filename = "core-with-hyphen.addressDeclaration-000001.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+        val httpClient = Mockito.mock(CloseableHttpClient::class.java)
+        given(httpClientProvider.client()).willReturn(httpClient)
+        val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val statusLine = Mockito.mock(StatusLine::class.java)
+        given(statusLine.statusCode).willReturn(200)
+        given(httpResponse.statusLine).willReturn((statusLine))
+
+        httpWriter.write(mutableListOf(decryptedStream))
+
+        verify(httpClient, once()).execute(any(HttpPost::class.java))
+        verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
+    }
+
+    @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_collection() {
         val filename = "db.core-with-hyphen.address-declaration-has-hyphen-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
@@ -199,7 +217,7 @@ class HttpWriterTest {
 
     @Test
     fun test_will_raise_metatdata_error_when_filename_is_bad() {
-        val filename = "dbcoreaddressDeclaration-000001.txt"
+        val filename = "dbcoreaddressDeclaration-000001"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         try {
@@ -207,7 +225,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001.txt' as fileName does not match '^\w+\.([\w-]+)\.([\w-]+)'""", ex.message)
+            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001' as fileName does not match '^(?:\w+\.)?([\w-]+)\.([\w-]+)'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
@@ -278,13 +296,13 @@ class HttpWriterTest {
 
     @Test
     fun shouldThrowMetadataExceptionWhenFileNameDoesNotMatchRegex() {
-        val filename = "bad_filename-000001.txt"
+        val filename = "bad_filename-000001"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         val exception = shouldThrow<MetadataException> {
             httpWriter.write(mutableListOf(decryptedStream))
         }
-        exception.message shouldBe "Rejecting: 'exporter-output/job01/bad_filename-000001.txt' as fileName does not match '^\\w+\\.([\\w-]+)\\.([\\w-]+)'"
+        exception.message shouldBe "Rejecting: 'exporter-output/job01/bad_filename-000001' as fileName does not match '^(?:\\w+\\.)?([\\w-]+)\\.([\\w-]+)'"
         verifyZeroInteractions(exportStatusService)
     }
 
