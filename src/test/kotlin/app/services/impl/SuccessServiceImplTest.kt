@@ -131,7 +131,7 @@ class SuccessServiceImplTest {
         assertEquals("2019-01-01", exportDateHeader)
         assertEquals("core", databaseHeader)
         assertEquals("toDo", collectionHeader)
-        assertEquals("db.core.toDo", topicHeader)
+        assertEquals("core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
 
         val payload = put.entity.content.readBytes()

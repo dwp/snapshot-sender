@@ -217,7 +217,7 @@ class HttpWriterTest {
 
     @Test
     fun test_will_raise_metatdata_error_when_filename_is_bad() {
-        val filename = "dbcoreaddressDeclaration-000001.txt"
+        val filename = "dbcoreaddressDeclaration-000001"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         try {
@@ -296,7 +296,7 @@ class HttpWriterTest {
 
     @Test
     fun shouldThrowMetadataExceptionWhenFileNameDoesNotMatchRegex() {
-        val filename = "bad_filename-000001.txt"
+        val filename = "bad_filename-000001"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         val exception = shouldThrow<MetadataException> {
