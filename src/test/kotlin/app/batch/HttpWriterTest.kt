@@ -225,7 +225,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001' as fileName does not match '^(?:\\w+\\.)?([\w-]+)\.([\w-]+)'""", ex.message)
+            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001' as fileName does not match '^(?:\w+\.)?([\w-]+)\.([\w-]+)'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
