@@ -128,7 +128,7 @@ class HttpWriterTest {
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
         assertEquals("""Checking item to  write", "file_name":"db.core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz"""", formattedMessages[1])
         assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.core.addressDeclaration-000001.json.gz", "export_date":"2019-01-01", "snapshot_type":"incremental"""", formattedMessages[2])
-        assertEquals("""Successfully posted file", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_status"""", formattedMessages[3])
+        assertEquals("""Successfully posted file", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[3])
     }
 
     @Test
