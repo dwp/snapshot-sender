@@ -43,6 +43,8 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                         setHeader("collection", collection)
                         setHeader("snapshot_type", snapshotType)
                         setHeader("topic", topic)
+                        setHeader("status_table_name", statusTableName)
+                        setHeader("correlation_id", correlationId)
                     }
 
                     it.execute(post).use { response ->
@@ -56,7 +58,9 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                                         "collection" to collection,
                                         "topic" to topic,
                                         "export_date" to exportDate,
-                                        "snapshot_type" to snapshotType)
+                                        "snapshot_type" to snapshotType,
+                                        "status_table_name" to statusTableName,
+                                        "correlation_id" to correlationId)
                             }
                             else -> {
                                 logger.warn("Failed to post success indicator",
@@ -67,7 +71,9 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                                         "collection" to collection,
                                         "topic" to topic,
                                         "export_date" to exportDate,
-                                        "snapshot_type" to snapshotType)
+                                        "snapshot_type" to snapshotType,
+                                        "status_table_name" to statusTableName,
+                                        "correlation_id" to correlationId)
                                 throw SuccessException("Failed to post success indicator $fileName, response: ${response.statusLine.statusCode}")
                             }
                         }
@@ -91,6 +97,11 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
+
+    @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
+    private lateinit var statusTableName: String
+
+    private val correlationId by lazy { System.getProperty("correlation_id") }
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())

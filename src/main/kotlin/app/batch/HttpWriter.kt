@@ -60,7 +60,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 "nifi_url" to nifiUrl,
                 "filename_header" to filenameHeader,
                 "export_date" to exportDate,
-                "snapshot_type" to snapshotType)
+                "snapshot_type" to snapshotType,
+                "status_table_name" to statusTableName)
 
         httpClientProvider.client().use { it ->
             val post = HttpPost(nifiUrl).apply {
@@ -72,6 +73,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 setHeader("collection", collection)
                 setHeader("snapshot_type", snapshotType)
                 setHeader("topic", topic)
+                setHeader("status_table_name", statusTableName)
+                setHeader("correlation_id", correlationId)
             }
 
             it.execute(post).use { response ->
@@ -85,7 +88,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                                 "response" to response.statusLine.statusCode.toString(),
                                 "nifi_url" to nifiUrl,
                                 "export_date" to exportDate,
-                                "snapshot_type" to snapshotType)
+                                "snapshot_type" to snapshotType,
+                                "status_table_name" to statusTableName)
                         exportStatusService.incrementSentCount(item.fileName)
                         s3StatusFileWriter.writeStatus(item.fullPath)
                     }
@@ -98,7 +102,10 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                         logger.warn("Failed to post the provided item",
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
-                                "nifi_url" to nifiUrl, *headers.toTypedArray())
+                                "nifi_url" to nifiUrl,
+                                "export_date" to exportDate,
+                                "snapshot_type" to snapshotType,
+                                "status_table_name" to statusTableName, *headers.toTypedArray())
 
                         throw WriterException("Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}")
                     }
@@ -134,6 +141,11 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
+
+    @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
+    private lateinit var statusTableName: String
+
+    private val correlationId by lazy { System.getProperty("correlation_id") }
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())

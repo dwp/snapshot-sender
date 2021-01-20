@@ -29,13 +29,15 @@ import java.net.URI
 @TestPropertySource(properties = [
     "nifi.url=https://nifi:8091/dummy",
     "export.date=2019-01-01",
-    "snapshot.type=incremental"
+    "snapshot.type=incremental",
+    "dynamodb.status.table.name=test_table"
 ])
 class SuccessServiceImplTest {
 
     @Before
     fun before() {
         System.setProperty("environment", "test")
+        System.setProperty("correlation_id", "123")
         reset(httpClientProvider)
     }
 
@@ -79,6 +81,8 @@ class SuccessServiceImplTest {
         val collectionHeader = put.getHeaders("collection")[0].value
         val topicHeader = put.getHeaders("topic")[0].value
         val snapshotTypeHeader = put.getHeaders("snapshot_type")[0].value
+        val statusTableNameHeader = put.getHeaders("status_table_name")[0].value
+        val correlationIdHeader = put.getHeaders("correlation_id")[0].value
 
         assertEquals("_core_toDo_successful.gz", filenameHeader)
         assertEquals("aws/test", environmentHeader)
@@ -87,6 +91,10 @@ class SuccessServiceImplTest {
         assertEquals("toDo", collectionHeader)
         assertEquals("db.core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
+        assertEquals("db.core.toDo", topicHeader)
+        assertEquals("incremental", snapshotTypeHeader)
+        assertEquals("test_table", statusTableNameHeader)
+        assertEquals("123", correlationIdHeader)
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
@@ -125,6 +133,8 @@ class SuccessServiceImplTest {
         val collectionHeader = put.getHeaders("collection")[0].value
         val topicHeader = put.getHeaders("topic")[0].value
         val snapshotTypeHeader = put.getHeaders("snapshot_type")[0].value
+        val statusTableNameHeader = put.getHeaders("status_table_name")[0].value
+        val correlationIdHeader = put.getHeaders("correlation_id")[0].value
 
         assertEquals("_core_toDo_successful.gz", filenameHeader)
         assertEquals("aws/test", environmentHeader)
@@ -133,6 +143,8 @@ class SuccessServiceImplTest {
         assertEquals("toDo", collectionHeader)
         assertEquals("core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
+        assertEquals("test_table", statusTableNameHeader)
+        assertEquals("123", correlationIdHeader)
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)

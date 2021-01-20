@@ -51,7 +51,8 @@ import java.io.ByteArrayInputStream
     "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
-    "snapshot.type=incremental"
+    "snapshot.type=incremental",
+    "dynamodb.status.table.name=test_table"
 ])
 class HttpWriterTest {
 
@@ -82,6 +83,7 @@ class HttpWriterTest {
     @Before
     fun before() {
         System.setProperty("environment", "test")
+        System.setProperty("correlation_id", "123")
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         root.addAppender(mockAppender)
         Mockito.reset(mockAppender)
@@ -108,13 +110,15 @@ class HttpWriterTest {
         val httpCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, once()).execute(httpCaptor.capture())
         assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
-        assertEquals(7, httpCaptor.firstValue.allHeaders.size)
+        assertEquals(9, httpCaptor.firstValue.allHeaders.size)
         assertEquals("filename: db.core.addressDeclaration-000001.json.gz", httpCaptor.firstValue.allHeaders[0].toString())
         assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
         assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
         assertEquals("collection: addressDeclaration", httpCaptor.firstValue.allHeaders[4].toString())
         assertEquals("snapshot_type: incremental", httpCaptor.firstValue.allHeaders[5].toString())
         assertEquals("topic: db.core.addressDeclaration", httpCaptor.firstValue.allHeaders[6].toString())
+        assertEquals("status_table_name: test_table", httpCaptor.firstValue.allHeaders[7].toString())
+        assertEquals("correlation_id: 123", httpCaptor.firstValue.allHeaders[8].toString())
 
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
@@ -123,8 +127,8 @@ class HttpWriterTest {
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
         assertEquals("""Checking item to  write", "file_name":"db.core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz"""", formattedMessages[1])
-        assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.core.addressDeclaration-000001.json.gz", "export_date":"2019-01-01", "snapshot_type":"incremental"""", formattedMessages[2])
-        assertEquals("""Successfully posted file", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental"""", formattedMessages[3])
+        assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.core.addressDeclaration-000001.json.gz", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[2])
+        assertEquals("""Successfully posted file", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[3])
     }
 
     @Test
@@ -211,8 +215,8 @@ class HttpWriterTest {
         val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
         assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
         assertEquals("""Checking item to  write", "file_name":"db.a.b-01.txt.gz", "full_path":"exporter-output\/job01\/db.a.b-01.txt.gz"""", formattedMessages[1])
-        assertEquals("""Posting file name to collection", "database":"a", "collection":"b", "topic":"db.a.b", "file_name":"db.a.b-01.txt.gz", "full_path":"exporter-output\/job01\/db.a.b-01.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.a.b-01.json.gz", "export_date":"2019-01-01", "snapshot_type":"incremental"""", formattedMessages[2])
-        assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.txt.gz", "response":"400", "nifi_url":"nifi:8091\/dummy", "HEADER_NAME":"HEADER_VALUE"""", formattedMessages[3])
+        assertEquals("""Posting file name to collection", "database":"a", "collection":"b", "topic":"db.a.b", "file_name":"db.a.b-01.txt.gz", "full_path":"exporter-output\/job01\/db.a.b-01.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.a.b-01.json.gz", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[2])
+        assertEquals("""Failed to post the provided item", "file_name":"exporter-output\/job01\/db.a.b-01.txt.gz", "response":"400", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table", "HEADER_NAME":"HEADER_VALUE"""", formattedMessages[3])
     }
 
     @Test
