@@ -60,7 +60,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 "nifi_url" to nifiUrl,
                 "filename_header" to filenameHeader,
                 "export_date" to exportDate,
-                "snapshot_type" to snapshotType)
+                "snapshot_type" to snapshotType,
+                "status_table_name" to statusTableName)
 
         httpClientProvider.client().use { it ->
             val post = HttpPost(nifiUrl).apply {
