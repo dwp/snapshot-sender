@@ -93,8 +93,8 @@ class SuccessServiceImplTest {
         assertEquals("incremental", snapshotTypeHeader)
         assertEquals("db.core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
-        assertEquals("status_table_name", statusTableNameHeader)
-        assertEquals("correlation_id", correlationIdHeader)
+        assertEquals("test_table", statusTableNameHeader)
+        assertEquals("123", correlationIdHeader)
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
@@ -133,6 +133,8 @@ class SuccessServiceImplTest {
         val collectionHeader = put.getHeaders("collection")[0].value
         val topicHeader = put.getHeaders("topic")[0].value
         val snapshotTypeHeader = put.getHeaders("snapshot_type")[0].value
+        val statusTableNameHeader = put.getHeaders("status_table_name")[0].value
+        val correlationIdHeader = put.getHeaders("correlation_id")[0].value
 
         assertEquals("_core_toDo_successful.gz", filenameHeader)
         assertEquals("aws/test", environmentHeader)
@@ -141,6 +143,8 @@ class SuccessServiceImplTest {
         assertEquals("toDo", collectionHeader)
         assertEquals("core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
+        assertEquals("test_table", statusTableNameHeader)
+        assertEquals("123", correlationIdHeader)
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)

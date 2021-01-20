@@ -101,10 +101,10 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                         logger.warn("Failed to post the provided item",
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
-                                "nifi_url" to nifiUrl, *headers.toTypedArray(),
+                                "nifi_url" to nifiUrl,
                                 "export_date" to exportDate,
                                 "snapshot_type" to snapshotType,
-                                "status_table_name" to statusTableName)
+                                "status_table_name" to statusTableName, *headers.toTypedArray())
 
                         throw WriterException("Failed to post '${item.fullPath}': post returned status code ${response.statusLine.statusCode}")
                     }
