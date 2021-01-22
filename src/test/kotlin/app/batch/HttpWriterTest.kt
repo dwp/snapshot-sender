@@ -270,7 +270,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001' as fileName does not match '^(?:\w+\.)?(?<database>[\w-]+)-\.(?<collection>[\w-]+)-'""", ex.message)
+            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001' as fileName does not match '^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)-'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
@@ -285,7 +285,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("Rejecting: 'exporter-output/job01/db.core.address01.txt' as fileName does not contain '-' to find number", ex.message)
+            assertEquals("""Rejecting: 'exporter-output/job01/db.core.address01.txt' as fileName does not match '^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)-'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
@@ -359,7 +359,7 @@ class HttpWriterTest {
         val exception = shouldThrow<MetadataException> {
             httpWriter.write(mutableListOf(decryptedStream))
         }
-        exception.message shouldBe "Rejecting: 'exporter-output/job01/db.type.nonum.txt.gz' as fileName does not contain '-' to find number"
+        exception.message shouldBe "Rejecting: 'exporter-output/job01/db.type.nonum.txt.gz' as fileName does not match '^(?:\\w+\\.)?(?<database>[\\w-]+)\\.(?<collection>[\\w-]+)-'"
         verifyZeroInteractions(exportStatusService)
     }
 

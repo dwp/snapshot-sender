@@ -41,7 +41,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
         val match = filenameRe.find(item.fileName)
         checkFilenameMatchesRegex(match, item)
-        checkFileNameHasDashNumberSeparator(item)
 
         val database = match!!.groups["database"]?.value ?: ""
         val collection = match.groups["collection"]?.value ?: ""
@@ -125,16 +124,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
             val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
             val exception = MetadataException(errorMessage)
             logger.error("Rejecting item to write", exception, "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
-            throw exception
-        }
-    }
-
-    private fun checkFileNameHasDashNumberSeparator(item: DecryptedStream) {
-        val lastDashIndex = item.fileName.lastIndexOf("-")
-        if (lastDashIndex < 0) {
-            val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
-            val exception = MetadataException(errorMessage)
-            logger.error("Rejecting item to write", exception, "file_name" to item.fullPath)
             throw exception
         }
     }
