@@ -24,8 +24,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
-
-    val filenameRe = Regex("""^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)-""")
+    val filenameRe2= Regex("""^(?:\w+\.)?([\w-]+)\.([\w-]+)""")
+    val filenameRe = Regex("""^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)(?:-\d{3}-\d{3}-\d+\.\w+\.\w+)$""")
 
     @Throws(Exception::class)
     override fun write(items: MutableList<out DecryptedStream>) {
@@ -40,17 +40,15 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
 
         val match = filenameRe.find(item.fileName)
+        val match2 = filenameRe2.find(item.fileName)
         checkFilenameMatchesRegex(match, item)
 
         val database = match!!.groups["database"]?.value ?: ""
         val collection = match.groups["collection"]?.value ?: ""
-        val collection_qualified = collection.replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
+        val collectionQualified = collection.replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
 
-        var topic_prefix = ""
-        if (item.fileName.toString().startsWith("db.")) {
-            topic_prefix = "db."
-        }
-        val topic = "$topic_prefix$database.$collection_qualified"
+        val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
+        val topic = "$topicPrefix$database.$collectionQualified"
 
         filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
 
@@ -58,7 +56,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
         logger.info("Posting file name to collection",
                 "database" to database,
-                "collection" to collection_qualified,
+                "collection" to collectionQualified,
                 "topic" to topic,
                 "file_name" to item.fileName,
                 "full_path" to item.fullPath,
@@ -75,7 +73,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 setHeader("environment", "aws/${System.getProperty("environment")}")
                 setHeader("export_date", exportDate)
                 setHeader("database", database)
-                setHeader("collection", collection_qualified)
+                setHeader("collection", collectionQualified)
                 setHeader("snapshot_type", snapshotType)
                 setHeader("topic", topic)
                 setHeader("status_table_name", statusTableName)
@@ -87,7 +85,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                     200 -> {
                         logger.info("Successfully posted file",
                                 "database" to database,
-                                "collection" to collection_qualified,
+                                "collection" to collectionQualified,
                                 "topic" to topic,
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
