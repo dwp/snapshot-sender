@@ -132,6 +132,47 @@ class HttpWriterTest {
     }
 
     @Test
+    fun test_will_write_to_nifi_when_valid_file_without_prefix() {
+        //given
+        val filename = "core.addressDeclaration-000001.txt.gz"
+        val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
+        val httpClient = Mockito.mock(CloseableHttpClient::class.java)
+        given(httpClientProvider.client()).willReturn(httpClient)
+        val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val statusLine = Mockito.mock(StatusLine::class.java)
+        given(statusLine.statusCode).willReturn(200)
+        given(httpResponse.statusLine).willReturn((statusLine))
+
+        //when
+        httpWriter.write(mutableListOf(decryptedStream))
+
+        //then
+        val httpCaptor = argumentCaptor<HttpPost>()
+        verify(httpClient, once()).execute(httpCaptor.capture())
+        assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
+        assertEquals(9, httpCaptor.firstValue.allHeaders.size)
+        assertEquals("filename: core.addressDeclaration-000001.json.gz", httpCaptor.firstValue.allHeaders[0].toString())
+        assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
+        assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
+        assertEquals("collection: addressDeclaration", httpCaptor.firstValue.allHeaders[4].toString())
+        assertEquals("snapshot_type: incremental", httpCaptor.firstValue.allHeaders[5].toString())
+        assertEquals("topic: core.addressDeclaration", httpCaptor.firstValue.allHeaders[6].toString())
+        assertEquals("status_table_name: test_table", httpCaptor.firstValue.allHeaders[7].toString())
+        assertEquals("correlation_id: 123", httpCaptor.firstValue.allHeaders[8].toString())
+
+        verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
+
+        val logCaptor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, Mockito.times(4)).doAppend(logCaptor.capture())
+        val formattedMessages = logCaptor.allValues.map { it.formattedMessage }
+        assertEquals("""Writing items to S3", "number_of_items":"1"""", formattedMessages[0])
+        assertEquals("""Checking item to  write", "file_name":"core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/core.addressDeclaration-000001.txt.gz"""", formattedMessages[1])
+        assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"core.addressDeclaration", "file_name":"core.addressDeclaration-000001.txt.gz", "full_path":"exporter-output\/job01\/core.addressDeclaration-000001.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"core.addressDeclaration-000001.json.gz", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[2])
+        assertEquals("""Successfully posted file", "database":"core", "collection":"addressDeclaration", "topic":"core.addressDeclaration", "file_name":"exporter-output\/job01\/core.addressDeclaration-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[3])
+    }
+
+    @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_dbname() {
         val filename = "db.core-with-hyphen.addressDeclaration-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
@@ -311,7 +352,7 @@ class HttpWriterTest {
     }
 
     @Test
-    fun shouldThrowMetadataExceptionWhenTopicNameIsInBlockedList() {
+    fun shouldThrowMetadataExceptionWhenFilenameDoesNotContainAHyphen() {
         val filename = "db.type.nonum.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
