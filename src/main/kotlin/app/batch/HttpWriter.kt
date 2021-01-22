@@ -25,7 +25,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
 
-    val filenameRe = Regex("""^(?:\w+\.)?([\w-]+)\.([\w-]+)""")
+    val filenameRe = Regex("""^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)-""")
 
     @Throws(Exception::class)
     override fun write(items: MutableList<out DecryptedStream>) {
@@ -41,19 +41,24 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
         val match = filenameRe.find(item.fileName)
         checkFilenameMatchesRegex(match, item)
-        checkFileNameHasDashNumberSeparator(item)
 
-        val database = match!!.groupValues[1]
-        val collection = match.groupValues[2].replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
+        val database = match!!.groups["database"]?.value ?: ""
+        val collection = match.groups["collection"]?.value ?: ""
+        val collection_qualified = collection.replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
 
-        val topic = "db.$database.$collection"
+        var topic_prefix = ""
+        if (item.fileName.toString().startsWith("db.")) {
+            topic_prefix = "db."
+        }
+        val topic = "$topic_prefix$database.$collection_qualified"
+
         filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
 
         val filenameHeader = item.fileName.replace(Regex("""\.txt\.gz$"""), ".json.gz")
 
         logger.info("Posting file name to collection",
                 "database" to database,
-                "collection" to collection,
+                "collection" to collection_qualified,
                 "topic" to topic,
                 "file_name" to item.fileName,
                 "full_path" to item.fullPath,
@@ -70,7 +75,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 setHeader("environment", "aws/${System.getProperty("environment")}")
                 setHeader("export_date", exportDate)
                 setHeader("database", database)
-                setHeader("collection", collection)
+                setHeader("collection", collection_qualified)
                 setHeader("snapshot_type", snapshotType)
                 setHeader("topic", topic)
                 setHeader("status_table_name", statusTableName)
@@ -82,7 +87,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                     200 -> {
                         logger.info("Successfully posted file",
                                 "database" to database,
-                                "collection" to collection,
+                                "collection" to collection_qualified,
                                 "topic" to topic,
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
@@ -119,16 +124,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
             val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
             val exception = MetadataException(errorMessage)
             logger.error("Rejecting item to write", exception, "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
-            throw exception
-        }
-    }
-
-    private fun checkFileNameHasDashNumberSeparator(item: DecryptedStream) {
-        val lastDashIndex = item.fileName.lastIndexOf("-")
-        if (lastDashIndex < 0) {
-            val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not contain '-' to find number"
-            val exception = MetadataException(errorMessage)
-            logger.error("Rejecting item to write", exception, "file_name" to item.fullPath)
             throw exception
         }
     }
