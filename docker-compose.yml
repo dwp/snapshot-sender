@@ -86,6 +86,7 @@ services:
       --snapshot.sender.reprocess.files=true
       --snapshot.sender.shutdown.flag=false
       --snapshot.sender.export.date=2020-01-01
+      --snapshot.type=full
       --trigger.snapshot.sender=false
       --topic.name=db.core.addressDeclaration
       --trust.keystore=htme-truststore.jks
@@ -138,6 +139,7 @@ services:
       --snapshot.sender.reprocess.files=true
       --snapshot.sender.shutdown.flag=false
       --snapshot.sender.export.date=2020-01-01
+      --snapshot.type=full
       --trigger.snapshot.sender=false
       --topic.name=db.quartz.claimantEvent
       --trust.keystore=htme-truststore.jks

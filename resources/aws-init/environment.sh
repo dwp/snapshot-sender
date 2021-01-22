@@ -49,19 +49,38 @@ create_uc_ecc_table() {
 }
 
 add_status_item() {
+    add_item "$(status_item_id)" 2
+}
+
+add_empty_status_item() {
+    add_item "$(empty_status_item_id)" 0
+}
+
+add_item() {
+    local id=${1:?Usage: $FUNCNAME id files-exported}
+    local files_exported=${2:?Usage: $FUNCNAME id files-exported}
+
     aws_local dynamodb delete-item \
-          --table-name "UCExportToCrownStatus" \
-          --key \
-            '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.toDo"}}' \
-          --return-values "ALL_OLD"
+              --table-name "UCExportToCrownStatus" \
+              --key "$id" \
+              --return-values "ALL_OLD"
 
     aws_local dynamodb update-item \
-          --table-name "UCExportToCrownStatus" \
-          --key \
-            '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.toDo"}}' \
-          --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
-          --return-values "ALL_NEW" \
-          --expression-attribute-values '{":cs": {"S":"Exported"}, ":fe": {"N":"2"}, ":fs": {"N":"0"}}'
+              --table-name "UCExportToCrownStatus" \
+              --key "$id" \
+              --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
+              --return-values "ALL_NEW" \
+              --expression-attribute-values \
+              '{":cs": {"S":"Exported"}, ":fe": {"N":"'$files_exported'"}, ":fs": {"N":"0"}}'
+
+}
+
+status_item_id() {
+    echo '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.toDo"}}'
+}
+
+empty_status_item_id() {
+    echo '{"CorrelationId":{"S":"321"},"CollectionName":{"S":"db.database.empty"}}'
 }
 
 get_status_item() {

@@ -1,7 +1,9 @@
 package app.configuration
 
+import app.domain.EncryptedStream
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
+import org.springframework.batch.item.ItemReader
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -18,4 +20,8 @@ class ContextConfiguration {
             }
         }
     }
+
+    @Bean
+    @Profile("!S3SourceData")
+    fun noOpReader() = ItemReader<EncryptedStream> { null }
 }
