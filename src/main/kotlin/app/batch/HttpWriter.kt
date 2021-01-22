@@ -48,7 +48,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         val collection_qualified = collection.replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
 
         var topic_prefix = ""
-        if item.fileName.toString().startsWith("db.") {
+        if (item.fileName.toString().startsWith("db.")) {
             topic_prefix = "db."
         }
         val topic = "$topic_prefix$database.$collection_qualified"
