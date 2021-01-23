@@ -2,7 +2,6 @@ package app.batch
 
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
-import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.utils.FilterBlockedTopicsUtils
@@ -25,8 +24,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
-    val filenameRe2= Regex("""^(?:\w+\.)?([\w-]+)\.([\w-]+)""")
-    val filenameRe = Regex("""^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)(?:-\d{3}-\d{3}-\d+\.\w+\.\w+)$""")
 
     @Throws(Exception::class)
     override fun write(items: MutableList<out DecryptedStream>) {
@@ -37,16 +34,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     private fun postItem(item: DecryptedStream) {
 
         logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
-
-//        val match2 = filenameRe2.find(item.fileName)
-//        val match = filenameRe.find(item.fileName)
-//        checkFilenameMatchesRegex(match, item)
-
         val (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
-//        val database = match!!.groups["database"]?.value ?: ""
-//        val collection = match.groups["collection"]?.value ?: ""
-//        val collectionQualified = collection.replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
-
         val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
         val topic = "$topicPrefix$database.$collection"
 
@@ -114,15 +102,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                     }
                 }
             }
-        }
-    }
-
-    private fun checkFilenameMatchesRegex(match: MatchResult?, item: DecryptedStream) {
-        if (match == null) {
-            val errorMessage = "Rejecting: '${item.fullPath}' as fileName does not match '$filenameRe'"
-            val exception = MetadataException(errorMessage)
-            logger.error("Rejecting item to write", exception, "file_name" to item.fullPath, "expected_file_name" to filenameRe.toString())
-            throw exception
         }
     }
 

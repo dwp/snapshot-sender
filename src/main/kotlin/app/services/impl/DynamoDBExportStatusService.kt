@@ -14,9 +14,11 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Service
 class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportStatusService {
 
+
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun incrementSentCount(fileSent: String) {
         val result = dynamoDB.updateItem(incrementFilesSentRequest())
         logger.info("Incremented files sent",
@@ -25,8 +27,9 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
     }
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun setSentStatus(): Boolean =
             if (collectionIsComplete()) {
                 val result = dynamoDB.updateItem(setStatusSentRequest())
@@ -98,8 +101,5 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 }

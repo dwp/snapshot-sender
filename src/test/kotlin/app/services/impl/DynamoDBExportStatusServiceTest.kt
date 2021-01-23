@@ -15,11 +15,17 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.retry.annotation.EnableRetry
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
 @EnableRetry
 @SpringBootTest(classes = [DynamoDBExportStatusService::class])
+@TestPropertySource(properties = [
+    "dynamodb.retry.maxAttempts=5",
+    "dynamodb.retry.delay=5",
+    "dynamodb.retry.multiplier=1"
+])
 class DynamoDBExportStatusServiceTest {
 
     @SpyBean

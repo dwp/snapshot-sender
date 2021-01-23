@@ -20,8 +20,9 @@ import java.util.zip.GZIPOutputStream
 class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): SuccessService {
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+        maxAttemptsExpression = "\${success.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${success.retry.delay:1000}",
+            multiplierExpression = "\${success.retry.multiplier:2}"))
     override fun postSuccessIndicator() {
         val topic = System.getProperty("topic_name")
         if (StringUtils.isNotBlank(topic)) {
@@ -105,8 +106,5 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())
-        const val maxAttempts = 10
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 }

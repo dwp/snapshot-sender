@@ -9,10 +9,12 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
+@Profile("!NoOpReader")
 class S3DirectoryReader(private val s3Client: AmazonS3,
                         private val s3Utils: S3Utils) : ItemReader<EncryptedStream> {
 

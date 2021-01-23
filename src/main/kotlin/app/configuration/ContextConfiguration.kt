@@ -22,6 +22,6 @@ class ContextConfiguration {
     }
 
     @Bean
-    @Profile("!S3SourceData")
+    @Profile("NoOpReader")
     fun noOpReader() = ItemReader<EncryptedStream> { null }
 }
