@@ -344,7 +344,7 @@ class HttpWriterTest {
 
         val response = mock<CloseableHttpResponse> {
             on { statusLine } doReturn okStatusLine
-            on { allHeaders } doReturn arrayOf(mock<Header>())
+            on { allHeaders } doReturn arrayOf(mock())
         }
 
         val httpClient = mock<CloseableHttpClient> {

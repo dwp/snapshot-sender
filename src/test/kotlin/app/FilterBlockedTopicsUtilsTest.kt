@@ -12,7 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils
 class FilterBlockedTopicsUtilsTest {
 
     companion object {
-        val fullPath = "some path"
+        const val FULL_PATH = "some path"
     }
 
     @Test
@@ -23,7 +23,7 @@ class FilterBlockedTopicsUtilsTest {
         val util = FilterBlockedTopicsUtils()
 
         val exception = shouldNotThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
             success()
         }
 
@@ -42,7 +42,7 @@ class FilterBlockedTopicsUtilsTest {
         ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
 
         val exception = shouldNotThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
             success()
         }
 
@@ -61,7 +61,7 @@ class FilterBlockedTopicsUtilsTest {
         ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
 
         val exception = shouldNotThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
             success()
         }
 
@@ -80,7 +80,7 @@ class FilterBlockedTopicsUtilsTest {
         ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
 
         val exception = shouldNotThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
             success()
         }
 
@@ -99,7 +99,7 @@ class FilterBlockedTopicsUtilsTest {
         ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
 
         val exception = shouldNotThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
             success()
         }
 
@@ -118,7 +118,7 @@ class FilterBlockedTopicsUtilsTest {
         ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
 
         val exception = shouldNotThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
             success()
         }
 
@@ -137,7 +137,7 @@ class FilterBlockedTopicsUtilsTest {
         ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
 
         val exception = shouldThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
         }
 
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'blocked.topic'"
@@ -155,7 +155,7 @@ class FilterBlockedTopicsUtilsTest {
         ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
 
         val exception = shouldThrow<BlockedTopicException> {
-            util.checkIfTopicIsBlocked(topic, fullPath)
+            util.checkIfTopicIsBlocked(topic, FULL_PATH)
         }
 
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'blocked.topic'"

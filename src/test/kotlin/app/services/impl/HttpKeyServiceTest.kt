@@ -54,8 +54,6 @@ class HttpKeyServiceTest {
         private fun nextDksCorrelationId(): String {
             return "dks-id-${++dksCorrelationId}"
         }
-        const val blockedTopicName = "db.crypto.encryptedData.unencrypted"
-        const val blockedTopics = "db.crypto.encryptedData.unencrypted"
     }
 
     @Before
@@ -199,7 +197,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun test_decrypt_key_will_retry_untils_uccessful_before_max_calls() {
+    fun test_decrypt_key_will_retry_until_successful_before_max_calls() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",

@@ -58,15 +58,11 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
 
         "Export status is sent for no files exported topic" {
-            getItemResult("321", "db.database.empty").let { result ->
-                validateResult(result.item, "0", "0")
-            }
+            validateResult(getItemResult("321", "db.database.empty").item, "0", "0")
         }
 
         "Export status is sent" {
-            getItemResult("123", "db.core.toDo").let { result ->
-                validateResult(result.item, "2", "2")
-            }
+            validateResult(getItemResult("123", "db.core.toDo").item, "2", "2")
         }
 
         "Verify nifi output files have a valid json per line at expected timestamp with specified line count" {

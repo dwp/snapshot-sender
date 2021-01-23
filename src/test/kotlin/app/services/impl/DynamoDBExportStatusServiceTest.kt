@@ -47,7 +47,7 @@ class DynamoDBExportStatusServiceTest {
         given(amazonDynamoDB.updateItem(any()))
                 .willThrow(SdkClientException(""))
                 .willThrow(SdkClientException(""))
-                .willReturn(mock<UpdateItemResult>())
+                .willReturn(mock())
         exportStatusService.incrementSentCount("")
         verify(exportStatusService, times(3)).incrementSentCount("")
     }
@@ -57,7 +57,7 @@ class DynamoDBExportStatusServiceTest {
         given(amazonDynamoDB.getItem(any()))
                 .willThrow(SdkClientException(""))
                 .willThrow(SdkClientException(""))
-                .willReturn(mock<GetItemResult>())
+                .willReturn(mock())
         exportStatusService.setSentStatus()
         verify(exportStatusService, times(3)).setSentStatus()
     }
@@ -86,7 +86,7 @@ class DynamoDBExportStatusServiceTest {
         }
 
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
-        given(amazonDynamoDB.updateItem(any())).willReturn(mock<UpdateItemResult>())
+        given(amazonDynamoDB.updateItem(any())).willReturn(mock())
         exportStatusService.setSentStatus()
         verify(amazonDynamoDB, times(1)).updateItem(any())
     }
@@ -115,7 +115,7 @@ class DynamoDBExportStatusServiceTest {
         }
 
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
-        given(amazonDynamoDB.updateItem(any())).willReturn(mock<UpdateItemResult>())
+        given(amazonDynamoDB.updateItem(any())).willReturn(mock())
         exportStatusService.setSentStatus()
         verify(amazonDynamoDB, times(0)).updateItem(any())
     }
