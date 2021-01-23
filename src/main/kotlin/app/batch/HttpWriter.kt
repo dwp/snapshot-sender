@@ -6,6 +6,7 @@ import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.utils.FilterBlockedTopicsUtils
+import app.utils.TextParsingUtility
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -30,25 +31,24 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     @Throws(Exception::class)
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing items to S3", "number_of_items" to items.size.toString())
-        items.forEach { item ->
-            postItem(item)
-        }
+        items.forEach(::postItem)
     }
 
     private fun postItem(item: DecryptedStream) {
 
         logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
 
-        val match = filenameRe.find(item.fileName)
-        val match2 = filenameRe2.find(item.fileName)
-        checkFilenameMatchesRegex(match, item)
+//        val match2 = filenameRe2.find(item.fileName)
+//        val match = filenameRe.find(item.fileName)
+//        checkFilenameMatchesRegex(match, item)
 
-        val database = match!!.groups["database"]?.value ?: ""
-        val collection = match.groups["collection"]?.value ?: ""
-        val collectionQualified = collection.replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
+        val (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
+//        val database = match!!.groups["database"]?.value ?: ""
+//        val collection = match.groups["collection"]?.value ?: ""
+//        val collectionQualified = collection.replace(Regex("""(-\d{3}-\d{3})?-\d+$"""), "")
 
         val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
-        val topic = "$topicPrefix$database.$collectionQualified"
+        val topic = "$topicPrefix$database.$collection"
 
         filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
 
@@ -56,7 +56,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
         logger.info("Posting file name to collection",
                 "database" to database,
-                "collection" to collectionQualified,
+                "collection" to collection,
                 "topic" to topic,
                 "file_name" to item.fileName,
                 "full_path" to item.fullPath,
@@ -73,7 +73,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 setHeader("environment", "aws/${System.getProperty("environment")}")
                 setHeader("export_date", exportDate)
                 setHeader("database", database)
-                setHeader("collection", collectionQualified)
+                setHeader("collection", collection)
                 setHeader("snapshot_type", snapshotType)
                 setHeader("topic", topic)
                 setHeader("status_table_name", statusTableName)
@@ -85,7 +85,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                     200 -> {
                         logger.info("Successfully posted file",
                                 "database" to database,
-                                "collection" to collectionQualified,
+                                "collection" to collection,
                                 "topic" to topic,
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),

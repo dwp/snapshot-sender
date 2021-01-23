@@ -289,7 +289,7 @@ class HttpWriterTest {
     }
 
     @Test
-    fun test_will_raise_metatdata_error_when_filename_is_bad() {
+    fun test_will_raise_metadata_error_when_filename_is_bad() {
         val filename = "dbcoreaddressDeclaration-000001"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
@@ -298,7 +298,7 @@ class HttpWriterTest {
             fail("Expected MetadataException")
         }
         catch (ex: MetadataException) {
-            assertEquals("""Rejecting: 'exporter-output/job01/dbcoreaddressDeclaration-000001' as fileName does not match '^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)(?:-\d{3}-\d{3}-\d+\.\w+\.\w+)${'$'}'""", ex.message)
+            assertEquals("""Rejecting 'dbcoreaddressDeclaration-000001': does not match '^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)-\d{3}-\d{3}-\d+\.\w+\.\w+${'$'}'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
     }
