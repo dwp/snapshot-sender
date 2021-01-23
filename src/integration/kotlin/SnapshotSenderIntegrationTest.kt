@@ -4,9 +4,11 @@ import com.amazonaws.Protocol
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
+import com.amazonaws.services.dynamodbv2.model.GetItemResult
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.S3ObjectSummary
@@ -47,33 +49,24 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             outputs shouldContainExactlyInAnyOrder inputs
         }
 
-        "Export status is sent" {
-            val dynamoDB = AmazonDynamoDBClientBuilder.standard()
-                    .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration("http://aws:4566",
-                            "eu-west-2"))
-                    .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-                    .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials("access-key", "secret-key")))
-                    .build()
-            val correlationIdAttributeValue = AttributeValue().apply { s = "123" }
-            val collectionNameAttributeValue = AttributeValue().apply { s = "db.core.toDo" }
-            val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
+        "There should be a success file for each topic" {
+            val successes = File(NIFI_OUTPUT_FOLDER).walkTopDown()
+                .filter(File::isFile).map(File::getName)
+                .filter { it.endsWith("_successful.gz") }
+                .toList()
+            successes shouldContainExactlyInAnyOrder listOf("_core_toDo_successful.gz", "_database_empty_successful.gz")
+        }
 
-            val getItemRequest = GetItemRequest().apply {
-                tableName = "UCExportToCrownStatus"
-                key = primaryKey
-                consistentRead = true
+        "Export status is sent for no files exported topic" {
+            getItemResult("321", "db.database.empty").let { result ->
+                validateResult(result.item, "0", "0")
             }
-            val result = dynamoDB.getItem(getItemRequest)
-            val item = result.item
-            val status = item["CollectionStatus"]
-            val filesExported = item["FilesExported"]
-            val filesSent = item["FilesSent"]
-            status.shouldNotBeNull()
-            status.s shouldBe "Sent"
-            filesExported.shouldNotBeNull()
-            filesExported.n shouldBe "2"
-            filesSent.shouldNotBeNull()
-            filesSent.n shouldBe "2"
+        }
+
+        "Export status is sent" {
+            getItemResult("123", "db.core.toDo").let { result ->
+                validateResult(result.item, "2", "2")
+            }
         }
 
         "Verify nifi output files have a valid json per line at expected timestamp with specified line count" {
@@ -126,6 +119,32 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
     }
 
+    private fun validateResult(item: MutableMap<String, AttributeValue>, expectedExported: String, expectedSent: String) {
+        val status = item["CollectionStatus"]
+        val filesExported = item["FilesExported"]
+        val filesSent = item["FilesSent"]
+        status.shouldNotBeNull()
+        status.s shouldBe "Sent"
+        filesExported.shouldNotBeNull()
+        filesExported.n shouldBe expectedExported
+        filesSent.shouldNotBeNull()
+        filesSent.n shouldBe expectedSent
+    }
+
+    private fun getItemResult(correlationId: String, collectionName: String): GetItemResult =
+        dynamoDB.getItem(getItemRequest(primaryKeyValue(correlationId, collectionName)))
+
+    private fun getItemRequest(primaryKey: Map<String, AttributeValue>): GetItemRequest =
+        GetItemRequest().apply {
+            tableName = "UCExportToCrownStatus"
+            key = primaryKey
+            consistentRead = true
+        }
+
+    private fun primaryKeyValue(correlationId: String, collectionName: String): Map<String, AttributeValue> =
+        mapOf("CorrelationId" to AttributeValue().apply { s = correlationId },
+            "CollectionName" to AttributeValue().apply { s = collectionName })
+
     private fun deriveCollection(fileName: String): String {
         //s3 in:    test/output/db.core.addressDeclaration-045-050-000001.json.gz.enc
         //out       db.core.addressDeclaration
@@ -169,6 +188,16 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             }
         }
 
+        val dynamoDB: AmazonDynamoDB by lazy {
+            with (AmazonDynamoDBClientBuilder.standard()) {
+                withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration("http://aws:4566", "eu-west-2"))
+                withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+                withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials("access-key", "secret-key")))
+                build()
+            }
+        }
+
         private val logger: Logger = LoggerFactory.getLogger(SnapshotSenderIntegrationTest::class.toString())
+
     }
 }

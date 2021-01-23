@@ -53,6 +53,7 @@ class SuccessServiceImplTest {
 
     @Test
     fun willPostPayloadWithAppropriateHeaders() {
+
         System.setProperty("topic_name", "db.core.toDo")
 
         val status = mock<StatusLine> {
@@ -94,7 +95,6 @@ class SuccessServiceImplTest {
         assertEquals("toDo", collectionHeader)
         assertEquals("db.core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
-        assertEquals("db.core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
         assertEquals("test_table", statusTableNameHeader)
         assertEquals("123", correlationIdHeader)

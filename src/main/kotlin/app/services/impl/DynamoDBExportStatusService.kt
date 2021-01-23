@@ -89,8 +89,8 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         }
 
     private val primaryKey by lazy {
-        mapOf("CorrelationId" to stringAttribute(correlationId),
-                "CollectionName" to stringAttribute(topicName))
+        mapOf("CorrelationId" to stringAttribute(correlationId()),
+                "CollectionName" to stringAttribute(topicName()))
     }
 
     private fun stringAttribute(value: String) = AttributeValue().apply { s = value }

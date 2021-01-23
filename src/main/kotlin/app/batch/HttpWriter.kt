@@ -67,7 +67,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                     snapshotType = snapshotType,
                     topic = topic,
                     statusTableName = statusTableName,
-                    correlationId = correlationId))
+                    correlationId = correlationId()))
             }
 
             it.execute(post).use { response ->
