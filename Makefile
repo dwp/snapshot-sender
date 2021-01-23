@@ -1,14 +1,5 @@
 SHELL:=bash
 
-snapshot_sender_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
-aws_default_region=eu-west-2
-aws_secret_access_key=DummyKey
-aws_access_key_id=DummyKey
-s3_bucket=demobucket
-s3_prefix_folder=test-exporter
-data_key_service_url=http://dks-standalone-http:8080
-data_key_service_url_ssl=https://dks-standalone-https:8443
-follow_flag=--follow
 S3_READY_REGEX=^Ready\.$
 
 default: help
@@ -37,15 +28,6 @@ git-hooks: ## Set up hooks in .git/hooks
 build-jar: ## Build all code including tests and main jar
 	gradle clean build test
 
-dist: ## Assemble distribution files in build/dist
-	gradle assembleDist
-
-add-containers-to-hosts: ## Update laptop hosts file with reference to containers
-	./resources/add-containers-to-hosts.sh;
-
-generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
-	pushd resources && ./generate-developer-certs.sh && popd
-
 .PHONY: build-all
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
@@ -61,10 +43,7 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 
 .PHONY: build-images
 build-images: build-base-images ## Build all ecosystem of images
-	@{ \
-		docker-compose build hbase hbase-populate aws aws-init dks-standalone-http dks-standalone-https hbase-to-mongo-export mock-nifi; \
-		docker-compose build --no-cache snapshot-sender; \
-	}
+	docker-compose build
 
 .PHONY: up
 up: ## Run the ecosystem of containers
@@ -89,7 +68,7 @@ up: ## Run the ecosystem of containers
 		docker-compose up hbase-populate; \
 		docker-compose up hbase-to-mongo-export; \
 		docker-compose up hbase-to-mongo-export-claimant-event; \
-		docker-compose up snapshot-sender; \
+		docker-compose up snapshot-sender snapshot-sender-no-exports; \
 	}
 
 .PHONY: up-all
@@ -109,8 +88,4 @@ destroy: ## Bring down the hbase and other services then delete all volumes
 
 .PHONY: integration-tests
 integration-tests: ## Run the integration tests
-	docker-compose build --no-cache sender-integration-test
 	docker-compose run sender-integration-test
-
-.PHONY: integration-all
-integration-all: destroy build-all up integration-tests ## Generate certs, build the jar and images, put up the containers, run the integration tests

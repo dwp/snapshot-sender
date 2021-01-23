@@ -8,6 +8,7 @@ main() {
     create_crl_bucket
     create_uc_ecc_table
     add_status_item
+    add_empty_status_item
 }
 
 main

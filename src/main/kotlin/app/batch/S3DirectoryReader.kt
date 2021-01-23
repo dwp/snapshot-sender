@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
-@Profile("!NoOpReader")
+@Profile("!noOpReader")
 class S3DirectoryReader(private val s3Client: AmazonS3,
                         private val s3Utils: S3Utils) : ItemReader<EncryptedStream> {
 

@@ -5,6 +5,7 @@ import app.domain.NifiHeaders
 import app.exceptions.SuccessException
 import app.services.SuccessService
 import app.utils.NiFiUtility.setNifiHeaders
+import app.utils.PropertyUtility.correlationId
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -105,8 +106,6 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
-
-    private val correlationId by lazy { System.getProperty("correlation_id") }
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())

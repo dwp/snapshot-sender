@@ -162,34 +162,21 @@ services:
     depends_on:
       - dks-standalone-https
       - mock-nifi
-    command: >-
-      --logging.level.root=${LOGGING_LEVEL}
-      --spring.main.banner-mode=off
-      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,localStackConfiguration
-      --aws.region=eu-west-2
-      --data.key.service.url=https://dks-standalone-https:8443
-      --nifi.url=https://mock-nifi:5443/collections
-      --s3.access.key=access-key
-      --s3.bucket=demobucket
-      --s3.prefix.folder=test/output/
-      --s3.htme.root.folder=test
-      --s3.status.folder=status
-      --s3.secret.key=access-key
-      --s3.service.endpoint=http://aws:4566
-      --identity.key.password=changeit
-      --identity.keystore=snapshot-sender-keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --trust.keystore=snapshot-sender-truststore.jks
-      --trust.store.password=changeit
-      --export.date=2019-01-01
-      --snapshot.type=full
     environment:
-      - ENVIRONMENT=local-docker
-      - APPLICATION=snapshot_sender
-      - APP_VERSION=latest-dev
-      - COMPONENT=jar_file
       - CORRELATION_ID=123
+      - TOPIC_NAME=db.core.toDo
+
+  snapshot-sender-no-exports:
+    image: snapshot-sender
+    build:
+      context: .
+    container_name: snapshot-sender-no-exports
+    depends_on:
+      - mock-nifi
+    environment:
+      - CORRELATION_ID=321
+      - TOPIC_NAME=db.database.empty
+      - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
 
   dks-standalone-http:
     image: dks-standalone-http

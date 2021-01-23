@@ -22,6 +22,6 @@ class ContextConfiguration {
     }
 
     @Bean
-    @Profile("NoOpReader")
+    @Profile("noOpReader")
     fun noOpReader() = ItemReader<EncryptedStream> { null }
 }

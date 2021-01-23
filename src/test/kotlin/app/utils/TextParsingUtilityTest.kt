@@ -1,7 +1,7 @@
 package app.utils
 
 import app.exceptions.MetadataException
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 

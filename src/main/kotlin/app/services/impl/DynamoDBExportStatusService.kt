@@ -1,6 +1,8 @@
 package app.services.impl
 
 import app.services.ExportStatusService
+import app.utils.PropertyUtility.correlationId
+import app.utils.PropertyUtility.topicName
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
@@ -95,9 +97,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
-
-    private val correlationId by lazy { System.getProperty("correlation_id") }
-    private val topicName by lazy { System.getProperty("topic_name") }
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())

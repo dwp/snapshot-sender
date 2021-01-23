@@ -7,6 +7,7 @@ import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.NiFiUtility.setNifiHeaders
+import app.utils.PropertyUtility.correlationId
 import app.utils.TextParsingUtility
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -14,12 +15,10 @@ import org.apache.http.entity.InputStreamEntity
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
-@Profile("httpWriter")
 class HttpWriter(private val httpClientProvider: HttpClientProvider,
                  private val exportStatusService: ExportStatusService,
                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemWriter<DecryptedStream> {
@@ -57,19 +56,18 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 "status_table_name" to statusTableName)
 
         httpClientProvider.client().use { it ->
-            val headers = NifiHeaders(filename = filenameHeader,
-                                        environment = "aws/${System.getProperty("environment")}",
-                                        exportDate = exportDate,
-                                        database = database,
-                                        collection = collection,
-                                        snapshotType = snapshotType,
-                                        topic = topic,
-                                        statusTableName = statusTableName,
-                                        correlationId = correlationId)
 
             val post = HttpPost(nifiUrl).apply {
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
-                setNifiHeaders(headers)
+                setNifiHeaders(NifiHeaders(filename = filenameHeader,
+                    environment = "aws/${System.getProperty("environment")}",
+                    exportDate = exportDate,
+                    database = database,
+                    collection = collection,
+                    snapshotType = snapshotType,
+                    topic = topic,
+                    statusTableName = statusTableName,
+                    correlationId = correlationId))
             }
 
             it.execute(post).use { response ->
@@ -120,8 +118,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
-
-    private val correlationId by lazy { System.getProperty("correlation_id") }
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())
