@@ -92,6 +92,36 @@ class DynamoDBExportStatusServiceTest {
     }
 
     @Test
+    fun setSentStatusSetsStatusIfExportedAndNoFilesExported() {
+
+        val status = mock<AttributeValue> {
+            on { s } doReturn "Exported"
+        }
+
+        val filesExported = mock<AttributeValue> {
+            on { n } doReturn "0"
+        }
+
+        val filesSent = mock<AttributeValue> {
+            on { n } doReturn "0"
+        }
+
+        val record =
+            mapOf("CollectionStatus" to status,
+                "FilesExported" to filesExported,
+                "FilesSent" to filesSent)
+
+        val getItemResult = mock<GetItemResult> {
+            on { item } doReturn record
+        }
+
+        given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
+        given(amazonDynamoDB.updateItem(any())).willReturn(mock())
+        exportStatusService.setSentStatus()
+        verify(amazonDynamoDB, times(1)).updateItem(any())
+    }
+
+    @Test
     fun setSentStatusDoesNotSetStatusIfNotExported() {
 
         val status = mock<AttributeValue> {
