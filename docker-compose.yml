@@ -61,45 +61,7 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
-      --logging.level.root=${LOGGING_LEVEL}
-      --spring.main.banner-mode=off
-      --aws.region=eu-west-2
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/snapshot-sender/data/ready
-      --data.table.name=ucfs-data
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=htme-keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --output.batch.size.max.bytes=10000
-      --s3.access.key=access-key
-      --s3.bucket=demobucket
-      --s3.prefix.folder=test/output
-      --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4566
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.export.date=2020-01-01
-      --snapshot.type=full
-      --trigger.snapshot.sender=false
       --topic.name=db.core.addressDeclaration
-      --trust.keystore=htme-truststore.jks
-      --trust.store.password=changeit
-      --s3.manifest.prefix.folder=test/manifest
-      --s3.manifest.bucket=demobucket
-    environment:
-      - topic.name=db.core.addressDeclaration
-      - ENVIRONMENT=local-docker
-      - APPLICATION=htme
-      - APP_VERSION=latest-dev
-      - COMPONENT=jar_file
-      - CORRELATION_ID=htme-address
 
   hbase-to-mongo-export-claimant-event:
     image: hbase-to-mongo-export
@@ -114,45 +76,7 @@ services:
     volumes:
       - shared-volume:/opt/snapshot-sender/data
     command: >-
-      --logging.level.root=${LOGGING_LEVEL}
-      --spring.main.banner-mode=off
-      --aws.region=eu-west-2
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/snapshot-sender/data/ready
-      --data.table.name=ucfs-data
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=htme-keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --output.batch.size.max.bytes=10000
-      --s3.access.key=access-key
-      --s3.bucket=demobucket
-      --s3.prefix.folder=test/output
-      --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4566
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.export.date=2020-01-01
-      --snapshot.type=full
-      --trigger.snapshot.sender=false
       --topic.name=db.quartz.claimantEvent
-      --trust.keystore=htme-truststore.jks
-      --trust.store.password=changeit
-      --s3.manifest.prefix.folder=test/manifest
-      --s3.manifest.bucket=demobucket
-    environment:
-      - topic.name=db.quartz.claimantEvent
-      - ENVIRONMENT=local-docker
-      - APPLICATION=htme_claimant
-      - APP_VERSION=latest-dev
-      - COMPONENT=jar_file
-      - CORRELATION_ID=htme-claimant
 
   snapshot-sender:
     image: snapshot-sender

@@ -8,7 +8,7 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/hbase-to-m
 
 
 COPY htme*.jks htme*.crt ./
-
+COPY htme.properties ./application.properties
 RUN chmod a+rwx -R /opt/hbase-to-mongo-export/ /opt/snapshot-sender/
 
 ENTRYPOINT ["sh", "-c", "java -Dtopic.name=test -jar htme-latest.jar \"$@\"", "--"]
