@@ -2,9 +2,11 @@ package app.batch
 
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
+import app.domain.NifiHeaders
 import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.utils.FilterBlockedTopicsUtils
+import app.utils.NiFiUtility.setNifiHeaders
 import app.utils.TextParsingUtility
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -55,17 +57,19 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                 "status_table_name" to statusTableName)
 
         httpClientProvider.client().use { it ->
+            val headers = NifiHeaders(filename = filenameHeader,
+                                        environment = "aws/${System.getProperty("environment")}",
+                                        exportDate = exportDate,
+                                        database = database,
+                                        collection = collection,
+                                        snapshotType = snapshotType,
+                                        topic = topic,
+                                        statusTableName = statusTableName,
+                                        correlationId = correlationId)
+
             val post = HttpPost(nifiUrl).apply {
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
-                setHeader("filename", filenameHeader)
-                setHeader("environment", "aws/${System.getProperty("environment")}")
-                setHeader("export_date", exportDate)
-                setHeader("database", database)
-                setHeader("collection", collection)
-                setHeader("snapshot_type", snapshotType)
-                setHeader("topic", topic)
-                setHeader("status_table_name", statusTableName)
-                setHeader("correlation_id", correlationId)
+                setNifiHeaders(headers)
             }
 
             it.execute(post).use { response ->

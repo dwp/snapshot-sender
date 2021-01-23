@@ -1,8 +1,10 @@
 package app.services.impl
 
 import app.configuration.HttpClientProvider
+import app.domain.NifiHeaders
 import app.exceptions.SuccessException
 import app.services.SuccessService
+import app.utils.NiFiUtility.setNifiHeaders
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -35,17 +37,19 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                 logger.info("Writing success indicator to crown", "file_name" to fileName)
                 val inputStream = ByteArrayInputStream(zeroBytesCompressed())
                 httpClientProvider.client().use {
+                    val headers = NifiHeaders(filename = fileName,
+                        environment = "aws/${System.getProperty("environment")}",
+                        exportDate = exportDate,
+                        database = database,
+                        collection = collection,
+                        snapshotType = snapshotType,
+                        topic = topic,
+                        statusTableName = statusTableName,
+                        correlationId = correlationId)
+
                     val post = HttpPost(nifiUrl).apply {
                         entity = InputStreamEntity(inputStream, -1, ContentType.DEFAULT_BINARY)
-                        setHeader("filename", fileName)
-                        setHeader("environment", "aws/${System.getProperty("environment")}")
-                        setHeader("export_date", exportDate)
-                        setHeader("database", database)
-                        setHeader("collection", collection)
-                        setHeader("snapshot_type", snapshotType)
-                        setHeader("topic", topic)
-                        setHeader("status_table_name", statusTableName)
-                        setHeader("correlation_id", correlationId)
+                        setNifiHeaders(headers)
                     }
 
                     it.execute(post).use { response ->
