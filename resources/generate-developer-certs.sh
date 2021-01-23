@@ -17,6 +17,18 @@ main() {
     extract_public_certificate mock-nifi-keystore.jks mock-nifi.crt
     make_truststore mock-nifi-truststore.jks mock-nifi.crt
 
+    make_keystore localstack-init-keystore.jks localstack
+    extract_public_certificate localstack-init-keystore.jks localstack-init.crt
+    import_into_truststore dks-truststore.jks localstack-init.crt \
+                           localstack-init
+
+    extract_pems ./localstack-init-keystore.jks
+    extract_pems ./dks-keystore.jks
+
+    cp -v dks-crt.pem localstack-init-key.pem \
+       localstack-init-crt.pem ../containers/localstack
+
+
     import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt \
                            hbase-to-mongo-export
 
@@ -89,6 +101,51 @@ import_into_truststore() {
             -file "${certificate}" \
             -keystore "${truststore}" \
             -storepass $(password)
+}
+
+extract_pems() {
+    local keystore=${1:-keystore.jks}
+    local key=${2:-${keystore%-keystore.jks}-key.pem}
+    local certificate=${3:-${keystore%-keystore.jks}-crt.pem}
+
+    local intermediate_store=${keystore/jks/p12}
+
+    local filename=$(basename $keystore)
+    local alias=cid
+
+    [[ -f $intermediate_store ]] && rm -v $intermediate_store
+    [[ -f $key ]] && rm -v $key
+
+    if keytool -importkeystore \
+               -srckeystore $keystore \
+               -srcstorepass $(password) \
+               -srckeypass $(password) \
+               -srcalias $alias \
+               -destalias $alias \
+               -destkeystore $intermediate_store \
+               -deststoretype PKCS12 \
+               -deststorepass $(password) \
+               -destkeypass $(password); then
+        local pwd=$(password)
+        export pwd
+
+        openssl pkcs12 \
+                -in $intermediate_store \
+                -nodes \
+                -nocerts \
+                -password env:pwd \
+                -out $key
+
+        openssl pkcs12 \
+                -in $intermediate_store \
+                -nokeys \
+                -out $certificate \
+                -password env:pwd
+
+        unset pwd
+    else
+        echo Failed to generate intermediate keystore $intermediate_store >&2
+    fi
 }
 
 password() {
