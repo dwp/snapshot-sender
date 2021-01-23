@@ -42,4 +42,5 @@ data class NifiHeaders(val filename: String,
                        val snapshotType: String,
                        val topic: String,
                        val statusTableName: String,
-                       val correlationId: String)
+                       val correlationId: String,
+                       val s3Prefix: String)

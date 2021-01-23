@@ -67,7 +67,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                     snapshotType = snapshotType,
                     topic = topic,
                     statusTableName = statusTableName,
-                    correlationId = correlationId()))
+                    correlationId = correlationId(),
+                    s3Prefix = s3Prefix))
             }
 
             it.execute(post).use { response ->
@@ -118,6 +119,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
+
+    @Value("\${s3.prefix.folder}")
+    lateinit var s3Prefix: String
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())

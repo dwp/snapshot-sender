@@ -14,5 +14,6 @@ object NiFiUtility {
         setHeader("topic", headers.topic)
         setHeader("status_table_name", headers.statusTableName)
         setHeader("correlation_id", headers.correlationId)
+        setHeader("s3_prefix", headers.s3Prefix)
     }
 }

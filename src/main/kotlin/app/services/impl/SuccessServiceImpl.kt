@@ -46,7 +46,8 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                     snapshotType = snapshotType,
                     topic = topicName(),
                     statusTableName = statusTableName,
-                    correlationId = correlationId()
+                    correlationId = correlationId(),
+                    s3Prefix = s3Prefix
                 )
 
                 val post = HttpPost(nifiUrl).apply {
@@ -113,6 +114,9 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
+
+    @Value("\${s3.prefix.folder}")
+    lateinit var s3Prefix: String
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())

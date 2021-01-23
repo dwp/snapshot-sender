@@ -90,6 +90,7 @@ class HttpWriterTest {
         Mockito.reset(httpClientProvider)
     }
 
+
     @Test
     fun test_will_write_to_nifi_when_valid_file() {
         //given
@@ -110,7 +111,9 @@ class HttpWriterTest {
         val httpCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, once()).execute(httpCaptor.capture())
         assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
-        assertEquals(9, httpCaptor.firstValue.allHeaders.size)
+        assertEquals(NIFI_HEADER_COUNT, httpCaptor.firstValue.allHeaders.size)
+
+
         assertEquals("filename: ${filename.replace("txt", "json")}", httpCaptor.firstValue.allHeaders[0].toString())
         assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
         assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
@@ -119,7 +122,7 @@ class HttpWriterTest {
         assertEquals("topic: db.core.addressDeclaration", httpCaptor.firstValue.allHeaders[6].toString())
         assertEquals("status_table_name: test_table", httpCaptor.firstValue.allHeaders[7].toString())
         assertEquals("correlation_id: 123", httpCaptor.firstValue.allHeaders[8].toString())
-
+        assertEquals("s3_prefix: exporter-output/job01", httpCaptor.firstValue.allHeaders[9].toString())
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
@@ -151,7 +154,7 @@ class HttpWriterTest {
         val httpCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, once()).execute(httpCaptor.capture())
         assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
-        assertEquals(9, httpCaptor.firstValue.allHeaders.size)
+        assertEquals(NIFI_HEADER_COUNT, httpCaptor.firstValue.allHeaders.size)
         assertEquals("filename: core.addressDeclaration-045-050-000001.json.gz", httpCaptor.firstValue.allHeaders[0].toString())
         assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
         assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
@@ -160,6 +163,7 @@ class HttpWriterTest {
         assertEquals("topic: core.addressDeclaration", httpCaptor.firstValue.allHeaders[6].toString())
         assertEquals("status_table_name: test_table", httpCaptor.firstValue.allHeaders[7].toString())
         assertEquals("correlation_id: 123", httpCaptor.firstValue.allHeaders[8].toString())
+        assertEquals("s3_prefix: exporter-output/job01", httpCaptor.firstValue.allHeaders[9].toString())
 
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
@@ -187,7 +191,7 @@ class HttpWriterTest {
             given(httpResponse.statusLine).willReturn(statusLine)
             httpWriter.write(mutableListOf(decryptedStream))
             assertEquals("Content-Type: application/octet-stream", firstValue.entity.contentType.toString())
-            assertEquals(9, firstValue.allHeaders.size)
+            assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
             assertEquals("environment: aws/test", firstValue.allHeaders[1].toString())
             assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
@@ -196,6 +200,7 @@ class HttpWriterTest {
             assertEquals("topic: db.core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
             assertEquals("status_table_name: test_table", firstValue.allHeaders[7].toString())
             assertEquals("correlation_id: 123", firstValue.allHeaders[8].toString())
+            assertEquals("s3_prefix: exporter-output/job01", firstValue.allHeaders[9].toString())
 
 
             verify(httpClient, once()).execute(any(HttpPost::class.java))
@@ -219,7 +224,7 @@ class HttpWriterTest {
             verify(httpClient, once()).execute(capture())
             verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
             assertEquals("Content-Type: application/octet-stream", firstValue.entity.contentType.toString())
-            assertEquals(9, firstValue.allHeaders.size)
+            assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
             assertEquals("environment: aws/test", firstValue.allHeaders[1].toString())
             assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
@@ -228,6 +233,7 @@ class HttpWriterTest {
             assertEquals("topic: core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
             assertEquals("status_table_name: test_table", firstValue.allHeaders[7].toString())
             assertEquals("correlation_id: 123", firstValue.allHeaders[8].toString())
+            assertEquals("s3_prefix: exporter-output/job01", firstValue.allHeaders[9].toString())
         }
     }
 
@@ -247,7 +253,7 @@ class HttpWriterTest {
             verify(httpClient, once()).execute(capture())
             verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
             assertEquals("Content-Type: application/octet-stream", firstValue.entity.contentType.toString())
-            assertEquals(9, firstValue.allHeaders.size)
+            assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
             assertEquals("environment: aws/test", firstValue.allHeaders[1].toString())
             assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
@@ -256,6 +262,7 @@ class HttpWriterTest {
             assertEquals("topic: db.core-with-hyphen.address-declaration-has-hyphen", firstValue.allHeaders[6].toString())
             assertEquals("status_table_name: test_table", firstValue.allHeaders[7].toString())
             assertEquals("correlation_id: 123", firstValue.allHeaders[8].toString())
+            assertEquals("s3_prefix: exporter-output/job01", firstValue.allHeaders[9].toString())
         }
     }
 
@@ -397,5 +404,9 @@ class HttpWriterTest {
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"
 
         verifyZeroInteractions(exportStatusService)
+    }
+
+    companion object {
+        private const val NIFI_HEADER_COUNT: Int = 10
     }
 }
