@@ -45,7 +45,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     private fun collectionIsComplete(): Boolean {
         val (currentStatus, filesExported, filesSent) = currentStatusAndCounts()
-        val isComplete = currentStatus == "Exported" && filesExported == filesSent //&& filesExported > 0
+        val isComplete = currentStatus == "Exported" && filesExported == filesSent
         logger.info("Collection status", "current_status" to currentStatus,
                 "files_exported" to "$filesExported",
                 "files_sent" to "$filesSent",
