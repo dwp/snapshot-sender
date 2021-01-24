@@ -95,7 +95,6 @@ jobs:
                 sleep 2
             done
 
-            docker-compose up aws-init
             docker-compose up -d dks-standalone-https
 
             while ! docker exec dks-standalone-https cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do
@@ -103,6 +102,7 @@ jobs:
               sleep 2
             done
 
+            docker-compose up aws-init
             docker-compose up snapshot-sender snapshot-sender-no-exports
             docker-compose up sender-integration-test
 
