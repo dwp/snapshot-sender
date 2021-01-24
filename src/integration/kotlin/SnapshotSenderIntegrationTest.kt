@@ -62,7 +62,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             validateResult(getItemResult("123", "db.core.claimant").item, "100", "100")
         }
 
-        "f:Nifi output files are valid compressed jsonl" {
+        "Nifi output files are valid compressed jsonl" {
             val filesOnNifi = File(NIFI_OUTPUT_FOLDER).walkTopDown()
                 .map(File::getAbsolutePath)
                 .filter { it.contains("db.") && it.contains(".json.gz") }
