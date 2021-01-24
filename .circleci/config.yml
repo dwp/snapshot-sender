@@ -79,11 +79,8 @@ jobs:
 
             cd resources
             ./generate-developer-certs.sh
-            java -version
-            docker build --tag dwp-centos-with-java:latest --file Dockerfile_centos_java .
-            docker build --tag dwp-python-preinstall:latest --file Dockerfile_python_preinstall .
             cd -
-            docker build --tag dwp-gradle:latest --file resources/Dockerfile_gradle .
+
             ./gradlew build
 
             docker-compose build

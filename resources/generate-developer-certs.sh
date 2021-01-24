@@ -5,10 +5,6 @@ main() {
     extract_public_certificate dks-keystore.jks dks-standalone-https.crt
     make_truststore dks-truststore.jks dks-standalone-https.crt
 
-    make_keystore htme-keystore.jks hbase-to-mongo-export
-    extract_public_certificate htme-keystore.jks hbase-to-mongo-export.crt
-    make_truststore htme-truststore.jks hbase-to-mongo-export.crt
-
     make_keystore snapshot-sender-keystore.jks snapshot-sender
     extract_public_certificate snapshot-sender-keystore.jks snapshot-sender.crt
     make_truststore snapshot-sender-truststore.jks snapshot-sender.crt
@@ -27,15 +23,8 @@ main() {
 
     cp -v dks-crt.pem aws-init-key.pem aws-init-crt.pem aws-init
 
-
-    import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt \
-                           hbase-to-mongo-export
-
     import_into_truststore dks-truststore.jks snapshot-sender.crt \
                            snapshot-sender
-
-    import_into_truststore htme-truststore.jks dks-standalone-https.crt \
-                           dks-standalone-https
 
     import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt \
                            mock-nifi
