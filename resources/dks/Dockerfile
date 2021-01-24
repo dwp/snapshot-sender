@@ -3,9 +3,6 @@ FROM openjdk:8-jdk-alpine
 RUN apk update
 RUN apk upgrade
 RUN apk add curl jq wget
-#RUN yum install -y epel-release
-#RUN yum install -y java-1.8.0-openjdk wget jq
-#ENV JAVA_HOME /etc/alternatives/jre
 
 EXPOSE 8443
 
