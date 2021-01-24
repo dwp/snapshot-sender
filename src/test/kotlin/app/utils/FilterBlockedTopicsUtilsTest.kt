@@ -1,7 +1,6 @@
-package app
+package app.utils
 
 import app.exceptions.BlockedTopicException
-import app.utils.FilterBlockedTopicsUtils
 import arrow.core.success
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotThrow
