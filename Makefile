@@ -26,7 +26,7 @@ git-hooks: ## Set up hooks in .git/hooks
 	}
 
 build-jar: ## Build all code including tests and main jar
-	gradle clean build test
+	./gradlew clean build test
 
 .PHONY: build-images
 build-images: ## Build all ecosystem of images
