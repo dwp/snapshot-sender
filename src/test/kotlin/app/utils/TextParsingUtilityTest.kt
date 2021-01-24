@@ -19,26 +19,30 @@ class TextParsingUtilityTest {
 
     @Test
     fun shouldParseNameWithHyphensInDatabase() {
-        verifyParsed("core-with-hyphen", "addressDeclaration",
+        verifyParsed(
+            DATABASE_WITH_HYPHEN, "addressDeclaration",
             "db.core-with-hyphen.addressDeclaration-045-050-000001.txt.gz")
     }
 
     @Test
     fun shouldParseNameWithHyphensInDatabaseNoPrefix() {
-        verifyParsed("core-with-hyphen", "addressDeclaration",
+        verifyParsed(
+            DATABASE_WITH_HYPHEN, "addressDeclaration",
             "core-with-hyphen.addressDeclaration-045-050-000001.txt.gz")
     }
 
 
     @Test
     fun shouldParseNameWithHyphensInDatabaseAndCollection() {
-        verifyParsed("core-with-hyphen", "address-declaration-has-hyphen",
+        verifyParsed(
+            DATABASE_WITH_HYPHEN, "address-declaration-has-hyphen",
             "db.core-with-hyphen.address-declaration-has-hyphen-045-050-000001.txt.gz")
     }
 
     @Test
     fun shouldParseNameWithHyphensInDatabaseAndCollectionNoPrefix() {
-        verifyParsed("core-with-hyphen", "address-declaration-has-hyphen",
+        verifyParsed(
+            DATABASE_WITH_HYPHEN, "address-declaration-has-hyphen",
             "core-with-hyphen.address-declaration-has-hyphen-045-050-000001.txt.gz")
     }
 
@@ -71,4 +75,8 @@ class TextParsingUtilityTest {
     }
 
     private fun parse(filename: String) = TextParsingUtility.databaseAndCollection(filename)
+
+    companion object {
+        private const val DATABASE_WITH_HYPHEN = "core-with-hyphen"
+    }
 }

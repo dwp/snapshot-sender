@@ -175,6 +175,7 @@ class HttpWriterTest {
         assertEquals("""Successfully posted file", "database":"core", "collection":"addressDeclaration", "topic":"core.addressDeclaration", "file_name":"exporter-output\/job01\/core.addressDeclaration-045-050-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[3])
     }
 
+
     @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_dbname() {
         val filename = "db.core-with-hyphen.addressDeclaration-045-050-000001.txt.gz"
@@ -193,7 +194,7 @@ class HttpWriterTest {
             assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
             assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
-            assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
+            assertEquals(DATABASE_WITH_HYPHEN_HEADER, firstValue.allHeaders[3].toString())
             assertEquals(COLLECTION_HEADER, firstValue.allHeaders[4].toString())
             assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
             assertEquals("topic: db.core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
@@ -226,7 +227,7 @@ class HttpWriterTest {
             assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
             assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
-            assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
+            assertEquals(DATABASE_WITH_HYPHEN_HEADER, firstValue.allHeaders[3].toString())
             assertEquals(COLLECTION_HEADER, firstValue.allHeaders[4].toString())
             assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
             assertEquals("topic: core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
@@ -255,7 +256,7 @@ class HttpWriterTest {
             assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
             assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
-            assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
+            assertEquals(DATABASE_WITH_HYPHEN_HEADER, firstValue.allHeaders[3].toString())
             assertEquals("collection: address-declaration-has-hyphen", firstValue.allHeaders[4].toString())
             assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
             assertEquals("topic: db.core-with-hyphen.address-declaration-has-hyphen", firstValue.allHeaders[6].toString())
@@ -295,7 +296,7 @@ class HttpWriterTest {
     }
 
     @Test
-    fun test_will_raise_metadata_error_when_filename_is_bad() {
+    fun shouldRaiseMetadataExceptionWhenFilenameIsBad() {
         val filename = "dbcoreaddressDeclaration-000001"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
@@ -410,6 +411,7 @@ class HttpWriterTest {
         private const val CONTENT_TYPE_HEADER = "Content-Type: application/octet-stream"
         private const val CORRELATION_ID_HEADER = "correlation_id: 123"
         private const val DATABASE_HEADER = "database: core"
+        private const val DATABASE_WITH_HYPHEN_HEADER = "database: core-with-hyphen"
         private const val ENVIRONMENT_HEADER = "environment: aws/test"
         private const val NIFI_HEADER_COUNT: Int = 10
         private const val S3_PREFIX_HEADER = "s3_prefix: exporter-output/job01"
