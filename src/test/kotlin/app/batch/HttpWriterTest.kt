@@ -90,7 +90,6 @@ class HttpWriterTest {
         Mockito.reset(httpClientProvider)
     }
 
-
     @Test
     fun test_will_write_to_nifi_when_valid_file() {
         //given
@@ -110,19 +109,19 @@ class HttpWriterTest {
         //then
         val httpCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, once()).execute(httpCaptor.capture())
-        assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
+        assertEquals(CONTENT_TYPE_HEADER, httpCaptor.firstValue.entity.contentType.toString())
         assertEquals(NIFI_HEADER_COUNT, httpCaptor.firstValue.allHeaders.size)
 
 
         assertEquals("filename: ${filename.replace("txt", "json")}", httpCaptor.firstValue.allHeaders[0].toString())
-        assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
-        assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
-        assertEquals("collection: addressDeclaration", httpCaptor.firstValue.allHeaders[4].toString())
-        assertEquals("snapshot_type: incremental", httpCaptor.firstValue.allHeaders[5].toString())
-        assertEquals("topic: db.core.addressDeclaration", httpCaptor.firstValue.allHeaders[6].toString())
-        assertEquals("status_table_name: test_table", httpCaptor.firstValue.allHeaders[7].toString())
-        assertEquals("correlation_id: 123", httpCaptor.firstValue.allHeaders[8].toString())
-        assertEquals("s3_prefix: exporter-output/job01", httpCaptor.firstValue.allHeaders[9].toString())
+        assertEquals(ENVIRONMENT_HEADER, httpCaptor.firstValue.allHeaders[1].toString())
+        assertEquals(DATABASE_HEADER, httpCaptor.firstValue.allHeaders[3].toString())
+        assertEquals(COLLECTION_HEADER, httpCaptor.firstValue.allHeaders[4].toString())
+        assertEquals(SNAPSHOT_TYPE_HEADER, httpCaptor.firstValue.allHeaders[5].toString())
+        assertEquals(TOPIC_HEADER, httpCaptor.firstValue.allHeaders[6].toString())
+        assertEquals(STATUS_TABLE_HEADER, httpCaptor.firstValue.allHeaders[7].toString())
+        assertEquals(CORRELATION_ID_HEADER, httpCaptor.firstValue.allHeaders[8].toString())
+        assertEquals(S3_PREFIX_HEADER, httpCaptor.firstValue.allHeaders[9].toString())
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
@@ -153,17 +152,17 @@ class HttpWriterTest {
         //then
         val httpCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, once()).execute(httpCaptor.capture())
-        assertEquals("Content-Type: application/octet-stream", httpCaptor.firstValue.entity.contentType.toString())
+        assertEquals(CONTENT_TYPE_HEADER, httpCaptor.firstValue.entity.contentType.toString())
         assertEquals(NIFI_HEADER_COUNT, httpCaptor.firstValue.allHeaders.size)
         assertEquals("filename: core.addressDeclaration-045-050-000001.json.gz", httpCaptor.firstValue.allHeaders[0].toString())
-        assertEquals("environment: aws/test", httpCaptor.firstValue.allHeaders[1].toString())
-        assertEquals("database: core", httpCaptor.firstValue.allHeaders[3].toString())
-        assertEquals("collection: addressDeclaration", httpCaptor.firstValue.allHeaders[4].toString())
-        assertEquals("snapshot_type: incremental", httpCaptor.firstValue.allHeaders[5].toString())
+        assertEquals(ENVIRONMENT_HEADER, httpCaptor.firstValue.allHeaders[1].toString())
+        assertEquals(DATABASE_HEADER, httpCaptor.firstValue.allHeaders[3].toString())
+        assertEquals(COLLECTION_HEADER, httpCaptor.firstValue.allHeaders[4].toString())
+        assertEquals(SNAPSHOT_TYPE_HEADER, httpCaptor.firstValue.allHeaders[5].toString())
         assertEquals("topic: core.addressDeclaration", httpCaptor.firstValue.allHeaders[6].toString())
-        assertEquals("status_table_name: test_table", httpCaptor.firstValue.allHeaders[7].toString())
-        assertEquals("correlation_id: 123", httpCaptor.firstValue.allHeaders[8].toString())
-        assertEquals("s3_prefix: exporter-output/job01", httpCaptor.firstValue.allHeaders[9].toString())
+        assertEquals(STATUS_TABLE_HEADER, httpCaptor.firstValue.allHeaders[7].toString())
+        assertEquals(CORRELATION_ID_HEADER, httpCaptor.firstValue.allHeaders[8].toString())
+        assertEquals(S3_PREFIX_HEADER, httpCaptor.firstValue.allHeaders[9].toString())
 
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
@@ -190,17 +189,17 @@ class HttpWriterTest {
             given(statusLine.statusCode).willReturn(200)
             given(httpResponse.statusLine).willReturn(statusLine)
             httpWriter.write(mutableListOf(decryptedStream))
-            assertEquals("Content-Type: application/octet-stream", firstValue.entity.contentType.toString())
+            assertEquals(CONTENT_TYPE_HEADER, firstValue.entity.contentType.toString())
             assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
-            assertEquals("environment: aws/test", firstValue.allHeaders[1].toString())
+            assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
             assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
-            assertEquals("collection: addressDeclaration", firstValue.allHeaders[4].toString())
-            assertEquals("snapshot_type: incremental", firstValue.allHeaders[5].toString())
+            assertEquals(COLLECTION_HEADER, firstValue.allHeaders[4].toString())
+            assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
             assertEquals("topic: db.core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
-            assertEquals("status_table_name: test_table", firstValue.allHeaders[7].toString())
-            assertEquals("correlation_id: 123", firstValue.allHeaders[8].toString())
-            assertEquals("s3_prefix: exporter-output/job01", firstValue.allHeaders[9].toString())
+            assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
+            assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
+            assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
 
 
             verify(httpClient, once()).execute(any(HttpPost::class.java))
@@ -223,17 +222,17 @@ class HttpWriterTest {
             httpWriter.write(mutableListOf(decryptedStream))
             verify(httpClient, once()).execute(capture())
             verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
-            assertEquals("Content-Type: application/octet-stream", firstValue.entity.contentType.toString())
+            assertEquals(CONTENT_TYPE_HEADER, firstValue.entity.contentType.toString())
             assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
-            assertEquals("environment: aws/test", firstValue.allHeaders[1].toString())
+            assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
             assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
-            assertEquals("collection: addressDeclaration", firstValue.allHeaders[4].toString())
-            assertEquals("snapshot_type: incremental", firstValue.allHeaders[5].toString())
+            assertEquals(COLLECTION_HEADER, firstValue.allHeaders[4].toString())
+            assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
             assertEquals("topic: core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
-            assertEquals("status_table_name: test_table", firstValue.allHeaders[7].toString())
-            assertEquals("correlation_id: 123", firstValue.allHeaders[8].toString())
-            assertEquals("s3_prefix: exporter-output/job01", firstValue.allHeaders[9].toString())
+            assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
+            assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
+            assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
         }
     }
 
@@ -252,17 +251,17 @@ class HttpWriterTest {
             httpWriter.write(mutableListOf(decryptedStream))
             verify(httpClient, once()).execute(capture())
             verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
-            assertEquals("Content-Type: application/octet-stream", firstValue.entity.contentType.toString())
+            assertEquals(CONTENT_TYPE_HEADER, firstValue.entity.contentType.toString())
             assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
             assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
-            assertEquals("environment: aws/test", firstValue.allHeaders[1].toString())
+            assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
             assertEquals("database: core-with-hyphen", firstValue.allHeaders[3].toString())
             assertEquals("collection: address-declaration-has-hyphen", firstValue.allHeaders[4].toString())
-            assertEquals("snapshot_type: incremental", firstValue.allHeaders[5].toString())
+            assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
             assertEquals("topic: db.core-with-hyphen.address-declaration-has-hyphen", firstValue.allHeaders[6].toString())
-            assertEquals("status_table_name: test_table", firstValue.allHeaders[7].toString())
-            assertEquals("correlation_id: 123", firstValue.allHeaders[8].toString())
-            assertEquals("s3_prefix: exporter-output/job01", firstValue.allHeaders[9].toString())
+            assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
+            assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
+            assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
         }
     }
 
@@ -407,6 +406,15 @@ class HttpWriterTest {
     }
 
     companion object {
+        private const val COLLECTION_HEADER = "collection: addressDeclaration"
+        private const val CONTENT_TYPE_HEADER = "Content-Type: application/octet-stream"
+        private const val CORRELATION_ID_HEADER = "correlation_id: 123"
+        private const val DATABASE_HEADER = "database: core"
+        private const val ENVIRONMENT_HEADER = "environment: aws/test"
         private const val NIFI_HEADER_COUNT: Int = 10
+        private const val S3_PREFIX_HEADER = "s3_prefix: exporter-output/job01"
+        private const val SNAPSHOT_TYPE_HEADER = "snapshot_type: incremental"
+        private const val STATUS_TABLE_HEADER = "status_table_name: test_table"
+        private const val TOPIC_HEADER = "topic: db.core.addressDeclaration"
     }
 }
