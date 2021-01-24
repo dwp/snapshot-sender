@@ -1,6 +1,12 @@
-FROM dwp-centos-with-java:latest
+FROM openjdk:8-jdk-alpine
 
-EXPOSE 8080
+RUN apk update
+RUN apk upgrade
+RUN apk add curl jq wget
+#RUN yum install -y epel-release
+#RUN yum install -y java-1.8.0-openjdk wget jq
+#ENV JAVA_HOME /etc/alternatives/jre
+
 EXPOSE 8443
 
 RUN mkdir -p /opt/data-key-service/data /opt/data-key-service/logs /opt/snapshot-sender/data
@@ -10,11 +16,10 @@ RUN curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/
              | jq -r '.assets[0].browser_download_url' >> dks_version
 RUN cat dks_version
 RUN wget --input-file dks_version --quiet --no-check-certificate --output-document dks-latest.jar
-RUN ls -la *.jar
 
-COPY application-dks-secure.properties ./
+COPY application.properties ./application.properties
 COPY dks*.jks dks*.crt ./
 
 RUN chmod a+rwx -R /opt/data-key-service /opt/snapshot-sender/
 
-ENTRYPOINT ["sh", "-c", "java -Dlogging.level.root=DEBUG -Ddks.log.directory=/opt/data-key-service/logs -jar dks-latest.jar \"$@\"", "--"]
+ENTRYPOINT ["java", "-Ddks.log.directory=/opt/data-key-service/logs", "-jar", "dks-latest.jar"]

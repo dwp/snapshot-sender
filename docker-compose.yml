@@ -15,11 +15,6 @@ services:
     build:
       context: resources/aws-init
     container_name: aws-init
-    depends_on:
-      - aws
-    environment:
-      - AWS_DEFAULT_REGION=
-      - S3_BUCKET=demobucket
 
   snapshot-sender:
     image: snapshot-sender
@@ -27,7 +22,6 @@ services:
       context: .
     container_name: snapshot-sender
     depends_on:
-      - dks
       - mock-nifi
     environment:
       - CORRELATION_ID=123
@@ -51,17 +45,9 @@ services:
       - 8091:8443
       - 8101:8080
     build:
-      context: resources
-      dockerfile: Dockerfile_dks
+      context: resources/dks
+      dockerfile: Dockerfile
     container_name: dks
-    command:
-      --spring.main.banner-mode=off
-      --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
-    environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE,LocalAWS
-      - SPRING_CONFIG_LOCATION=application-dks-secure.properties
 
   mock-nifi:
     image: mock-nifi
