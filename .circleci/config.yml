@@ -72,37 +72,14 @@ jobs:
             sudo apt-get install openjdk-8-jdk
             sudo apt-get install make
 
-            export S3_BUCKET=dummy-bucket
-            export S3_PREFIX_FOLDER=dummy-folder
-            export AWS_DEFAULT_REGION=dummy-region
-            export AWS_ACCESS_KEY_ID=dummy-key
-            export AWS_SECRET_ACCESS_KEY=dummy-secret
-
             cd resources
             ./generate-developer-certs.sh
             cd -
 
-            ./gradlew build
-
+            make build-jar
             docker-compose build
-            docker-compose up -d mock-nifi aws
-
-            S3_READY_REGEX=^Ready\.$
-            while ! docker logs aws 2> /dev/null | grep -q $S3_READY_REGEX; do
-                echo Waiting for aws.
-                sleep 2
-            done
-
-            docker-compose up -d dks
-
-            while ! docker exec dks cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do
-              echo "Waiting for dks"
-              sleep 2
-            done
-
-            docker-compose up aws-init
-            docker-compose up snapshot-sender snapshot-sender-no-exports
-            docker-compose up sender-integration-test
+            make up
+            make integration-tests
 
 #  snyk-pr:
 #    docker:

@@ -13,7 +13,7 @@ services:
   aws-init:
     image: aws-init
     build:
-      context: resources/aws-init
+      context: resources/aws
     container_name: aws-init
 
   snapshot-sender:
@@ -71,7 +71,7 @@ services:
     image: sender-integration-test:latest
     build:
       context: .
-      dockerfile: resources/Dockerfile_sender_integration
+      dockerfile: resources/tests/Dockerfile
     container_name: sender-integration-test
     volumes:
       - shared-volume:/data/output

@@ -15,13 +15,12 @@ main() {
 
     make_keystore aws-init-keystore.jks localstack
     extract_public_certificate aws-init-keystore.jks aws-init.crt
-    import_into_truststore dks-truststore.jks aws-init.crt \
-                           aws-init
+    import_into_truststore dks-truststore.jks aws-init.crt aws-init
 
     extract_pems ./aws-init-keystore.jks
     extract_pems ./dks-keystore.jks
 
-    cp -v dks-crt.pem aws-init-key.pem aws-init-crt.pem aws-init
+    cp -v dks-crt.pem aws-init-key.pem aws-init-crt.pem aws
 
     import_into_truststore dks-truststore.jks snapshot-sender.crt snapshot-sender
     import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt mock-nifi
