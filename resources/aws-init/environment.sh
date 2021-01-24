@@ -49,11 +49,15 @@ create_uc_ecc_table() {
 }
 
 add_status_item() {
-    add_item "$(status_item_id)" 2
+    add_item "$(status_item_id)" 100
 }
 
 add_empty_status_item() {
     add_item "$(empty_status_item_id)" 0
+}
+
+add_htme_outputs() {
+  ./s3_files.py
 }
 
 add_item() {
@@ -76,7 +80,7 @@ add_item() {
 }
 
 status_item_id() {
-    echo '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.toDo"}}'
+    echo '{"CorrelationId":{"S":"123"},"CollectionName":{"S":"db.core.claimant"}}'
 }
 
 empty_status_item_id() {

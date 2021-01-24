@@ -12,17 +12,18 @@ import com.amazonaws.services.dynamodbv2.model.GetItemResult
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import io.kotlintest.fail
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotlintest.matchers.types.shouldNotBeNull
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.io.*
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStreamReader
+import java.util.zip.GZIPInputStream
 
-@Suppress("BlockingMethodInNonBlockingContext")
 class SnapshotSenderIntegrationTest : StringSpec() {
 
     init {
@@ -30,8 +31,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             val inputs = s3.listObjectsV2(BUCKET, INPUT_FOLDER).objectSummaries.map(S3ObjectSummary::getKey).map(::File).map(File::getName)
             val successes = s3.listObjectsV2(BUCKET, STATUS_FILE_FOLDER).objectSummaries.map(S3ObjectSummary::getKey)
                 .map(::File).map(File::getName).map { it.replace(Regex(".finished$"), "") }
-            inputs shouldContainExactlyInAnyOrder listOf("db.core.addressDeclaration-045-050-000001.txt.gz.enc",
-                "db.quartz.claimantEvent-045-050-000001.txt.gz.enc")
             successes shouldContainExactlyInAnyOrder inputs
         }
 
@@ -44,8 +43,6 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 .filter { it.endsWith(".json.gz") }
                 .map { it.replace(Regex("""\.json\.gz$"""), "") }
                 .toList()
-            inputs shouldContainExactlyInAnyOrder listOf("db.core.addressDeclaration-045-050-000001",
-                "db.quartz.claimantEvent-045-050-000001")
             outputs shouldContainExactlyInAnyOrder inputs
         }
 
@@ -54,7 +51,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 .filter(File::isFile).map(File::getName)
                 .filter { it.endsWith("_successful.gz") }
                 .toList()
-            successes shouldContainExactlyInAnyOrder listOf("_core_toDo_successful.gz", "_database_empty_successful.gz")
+            successes shouldContainExactlyInAnyOrder listOf("_core_claimant_successful.gz", "_database_empty_successful.gz")
         }
 
         "Export status is sent for no files exported topic" {
@@ -62,58 +59,35 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
 
         "Export status is sent" {
-            validateResult(getItemResult("123", "db.core.toDo").item, "2", "2")
+            validateResult(getItemResult("123", "db.core.claimant").item, "100", "100")
         }
 
-        "Verify nifi output files have a valid json per line at expected timestamp with specified line count" {
-            logger.info("Check nifi outputs")
-
-            val actualNifiFiles = File(NIFI_OUTPUT_FOLDER).walkTopDown()
-                .map { it.absolutePath }
+        "f:Nifi output files are valid compressed jsonl" {
+            val filesOnNifi = File(NIFI_OUTPUT_FOLDER).walkTopDown()
+                .map(File::getAbsolutePath)
                 .filter { it.contains("db.") && it.contains(".json.gz") }
+                .map(::File)
                 .toList()
-            logger.info("actualNifiFiles: $actualNifiFiles")
 
-            for (index in nifiFileNames.indices) {
-                val expectedFile = nifiFileNames[index]
-                val collection = deriveCollection("/$expectedFile")
-                val fullPath = "$NIFI_OUTPUT_FOLDER/$collection/$expectedFile"
-                val expectedLineCount = nifiLineCounts[index].toInt()
-                val expectedTimestamp = nifiTimestamps[index].toLong()
-
-                logger.info("Checking that file $expectedFile was sent with $expectedLineCount lines and $expectedTimestamp latest timestamp in data")
-                logger.info("Looking for file $fullPath")
-
-                val streamIn = FileInputStream(fullPath)
-                val dataStream = CompressorStreamFactory()
-                    .createCompressorInputStream(CompressorStreamFactory.GZIP, BufferedInputStream(streamIn))
-                val dataReader = BufferedReader(InputStreamReader(dataStream, "UTF-8"))
-
-                var linesDone = 0
-                do {
-                    val line = dataReader.readLine()
-                    when {
-                        line != null -> {
-                            linesDone++
-                        }
-                        linesDone == expectedLineCount -> {
-                            logger.info("Skipping blank line at EOF as should be end of file: have processed $linesDone/$expectedLineCount in $expectedFile")
-                        }
-                        else -> {
-                            fail("Did not expect blank line before EOF: have only processed $linesDone/$expectedLineCount in $expectedFile")
-                        }
-                    }
-                }
-                while (line != null)
-
-                if (linesDone != expectedLineCount) {
-                    fail("Did get expected line count: have only processed $linesDone/$expectedLineCount in $expectedFile")
-                }
+            filesOnNifi.map(File::getName) shouldContainExactlyInAnyOrder (0..99).map {
+                String.format("db.core.claimant-045-050-%06d.json.gz", it)
             }
 
-            actualNifiFiles.size.shouldBe(nifiFileNames.size)
+            val gson = Gson()
+
+            filesOnNifi.forEach { file ->
+                BufferedReader(InputStreamReader(GZIPInputStream(FileInputStream(file)))).useLines { sequence ->
+                    sequence.count() shouldBe 1_000
+                }
+
+                BufferedReader(InputStreamReader(GZIPInputStream(FileInputStream(file)))).useLines { sequence ->
+                    sequence.forEach {
+                        gson.fromJson(it, JsonObject::class.java)
+                    }
+                }
+            }
         }
-    }
+   }
 
     private fun validateResult(item: MutableMap<String, AttributeValue>, expectedExported: String, expectedSent: String) {
         val status = item["CollectionStatus"]
@@ -141,28 +115,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         mapOf("CorrelationId" to AttributeValue().apply { s = correlationId },
             "CollectionName" to AttributeValue().apply { s = collectionName })
 
-    private fun deriveCollection(fileName: String): String {
-        //s3 in:    test/output/db.core.addressDeclaration-045-050-000001.json.gz.enc
-        //out       db.core.addressDeclaration
-
-        val lastSlashIndex = fileName.lastIndexOf("/")
-        if (lastSlashIndex < 0) {
-            fail("Rejecting: '$fileName' as fileName does not contain '/' to find collection")
-        }
-        val lastDashIndex = fileName.lastIndexOf("-")
-        if (lastDashIndex < 0) {
-            fail("Rejecting: '$fileName' as fileName does not contain '-' to find collection")
-        }
-        val fullCollection = fileName.substring((lastSlashIndex + 1) until (lastDashIndex)).replace(Regex("""-\d{3}-\d{3}$"""), "")
-        logger.info("Derived collection: '${fullCollection}' from fileName of '$fileName'")
-        return fullCollection
-    }
 
     companion object {
-        private val nifiFileNames = listOf("db.core.addressDeclaration-045-050-000001.json.gz","db.quartz.claimantEvent-045-050-000001.json.gz") //nifiFileNamesCSV.split(",")
-        private val nifiLineCounts = listOf("7", "1")
-        private val nifiTimestamps = listOf("10", "1")
-
         private const val INPUT_FOLDER = "test/output"
         private const val BUCKET = "demobucket"
         private const val NIFI_OUTPUT_FOLDER = "/data/output"
@@ -192,8 +146,5 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 build()
             }
         }
-
-        private val logger: Logger = LoggerFactory.getLogger(SnapshotSenderIntegrationTest::class.toString())
-
     }
 }

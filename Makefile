@@ -48,26 +48,22 @@ build-images: build-base-images ## Build all ecosystem of images
 .PHONY: up
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase aws; \
-		echo "Waiting for services"; \
+		docker-compose up -d aws; \
 		while ! docker logs aws 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 			echo "Waiting for aws..."; \
 			sleep 2; \
 		done; \
-		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
-		docker exec -i hbase hbase shell <<< "create_namespace 'core'"; \
-		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
-		docker-compose up aws-init; \
-		docker-compose up -d dks-standalone-http ; \
+#		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
+#		docker exec -i hbase hbase shell <<< "create_namespace 'core'"; \
+#		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
+#		docker-compose up -d dks-standalone-http ; \
 		docker-compose up -d dks-standalone-https ; \
 		docker-compose up -d mock-nifi; \
-		while ! docker exec dks-standalone-http cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do \
+		while ! docker exec dks-standalone-https cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do \
 		  echo "Waiting for dks"; \
 		  sleep 2; \
 		done; \
-		docker-compose up hbase-populate; \
-		docker-compose up hbase-to-mongo-export; \
-		docker-compose up hbase-to-mongo-export-claimant-event; \
+		docker-compose up aws-init; \
 		docker-compose up snapshot-sender snapshot-sender-no-exports; \
 	}
 

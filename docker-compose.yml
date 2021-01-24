@@ -1,15 +1,6 @@
 version: '3'
 
 services:
-  hbase:
-    image: harisekhon/hbase:1.4
-    ports:
-      - 9090:9090
-      - 9095:9095
-      - 2181:2181
-      - 16201:16201
-    container_name: hbase
-
   aws:
     image: localstack/localstack:latest
     ports:
@@ -30,54 +21,6 @@ services:
       - AWS_DEFAULT_REGION=
       - S3_BUCKET=demobucket
 
-  hbase-populate:
-    image: hbase-populate
-    build:
-      context: resources
-      dockerfile: Dockerfile_populate_hbase
-    container_name: hbase-populate
-    depends_on:
-      - hbase
-      - dks-standalone-http
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
-    command: >-
-      --data-key-service http://dks-standalone-http:8080/datakey
-      --zookeeper-quorum hbase
-      --completed-flag /opt/snapshot-sender/data/ready
-      --remove-output-file data/ucdata-file-output.txt
-      --test-configuration-file test-config.json
-
-  hbase-to-mongo-export:
-    image: hbase-to-mongo-export
-    build:
-      context: resources
-      dockerfile: Dockerfile_htme
-    container_name: hbase-to-mongo-export
-    depends_on:
-      - hbase
-      - dks-standalone-https
-      - aws
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
-    command: >-
-      --topic.name=db.core.addressDeclaration
-
-  hbase-to-mongo-export-claimant-event:
-    image: hbase-to-mongo-export
-    build:
-      context: resources
-      dockerfile: Dockerfile_htme
-    container_name: hbase-to-mongo-export-claimant-event
-    depends_on:
-      - hbase
-      - dks-standalone-https
-      - aws
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
-    command: >-
-      --topic.name=db.quartz.claimantEvent
-
   snapshot-sender:
     image: snapshot-sender
     build:
@@ -88,7 +31,7 @@ services:
       - mock-nifi
     environment:
       - CORRELATION_ID=123
-      - TOPIC_NAME=db.core.toDo
+      - TOPIC_NAME=db.core.claimant
 
   snapshot-sender-no-exports:
     image: snapshot-sender
@@ -101,23 +44,6 @@ services:
       - CORRELATION_ID=321
       - TOPIC_NAME=db.database.empty
       - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
-
-  dks-standalone-http:
-    image: dks-standalone-http
-    ports:
-      - 8090:8080
-      - 8100:8443
-    build:
-      context: resources
-      dockerfile: Dockerfile_dks
-    container_name: dks-standalone-http
-    command:
-      --spring.main.banner-mode=off
-      --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
-    environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
 
   dks-standalone-https:
     image: dks-standalone-https

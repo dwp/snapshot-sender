@@ -14,8 +14,8 @@ from Crypto.Util import Counter
 
 def main():
     response = requests.get("https://dks-standalone-https:8443/datakey",
-                            cert=("localstack-init-crt.pem",
-                                  "localstack-init-key.pem"),
+                            cert=("aws-init-crt.pem",
+                                  "aws-init-key.pem"),
                             verify="dks-crt.pem").json()
 
     plaintext_datakey = response['plaintextDataKey']
@@ -34,7 +34,7 @@ def main():
         }
         s3_object_key = f"test/output/db.core.claimant-045-050-{file_number:06d}.txt.gz.enc"
         s3.put_object(Bucket="demobucket", Body=encrypted_contents, Key=s3_object_key, Metadata=object_metadata)
-        print(f"Put {s3_object_key}")
+        print(f"Put {s3_object_key}.")
 
 
 def db_object(file_number: int, record_number: int) -> str:

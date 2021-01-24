@@ -17,16 +17,15 @@ main() {
     extract_public_certificate mock-nifi-keystore.jks mock-nifi.crt
     make_truststore mock-nifi-truststore.jks mock-nifi.crt
 
-    make_keystore localstack-init-keystore.jks localstack
-    extract_public_certificate localstack-init-keystore.jks localstack-init.crt
-    import_into_truststore dks-truststore.jks localstack-init.crt \
-                           localstack-init
+    make_keystore aws-init-keystore.jks localstack
+    extract_public_certificate aws-init-keystore.jks aws-init.crt
+    import_into_truststore dks-truststore.jks aws-init.crt \
+                           aws-init
 
-    extract_pems ./localstack-init-keystore.jks
+    extract_pems ./aws-init-keystore.jks
     extract_pems ./dks-keystore.jks
 
-    cp -v dks-crt.pem localstack-init-key.pem \
-       localstack-init-crt.pem ../containers/localstack
+    cp -v dks-crt.pem aws-init-key.pem aws-init-crt.pem aws-init
 
 
     import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt \
