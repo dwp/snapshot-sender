@@ -27,7 +27,7 @@ services:
       context: .
     container_name: snapshot-sender
     depends_on:
-      - dks-standalone-https
+      - dks
       - mock-nifi
     environment:
       - CORRELATION_ID=123
@@ -45,15 +45,15 @@ services:
       - TOPIC_NAME=db.database.empty
       - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
 
-  dks-standalone-https:
-    image: dks-standalone-https
+  dks:
+    image: dks
     ports:
       - 8091:8443
       - 8101:8080
     build:
       context: resources
       dockerfile: Dockerfile_dks
-    container_name: dks-standalone-https
+    container_name: dks
     command:
       --spring.main.banner-mode=off
       --logging.level.root=INFO

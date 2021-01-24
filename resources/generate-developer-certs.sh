@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 main() {
-    make_keystore dks-keystore.jks dks-standalone-https
-    extract_public_certificate dks-keystore.jks dks-standalone-https.crt
-    make_truststore dks-truststore.jks dks-standalone-https.crt
+    make_keystore dks-keystore.jks dks
+    extract_public_certificate dks-keystore.jks dks.crt
+    make_truststore dks-truststore.jks dks.crt
 
     make_keystore snapshot-sender-keystore.jks snapshot-sender
     extract_public_certificate snapshot-sender-keystore.jks snapshot-sender.crt
@@ -23,18 +23,10 @@ main() {
 
     cp -v dks-crt.pem aws-init-key.pem aws-init-crt.pem aws-init
 
-    import_into_truststore dks-truststore.jks snapshot-sender.crt \
-                           snapshot-sender
-
-    import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt \
-                           mock-nifi
-
-    import_into_truststore snapshot-sender-truststore.jks \
-                           dks-standalone-https.crt \
-                           dks-standalone-https
-
-    import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt \
-                           snapshot-sender
+    import_into_truststore dks-truststore.jks snapshot-sender.crt snapshot-sender
+    import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt mock-nifi
+    import_into_truststore snapshot-sender-truststore.jks dks.crt dks
+    import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt snapshot-sender
 }
 
 make_keystore() {

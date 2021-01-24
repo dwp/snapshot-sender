@@ -42,9 +42,9 @@ services:
 			echo "Waiting for aws..."; \
 			sleep 2; \
 		done; \
-		docker-compose up -d dks-standalone-https ; \
+		docker-compose up -d dks ; \
 		docker-compose up -d mock-nifi; \
-		while ! docker exec dks-standalone-https cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do \
+		while ! docker exec dks cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do \
 		  echo "Waiting for dks"; \
 		  sleep 2; \
 		done; \

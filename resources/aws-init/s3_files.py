@@ -13,7 +13,7 @@ from Crypto.Util import Counter
 
 
 def main():
-    response = requests.get("https://dks-standalone-https:8443/datakey",
+    response = requests.get("https://dks:8443/datakey",
                             cert=("aws-init-crt.pem",
                                   "aws-init-key.pem"),
                             verify="dks-crt.pem").json()
