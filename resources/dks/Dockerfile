@@ -11,7 +11,7 @@ WORKDIR /opt/data-key-service
 
 RUN curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
              | jq -r '.assets[0].browser_download_url' >> dks_version
-RUN cat dks_version
+
 RUN wget --input-file dks_version --quiet --no-check-certificate --output-document dks-latest.jar
 
 COPY application.properties ./application.properties

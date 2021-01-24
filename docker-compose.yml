@@ -52,8 +52,8 @@ services:
   mock-nifi:
     image: mock-nifi
     build:
-      context: resources
-      dockerfile: Dockerfile_mock_nifi
+      context: resources/nifi
+      dockerfile: Dockerfile
     ports:
       - "5443:5443"
     volumes:

@@ -28,7 +28,8 @@ main() {
     import_into_truststore snapshot-sender-truststore.jks dks.crt dks
     import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt snapshot-sender
 
-    cp dks-keystore.jks dks-truststore.jks dks
+    cp -v dks-keystore.jks dks-truststore.jks dks
+    cp -v mock-nifi-keystore.jks mock-nifi-truststore.jks nifi
 }
 
 make_keystore() {

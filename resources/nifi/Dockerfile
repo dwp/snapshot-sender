@@ -1,5 +1,8 @@
-FROM dwp-centos-with-java:latest
-ENV SPRING_CONFIG_LOCATION /opt/mock-nifi/application-mock-nifi.properties
+FROM openjdk:8-jdk-alpine
+
+RUN apk update
+RUN apk upgrade
+RUN apk add curl jq wget
 
 EXPOSE 5443
 
@@ -11,7 +14,7 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/mock-nifi/
 
 RUN ls -la *.jar
 
-COPY application-mock-nifi.properties ./
+COPY application.properties ./
 COPY mock-nifi*.jks ./
 
-ENTRYPOINT ["sh", "-c", "java -jar mock-nifi-latest.jar \"$@\"", "--"]
+ENTRYPOINT ["java", "-jar", "mock-nifi-latest.jar"]
