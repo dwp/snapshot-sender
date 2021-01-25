@@ -40,9 +40,6 @@ import org.springframework.test.context.junit4.SpringRunner
 class S3StatusFileWriterTest {
 
     //these must match test properties above
-    private val BUCKET_NAME1 = "bucket1"
-    private val HTME_FOLDER = "exporter-output"
-    private val STATUS_FOLDER = "sender-status"
     val htmeFileName = "$HTME_FOLDER/myfilename.enc"
 
     @Autowired
@@ -141,5 +138,11 @@ class S3StatusFileWriterTest {
         assertEquals(39, actualMetadata.contentLength)
         assertEquals("sender-status/myfilename.enc.finished", actualMetadata.userMetadata["x-amz-meta-title"])
         assertEquals("exporter-output/myfilename.enc", actualMetadata.userMetadata["original-s3-filename"])
+    }
+
+    companion object {
+        private const val BUCKET_NAME1 = "bucket1"
+        private const val HTME_FOLDER = "exporter-output"
+        private const val STATUS_FOLDER = "sender-status"
     }
 }

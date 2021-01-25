@@ -5,14 +5,12 @@ import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 @Component
-@Profile("S3SourceData")
 class S3StatusFileWriter(val s3utils: S3Utils) {
 
     @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from

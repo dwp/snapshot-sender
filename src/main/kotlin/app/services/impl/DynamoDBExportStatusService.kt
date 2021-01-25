@@ -1,6 +1,8 @@
 package app.services.impl
 
 import app.services.ExportStatusService
+import app.utils.PropertyUtility.correlationId
+import app.utils.PropertyUtility.topicName
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
@@ -14,9 +16,11 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Service
 class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportStatusService {
 
+
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun incrementSentCount(fileSent: String) {
         val result = dynamoDB.updateItem(incrementFilesSentRequest())
         logger.info("Incremented files sent",
@@ -25,8 +29,9 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
     }
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun setSentStatus(): Boolean =
             if (collectionIsComplete()) {
                 val result = dynamoDB.updateItem(setStatusSentRequest())
@@ -40,7 +45,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     private fun collectionIsComplete(): Boolean {
         val (currentStatus, filesExported, filesSent) = currentStatusAndCounts()
-        val isComplete = currentStatus == "Exported" && filesExported == filesSent && filesExported > 0
+        val isComplete = currentStatus == "Exported" && filesExported == filesSent
         logger.info("Collection status", "current_status" to currentStatus,
                 "files_exported" to "$filesExported",
                 "files_sent" to "$filesSent",
@@ -84,8 +89,8 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         }
 
     private val primaryKey by lazy {
-        mapOf("CorrelationId" to stringAttribute(correlationId),
-                "CollectionName" to stringAttribute(topicName))
+        mapOf("CorrelationId" to stringAttribute(correlationId()),
+                "CollectionName" to stringAttribute(topicName()))
     }
 
     private fun stringAttribute(value: String) = AttributeValue().apply { s = value }
@@ -93,13 +98,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
 
-    private val correlationId by lazy { System.getProperty("correlation_id") }
-    private val topicName by lazy { System.getProperty("topic_name") }
-
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 }

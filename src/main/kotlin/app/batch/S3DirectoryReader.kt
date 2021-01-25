@@ -14,14 +14,11 @@ import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
-@Profile("S3SourceData")
+@Profile("!noOpReader")
 class S3DirectoryReader(private val s3Client: AmazonS3,
                         private val s3Utils: S3Utils) : ItemReader<EncryptedStream> {
 
     private var iterator: ListIterator<S3ObjectSummary>? = null
-    private val IV_KEY = "iv"
-    private val DATAENCRYPTIONKEYID_KEY = "dataKeyEncryptionKeyId"
-    private val CIPHERTEXT_KEY = "cipherText"
 
     @Value("\${s3.bucket}") //where the HTME exports and the Sender picks up from
     lateinit var s3BucketName: String
@@ -83,7 +80,7 @@ class S3DirectoryReader(private val s3Client: AmazonS3,
     private fun encryptedStream(metadata: Map<String, String>, filePath: String, contents: ByteArray): EncryptedStream {
         try {
             val iv = metadata[IV_KEY]!!
-            val dataKeyEncryptionKey = metadata[DATAENCRYPTIONKEYID_KEY]!!
+            val dataKeyEncryptionKey = metadata[DATA_ENCRYPTION_KEY_ID_KEY]!!
             val cipherText = metadata[CIPHERTEXT_KEY]!!
             val encryptionMetadata = EncryptionMetadata(iv, dataKeyEncryptionKey, cipherText, "")
             val fileSplitArr = filePath.split("/")
@@ -101,6 +98,9 @@ class S3DirectoryReader(private val s3Client: AmazonS3,
     private lateinit var snapshotType: String
 
     companion object {
+        private const val IV_KEY = "iv"
+        private const val DATA_ENCRYPTION_KEY_ID_KEY = "dataKeyEncryptionKeyId"
+        private const val CIPHERTEXT_KEY = "cipherText"
         val logger = DataworksLogger.getLogger(S3DirectoryReader::class.toString())
     }
 }

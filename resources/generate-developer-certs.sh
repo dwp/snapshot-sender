@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
 main() {
-    make_keystore dks-keystore.jks dks-standalone-https
-    extract_public_certificate dks-keystore.jks dks-standalone-https.crt
-    make_truststore dks-truststore.jks dks-standalone-https.crt
-
-    make_keystore htme-keystore.jks hbase-to-mongo-export
-    extract_public_certificate htme-keystore.jks hbase-to-mongo-export.crt
-    make_truststore htme-truststore.jks hbase-to-mongo-export.crt
+    make_keystore dks-keystore.jks dks
+    extract_public_certificate dks-keystore.jks dks.crt
+    make_truststore dks-truststore.jks dks.crt
 
     make_keystore snapshot-sender-keystore.jks snapshot-sender
     extract_public_certificate snapshot-sender-keystore.jks snapshot-sender.crt
@@ -17,24 +13,22 @@ main() {
     extract_public_certificate mock-nifi-keystore.jks mock-nifi.crt
     make_truststore mock-nifi-truststore.jks mock-nifi.crt
 
-    import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt \
-                           hbase-to-mongo-export
+    make_keystore aws-init-keystore.jks localstack
+    extract_public_certificate aws-init-keystore.jks aws-init.crt
+    import_into_truststore dks-truststore.jks aws-init.crt aws-init
 
-    import_into_truststore dks-truststore.jks snapshot-sender.crt \
-                           snapshot-sender
+    extract_pems ./aws-init-keystore.jks
+    extract_pems ./dks-keystore.jks
 
-    import_into_truststore htme-truststore.jks dks-standalone-https.crt \
-                           dks-standalone-https
+    cp -v dks-crt.pem aws-init-key.pem aws-init-crt.pem aws
 
-    import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt \
-                           mock-nifi
+    import_into_truststore dks-truststore.jks snapshot-sender.crt snapshot-sender
+    import_into_truststore snapshot-sender-truststore.jks mock-nifi.crt mock-nifi
+    import_into_truststore snapshot-sender-truststore.jks dks.crt dks
+    import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt snapshot-sender
 
-    import_into_truststore snapshot-sender-truststore.jks \
-                           dks-standalone-https.crt \
-                           dks-standalone-https
-
-    import_into_truststore mock-nifi-truststore.jks snapshot-sender.crt \
-                           snapshot-sender
+    cp -v dks-keystore.jks dks-truststore.jks dks
+    cp -v mock-nifi-keystore.jks mock-nifi-truststore.jks nifi
 }
 
 make_keystore() {
@@ -89,6 +83,51 @@ import_into_truststore() {
             -file "${certificate}" \
             -keystore "${truststore}" \
             -storepass $(password)
+}
+
+extract_pems() {
+    local keystore=${1:-keystore.jks}
+    local key=${2:-${keystore%-keystore.jks}-key.pem}
+    local certificate=${3:-${keystore%-keystore.jks}-crt.pem}
+
+    local intermediate_store=${keystore/jks/p12}
+
+    local filename=$(basename $keystore)
+    local alias=cid
+
+    [[ -f $intermediate_store ]] && rm -v $intermediate_store
+    [[ -f $key ]] && rm -v $key
+
+    if keytool -importkeystore \
+               -srckeystore $keystore \
+               -srcstorepass $(password) \
+               -srckeypass $(password) \
+               -srcalias $alias \
+               -destalias $alias \
+               -destkeystore $intermediate_store \
+               -deststoretype PKCS12 \
+               -deststorepass $(password) \
+               -destkeypass $(password); then
+        local pwd=$(password)
+        export pwd
+
+        openssl pkcs12 \
+                -in $intermediate_store \
+                -nodes \
+                -nocerts \
+                -password env:pwd \
+                -out $key
+
+        openssl pkcs12 \
+                -in $intermediate_store \
+                -nokeys \
+                -out $certificate \
+                -password env:pwd
+
+        unset pwd
+    else
+        echo Failed to generate intermediate keystore $intermediate_store >&2
+    fi
 }
 
 password() {

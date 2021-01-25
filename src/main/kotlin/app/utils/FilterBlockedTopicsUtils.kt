@@ -1,7 +1,6 @@
 package app.utils
 
 import app.batch.HttpWriter
-import app.domain.DecryptedStream
 import app.exceptions.BlockedTopicException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component

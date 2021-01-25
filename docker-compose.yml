@@ -1,15 +1,6 @@
 version: '3'
 
 services:
-  hbase:
-    image: harisekhon/hbase:1.4
-    ports:
-      - 9090:9090
-      - 9095:9095
-      - 2181:2181
-      - 16201:16201
-    container_name: hbase
-
   aws:
     image: localstack/localstack:latest
     ports:
@@ -22,135 +13,8 @@ services:
   aws-init:
     image: aws-init
     build:
-      context: resources/aws-init
+      context: resources/aws
     container_name: aws-init
-    depends_on:
-      - aws
-    environment:
-      - AWS_DEFAULT_REGION=
-      - S3_BUCKET=demobucket
-
-  hbase-populate:
-    image: hbase-populate
-    build:
-      context: resources
-      dockerfile: Dockerfile_populate_hbase
-    container_name: hbase-populate
-    depends_on:
-      - hbase
-      - dks-standalone-http
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
-    command: >-
-      --data-key-service http://dks-standalone-http:8080/datakey
-      --zookeeper-quorum hbase
-      --completed-flag /opt/snapshot-sender/data/ready
-      --remove-output-file data/ucdata-file-output.txt
-      --test-configuration-file test-config.json
-
-  hbase-to-mongo-export:
-    image: hbase-to-mongo-export
-    build:
-      context: resources
-      dockerfile: Dockerfile_htme
-    container_name: hbase-to-mongo-export
-    depends_on:
-      - hbase
-      - dks-standalone-https
-      - aws
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
-    command: >-
-      --logging.level.root=${LOGGING_LEVEL}
-      --spring.main.banner-mode=off
-      --aws.region=eu-west-2
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/snapshot-sender/data/ready
-      --data.table.name=ucfs-data
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=htme-keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --output.batch.size.max.bytes=10000
-      --s3.access.key=access-key
-      --s3.bucket=demobucket
-      --s3.prefix.folder=test/output
-      --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4566
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.export.date=2020-01-01
-      --trigger.snapshot.sender=false
-      --topic.name=db.core.addressDeclaration
-      --trust.keystore=htme-truststore.jks
-      --trust.store.password=changeit
-      --s3.manifest.prefix.folder=test/manifest
-      --s3.manifest.bucket=demobucket
-    environment:
-      - topic.name=db.core.addressDeclaration
-      - ENVIRONMENT=local-docker
-      - APPLICATION=htme
-      - APP_VERSION=latest-dev
-      - COMPONENT=jar_file
-      - CORRELATION_ID=htme-address
-
-  hbase-to-mongo-export-claimant-event:
-    image: hbase-to-mongo-export
-    build:
-      context: resources
-      dockerfile: Dockerfile_htme
-    container_name: hbase-to-mongo-export-claimant-event
-    depends_on:
-      - hbase
-      - dks-standalone-https
-      - aws
-    volumes:
-      - shared-volume:/opt/snapshot-sender/data
-    command: >-
-      --logging.level.root=${LOGGING_LEVEL}
-      --spring.main.banner-mode=off
-      --aws.region=eu-west-2
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/snapshot-sender/data/ready
-      --data.table.name=ucfs-data
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=htme-keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --output.batch.size.max.bytes=10000
-      --s3.access.key=access-key
-      --s3.bucket=demobucket
-      --s3.prefix.folder=test/output
-      --s3.secret.key=secret-key
-      --s3.service.endpoint=http://aws:4566
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,weakRng,secureHttpClient,gzCompressor
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.export.date=2020-01-01
-      --trigger.snapshot.sender=false
-      --topic.name=db.quartz.claimantEvent
-      --trust.keystore=htme-truststore.jks
-      --trust.store.password=changeit
-      --s3.manifest.prefix.folder=test/manifest
-      --s3.manifest.bucket=demobucket
-    environment:
-      - topic.name=db.quartz.claimantEvent
-      - ENVIRONMENT=local-docker
-      - APPLICATION=htme_claimant
-      - APP_VERSION=latest-dev
-      - COMPONENT=jar_file
-      - CORRELATION_ID=htme-claimant
 
   snapshot-sender:
     image: snapshot-sender
@@ -158,77 +22,38 @@ services:
       context: .
     container_name: snapshot-sender
     depends_on:
-      - dks-standalone-https
       - mock-nifi
-    command: >-
-      --logging.level.root=${LOGGING_LEVEL}
-      --spring.main.banner-mode=off
-      --spring.profiles.active=httpWriter,secureHttpClient,batchRun,S3SourceData,localStackConfiguration
-      --aws.region=eu-west-2
-      --data.key.service.url=https://dks-standalone-https:8443
-      --nifi.url=https://mock-nifi:5443/collections
-      --s3.access.key=access-key
-      --s3.bucket=demobucket
-      --s3.prefix.folder=test/output/
-      --s3.htme.root.folder=test
-      --s3.status.folder=status
-      --s3.secret.key=access-key
-      --s3.service.endpoint=http://aws:4566
-      --identity.key.password=changeit
-      --identity.keystore=snapshot-sender-keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --trust.keystore=snapshot-sender-truststore.jks
-      --trust.store.password=changeit
-      --export.date=2019-01-01
-      --snapshot.type=full
     environment:
-      - ENVIRONMENT=local-docker
-      - APPLICATION=snapshot_sender
-      - APP_VERSION=latest-dev
-      - COMPONENT=jar_file
       - CORRELATION_ID=123
+      - TOPIC_NAME=db.core.claimant
 
-  dks-standalone-http:
-    image: dks-standalone-http
-    ports:
-      - 8090:8080
-      - 8100:8443
+  snapshot-sender-no-exports:
+    image: snapshot-sender
     build:
-      context: resources
-      dockerfile: Dockerfile_dks
-    container_name: dks-standalone-http
-    command:
-      --spring.main.banner-mode=off
-      --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
+      context: .
+    container_name: snapshot-sender-no-exports
+    depends_on:
+      - mock-nifi
     environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
+      - CORRELATION_ID=321
+      - TOPIC_NAME=db.database.empty
+      - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
 
-  dks-standalone-https:
-    image: dks-standalone-https
+  dks:
+    image: dks
     ports:
       - 8091:8443
       - 8101:8080
     build:
-      context: resources
-      dockerfile: Dockerfile_dks
-    container_name: dks-standalone-https
-    command:
-      --spring.main.banner-mode=off
-      --logging.level.root=INFO
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
-    environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE,LocalAWS
-      - SPRING_CONFIG_LOCATION=application-dks-secure.properties
+      context: resources/dks
+      dockerfile: Dockerfile
+    container_name: dks
 
   mock-nifi:
     image: mock-nifi
     build:
-      context: resources
-      dockerfile: Dockerfile_mock_nifi
+      context: resources/nifi
+      dockerfile: Dockerfile
     ports:
       - "5443:5443"
     volumes:
@@ -246,23 +71,13 @@ services:
     image: sender-integration-test:latest
     build:
       context: .
-      dockerfile: resources/Dockerfile_sender_integration
+      dockerfile: resources/tests/Dockerfile
     container_name: sender-integration-test
     volumes:
       - shared-volume:/data/output
     depends_on:
       - mock-nifi
     command: "gradle --rerun-tasks integration"
-    environment:
-      S3_BUCKET: "demobucket"
-      S3_PREFIX_FOLDER: "test/output"
-      S3_HTME_ROOT_FOLDER: "test"
-      S3_STATUS_FOLDER: "status"
-      S3_SERVICE_ENDPOINT: "http://aws:4572"
-      NIFI_ROOT_FOLDER: "/data/output" # see the shared-volume above
-      NIFI_FILE_NAMES_CSV: "db.core.addressDeclaration-045-050-000001.json.gz,db.quartz.claimantEvent-045-050-000001.json.gz"
-      NIFI_TIME_STAMPS_CSV: "10,1"
-      NIFI_LINE_COUNTS_CSV: "7,1"
 
 volumes:
   shared-volume:

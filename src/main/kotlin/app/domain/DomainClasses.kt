@@ -33,3 +33,14 @@ data class EncryptedStream(var contents: ByteArray, val fileName: String, val fu
 
 data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKey: String, val ciphertextDataKey: String)
 data class DecryptedStream(val inputStream: InputStream, val fileName: String, val fullPath: String)
+
+data class NifiHeaders(val filename: String,
+                       val environment: String,
+                       val exportDate: String,
+                       val database: String,
+                       val collection: String,
+                       val snapshotType: String,
+                       val topic: String,
+                       val statusTableName: String,
+                       val correlationId: String,
+                       val s3Prefix: String)

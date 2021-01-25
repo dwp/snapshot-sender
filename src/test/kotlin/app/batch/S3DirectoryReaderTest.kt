@@ -28,12 +28,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import java.io.BufferedReader
 import java.io.ByteArrayInputStream
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("httpDataKeyService", "unitTest", "S3SourceData")
@@ -50,19 +45,6 @@ import java.nio.charset.StandardCharsets
 ])
 class S3DirectoryReaderTest {
 
-    private val BUCKET_NAME1 = "bucket1" //must match test property "s3.bucket" above
-    private val S3_PREFIX_WITH_SLASH = "exporter-output/job01/" //must match test property "s3.prefix.folder" above + "/"
-    private val KEY1 = "exporter-output/job01/file1"
-    private val KEY1_FINISHED = "sender-status/job01/file1.finished"
-    private val KEY2 = "exporter-output/job01/file2"
-    private val KEY2_FINISHED = "sender-status/job01/file2.finished"
-    private val KEY3 = "exporter-output/job01/file3"
-    private val IV = "iv"
-    private val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
-    private val CIPHER_TEXT = "cipherText"
-    private val OBJECT_CONTENT1 = "SAMPLE_1"
-    private val OBJECT_CONTENT2 = "SAMPLE_2"
-    private val OBJECT_CONTENT3 = "SAMPLE_3"
 
     private lateinit var listObjectsV2Result: ListObjectsV2Result
     private lateinit var s3ObjectSummary1: S3ObjectSummary
@@ -99,7 +81,7 @@ class S3DirectoryReaderTest {
 
         val s3ObjectInputStream1 = mock<S3ObjectInputStream>()
 
-        s3Object1 = mock<S3Object> {
+        s3Object1 = mock {
             on { bucketName } doReturn BUCKET_NAME1
             on { key } doReturn KEY1
             on { objectContent } doReturn s3ObjectInputStream1
@@ -276,7 +258,7 @@ class S3DirectoryReaderTest {
         given(mockS3Client.getObject(bucket, page2Object2Key)).willReturn(page2Object2)
 
         val objectMetadata = mock<ObjectMetadata> {
-            on { userMetadata } doReturn mapOf("iv" to "INITIALISAION_VECTOR",
+            on { userMetadata } doReturn mapOf("iv" to "INITIALISATION_VECTOR",
                 "dataKeyEncryptionKeyId" to "DATAKEY_ENCRYPTION_KEY_ID",
                 "cipherText" to "CIPHER_TEXT")
         }
@@ -319,7 +301,7 @@ class S3DirectoryReaderTest {
         given(mockS3Client.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
 
         val objectMetadata = mock<ObjectMetadata> {
-            on { userMetadata } doReturn mapOf("iv" to "INITIALISAION_VECTOR",
+            on { userMetadata } doReturn mapOf("iv" to "INITIALISATION_VECTOR",
                 "dataKeyEncryptionKeyId" to "DATAKEY_ENCRYPTION_KEY_ID",
                 "cipherText" to "CIPHER_TEXT")
         }
@@ -338,7 +320,7 @@ class S3DirectoryReaderTest {
 
     private fun mockS3Object(): S3Object {
         val inputStream = mock<S3ObjectInputStream>()
-        return mock<S3Object> {
+        return mock {
             on { objectContent } doReturn inputStream
         }
     }
@@ -352,23 +334,26 @@ class S3DirectoryReaderTest {
         assertTrue(key.endsWith("/${encryptedStream.fileName}"))
     }
 
-    private fun assertObjectContent(objectContent: String, actualStream: InputStream?) {
-        val textBuilder = StringBuilder()
-        BufferedReader(InputStreamReader(actualStream!!, Charset.forName(StandardCharsets.UTF_8.name()))).use { reader ->
-            var c = 0
-            while (c != -1) {
-                c = reader.read()
-                if (c != -1) {
-                    textBuilder.append(c.toChar())
-                }
-            }
-        }
-        assertEquals(objectContent, textBuilder.toString().trim())
-    }
-
     private fun assertObjectMetadata(objectMetadata: ObjectMetadata, actualMetadata1: EncryptionMetadata?) {
         assertEquals(objectMetadata.userMetadata[IV], actualMetadata1?.initializationVector)
         assertEquals(objectMetadata.userMetadata[DATAENCRYPTION_KEY], actualMetadata1?.datakeyEncryptionKeyId)
         assertEquals(objectMetadata.userMetadata[CIPHER_TEXT], actualMetadata1?.cipherText)
+    }
+
+    companion object {
+        private const val BUCKET_NAME1 = "bucket1" //must match test property "s3.bucket" above
+        private const val S3_PREFIX_WITH_SLASH = "exporter-output/job01/" //must match test property "s3.prefix.folder" above + "/"
+        private const val KEY1 = "exporter-output/job01/file1"
+        private const val KEY1_FINISHED = "sender-status/job01/file1.finished"
+        private const val KEY2 = "exporter-output/job01/file2"
+        private const val KEY2_FINISHED = "sender-status/job01/file2.finished"
+        private const val KEY3 = "exporter-output/job01/file3"
+        private const val IV = "iv"
+        private const val DATAENCRYPTION_KEY = "dataKeyEncryptionKeyId"
+        private const val CIPHER_TEXT = "cipherText"
+        private const val OBJECT_CONTENT1 = "SAMPLE_1"
+        private const val OBJECT_CONTENT2 = "SAMPLE_2"
+        private const val OBJECT_CONTENT3 = "SAMPLE_3"
+
     }
 }

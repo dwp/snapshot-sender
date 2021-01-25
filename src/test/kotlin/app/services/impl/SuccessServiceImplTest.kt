@@ -30,7 +30,10 @@ import java.net.URI
     "nifi.url=https://nifi:8091/dummy",
     "export.date=2019-01-01",
     "snapshot.type=incremental",
-    "dynamodb.status.table.name=test_table"
+    "dynamodb.status.table.name=test_table",
+    "success.retry.maxAttempts=5",
+    "success.retry.delay=5",
+    "success.retry.multiplier=1"
 ])
 class SuccessServiceImplTest {
 
@@ -50,6 +53,7 @@ class SuccessServiceImplTest {
 
     @Test
     fun willPostPayloadWithAppropriateHeaders() {
+
         System.setProperty("topic_name", "db.core.toDo")
 
         val status = mock<StatusLine> {
@@ -91,7 +95,6 @@ class SuccessServiceImplTest {
         assertEquals("toDo", collectionHeader)
         assertEquals("db.core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
-        assertEquals("db.core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
         assertEquals("test_table", statusTableNameHeader)
         assertEquals("123", correlationIdHeader)

@@ -1,9 +1,12 @@
 package app.services.impl
 
 import app.configuration.HttpClientProvider
+import app.domain.NifiHeaders
 import app.exceptions.SuccessException
 import app.services.SuccessService
-import org.apache.commons.lang3.StringUtils
+import app.utils.NiFiUtility.setNifiHeaders
+import app.utils.PropertyUtility.correlationId
+import app.utils.PropertyUtility.topicName
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -19,69 +22,80 @@ import java.util.zip.GZIPOutputStream
 @Component
 class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): SuccessService {
 
-    @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    @Retryable(
+        value = [Exception::class],
+        maxAttemptsExpression = "\${success.retry.maxAttempts:5}",
+        backoff = Backoff(
+            delayExpression = "\${success.retry.delay:1000}",
+            multiplierExpression = "\${success.retry.multiplier:2}"
+        )
+    )
     override fun postSuccessIndicator() {
-        val topic = System.getProperty("topic_name")
-        if (StringUtils.isNotBlank(topic)) {
-            val topicRegex = Regex("""^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)""")
-            val match = topicRegex.find(topic)
-            if (match != null) {
-                val database = match.groups["database"]?.value ?: ""
-                val collection = match.groups["collection"]?.value ?: ""
-                val fileName = "_${database}_${collection}_successful.gz"
-                logger.info("Writing success indicator to crown", "file_name" to fileName)
-                val inputStream = ByteArrayInputStream(zeroBytesCompressed())
-                httpClientProvider.client().use {
-                    val post = HttpPost(nifiUrl).apply {
-                        entity = InputStreamEntity(inputStream, -1, ContentType.DEFAULT_BINARY)
-                        setHeader("filename", fileName)
-                        setHeader("environment", "aws/${System.getProperty("environment")}")
-                        setHeader("export_date", exportDate)
-                        setHeader("database", database)
-                        setHeader("collection", collection)
-                        setHeader("snapshot_type", snapshotType)
-                        setHeader("topic", topic)
-                        setHeader("status_table_name", statusTableName)
-                        setHeader("correlation_id", correlationId)
-                    }
+        databaseAndCollectionMatchResult()?.let { match ->
+            val (database, collection) = match.destructured
+            val fileName = "_${database}_${collection}_successful.gz"
+            logger.info("Writing success indicator to crown", "file_name" to fileName)
+            val inputStream = ByteArrayInputStream(zeroBytesCompressed())
+            httpClientProvider.client().use {
+                val headers = NifiHeaders(
+                    filename = fileName,
+                    environment = "aws/${System.getProperty("environment")}",
+                    exportDate = exportDate,
+                    database = database,
+                    collection = collection,
+                    snapshotType = snapshotType,
+                    topic = topicName(),
+                    statusTableName = statusTableName,
+                    correlationId = correlationId(),
+                    s3Prefix = s3Prefix
+                )
 
-                    it.execute(post).use { response ->
-                        when (response.statusLine.statusCode) {
-                            200 -> {
-                                logger.info("Successfully posted success indicator",
-                                        "file_name" to fileName,
-                                        "response" to response.statusLine.statusCode.toString(),
-                                        "nifi_url" to nifiUrl,
-                                        "database" to database,
-                                        "collection" to collection,
-                                        "topic" to topic,
-                                        "export_date" to exportDate,
-                                        "snapshot_type" to snapshotType,
-                                        "status_table_name" to statusTableName,
-                                        "correlation_id" to correlationId)
-                            }
-                            else -> {
-                                logger.warn("Failed to post success indicator",
-                                        "file_name" to fileName,
-                                        "response" to response.statusLine.statusCode.toString(),
-                                        "nifi_url" to nifiUrl,
-                                        "database" to database,
-                                        "collection" to collection,
-                                        "topic" to topic,
-                                        "export_date" to exportDate,
-                                        "snapshot_type" to snapshotType,
-                                        "status_table_name" to statusTableName,
-                                        "correlation_id" to correlationId)
-                                throw SuccessException("Failed to post success indicator $fileName, response: ${response.statusLine.statusCode}")
-                            }
+                val post = HttpPost(nifiUrl).apply {
+                    entity = InputStreamEntity(inputStream, -1, ContentType.DEFAULT_BINARY)
+                    setNifiHeaders(headers)
+                }
+
+                it.execute(post).use { response ->
+                    when (response.statusLine.statusCode) {
+                        200 -> {
+                            logger.info(
+                                "Successfully posted success indicator",
+                                "file_name" to fileName,
+                                "response" to response.statusLine.statusCode.toString(),
+                                "nifi_url" to nifiUrl,
+                                "database" to database,
+                                "collection" to collection,
+                                "topic" to topicName(),
+                                "export_date" to exportDate,
+                                "snapshot_type" to snapshotType,
+                                "status_table_name" to statusTableName,
+                                "correlation_id" to correlationId()
+                            )
+                        }
+                        else -> {
+                            logger.warn(
+                                "Failed to post success indicator",
+                                "file_name" to fileName,
+                                "response" to response.statusLine.statusCode.toString(),
+                                "nifi_url" to nifiUrl,
+                                "database" to database,
+                                "collection" to collection,
+                                "topic" to topicName(),
+                                "export_date" to exportDate,
+                                "snapshot_type" to snapshotType,
+                                "status_table_name" to statusTableName,
+                                "correlation_id" to correlationId()
+                            )
+                            throw SuccessException("Failed to post success indicator $fileName, response: ${response.statusLine.statusCode}")
                         }
                     }
                 }
             }
         }
     }
+
+    private fun databaseAndCollectionMatchResult(): MatchResult? =
+        Regex("""^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)""").find(topicName())
 
     private fun zeroBytesCompressed(): ByteArray {
         val outputStream = ByteArrayOutputStream()
@@ -101,12 +115,10 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
 
-    private val correlationId by lazy { System.getProperty("correlation_id") }
+    @Value("\${s3.prefix.folder}")
+    lateinit var s3Prefix: String
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())
-        const val maxAttempts = 10
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 }

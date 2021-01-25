@@ -1,16 +1,12 @@
 package app.services.impl
 
 import app.configuration.HttpClientProvider
-import app.exceptions.BlockedTopicException
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
-import app.utils.FilterBlockedTopicsUtils
 import app.utils.UUIDGenerator
 import com.nhaarman.mockitokotlin2.firstValue
 import com.nhaarman.mockitokotlin2.whenever
-import io.kotlintest.shouldBe
-import io.kotlintest.shouldThrow
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -30,14 +26,16 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.test.util.ReflectionTestUtils
 import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HttpKeyService::class])
 @EnableRetry
 @TestPropertySource(properties = [
-    "data.key.service.url=http://dummydks"
+    "data.key.service.url=http://dummydks",
+    "dks.retry.maxAttempts=5",
+    "dks.retry.delay=5",
+    "dks.retry.multiplier=1"
 ])
 class HttpKeyServiceTest {
 
@@ -56,8 +54,6 @@ class HttpKeyServiceTest {
         private fun nextDksCorrelationId(): String {
             return "dks-id-${++dksCorrelationId}"
         }
-        const val blockedTopicName = "db.crypto.encryptedData.unencrypted"
-        const val blockedTopics = "db.crypto.encryptedData.unencrypted"
     }
 
     @Before
@@ -201,7 +197,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun test_decrypt_key_will_retry_untils_uccessful_before_max_calls() {
+    fun shouldRetryDecryptKeyUntilSuccessfulBeforeMaxCalls() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
