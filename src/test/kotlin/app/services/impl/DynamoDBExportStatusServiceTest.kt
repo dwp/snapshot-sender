@@ -1,14 +1,17 @@
 package app.services.impl
 
+import app.services.CollectionStatus
 import app.services.ExportStatusService
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemResult
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Before
 import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -58,12 +61,12 @@ class DynamoDBExportStatusServiceTest {
                 .willThrow(SdkClientException(""))
                 .willThrow(SdkClientException(""))
                 .willReturn(mock())
-        exportStatusService.setSentStatus()
-        verify(exportStatusService, times(3)).setSentStatus()
+        exportStatusService.setCollectionStatus()
+        verify(exportStatusService, times(3)).setCollectionStatus()
     }
 
     @Test
-    fun setSentStatusSetsStatusIfFinished() {
+    fun setSentStatusSetsSentStatusIfFinished() {
 
         val status = mock<AttributeValue> {
             on { s } doReturn "Exported"
@@ -87,12 +90,13 @@ class DynamoDBExportStatusServiceTest {
 
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
         given(amazonDynamoDB.updateItem(any())).willReturn(mock())
-        exportStatusService.setSentStatus()
-        verify(amazonDynamoDB, times(1)).updateItem(any())
+        val newStatus = exportStatusService.setCollectionStatus()
+        assertEquals(CollectionStatus.SENT, newStatus)
+        verifyUpdateItemRequest("Sent")
     }
 
     @Test
-    fun setSentStatusSetsStatusIfExportedAndNoFilesExported() {
+    fun setSentStatusSetsSuccessStatusIfExportedAndNoFilesExported() {
 
         val status = mock<AttributeValue> {
             on { s } doReturn "Exported"
@@ -117,8 +121,8 @@ class DynamoDBExportStatusServiceTest {
 
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
         given(amazonDynamoDB.updateItem(any())).willReturn(mock())
-        exportStatusService.setSentStatus()
-        verify(amazonDynamoDB, times(1)).updateItem(any())
+        exportStatusService.setCollectionStatus()
+        verifyUpdateItemRequest("Success")
     }
 
     @Test
@@ -145,8 +149,7 @@ class DynamoDBExportStatusServiceTest {
         }
 
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
-        given(amazonDynamoDB.updateItem(any())).willReturn(mock())
-        exportStatusService.setSentStatus()
+        exportStatusService.setCollectionStatus()
         verify(amazonDynamoDB, times(0)).updateItem(any())
     }
 
@@ -177,7 +180,18 @@ class DynamoDBExportStatusServiceTest {
 
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
         given(amazonDynamoDB.updateItem(any())).willReturn(updateItemResult)
-        exportStatusService.setSentStatus()
+        exportStatusService.setCollectionStatus()
         verify(amazonDynamoDB, times(0)).updateItem(any())
+    }
+
+    private fun verifyUpdateItemRequest(status: String) {
+        argumentCaptor<UpdateItemRequest> {
+            verify(amazonDynamoDB, times(1)).updateItem(capture())
+            assertEquals(1, firstValue.expressionAttributeValues.size)
+            firstValue.expressionAttributeValues.forEach { (key, value) ->
+                assertEquals(":x", key)
+                assertEquals(AttributeValue().apply { s = status }, value)
+            }
+        }
     }
 }

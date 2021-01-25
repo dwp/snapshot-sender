@@ -53,7 +53,7 @@ services:
 
 .PHONY: up
 up: services ## Run the ecosystem of containers
-	docker-compose up snapshot-sender snapshot-sender-no-exports
+	docker-compose up snapshot-sender snapshot-sender-no-exports snapshot-sender-sent
 
 .PHONY: up-all
 up-all: images up
