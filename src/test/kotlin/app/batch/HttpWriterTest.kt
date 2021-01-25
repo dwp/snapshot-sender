@@ -171,7 +171,7 @@ class HttpWriterTest {
         httpWriter.write(mutableListOf(decryptedStream))
 
         argumentCaptor<HttpPost> {
-            verifyPostHeaders(httpClient, filename, "database: core-with-hyphen",
+            verifyPostHeaders(httpClient, filename, DATABASE_WITH_HYPHEN_HEADER ,
                 "topic: db.core-with-hyphen.addressDeclaration")
         }
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
@@ -190,7 +190,7 @@ class HttpWriterTest {
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream))
         argumentCaptor<HttpPost> {
-            verifyPostHeaders(httpClient, filename, "database: core-with-hyphen", "topic: core-with-hyphen.addressDeclaration")
+            verifyPostHeaders(httpClient, filename, DATABASE_WITH_HYPHEN_HEADER , "topic: core-with-hyphen.addressDeclaration")
         }
     }
 
@@ -207,7 +207,7 @@ class HttpWriterTest {
         given(httpResponse.statusLine).willReturn((statusLine))
         httpWriter.write(mutableListOf(decryptedStream))
         argumentCaptor<HttpPost> {
-            verifyPostHeaders(httpClient, filename, "database: core-with-hyphen",
+            verifyPostHeaders(httpClient, filename, DATABASE_WITH_HYPHEN_HEADER ,
             "topic: db.core-with-hyphen.address-declaration-has-hyphen",
                 "collection: address-declaration-has-hyphen")
         }
