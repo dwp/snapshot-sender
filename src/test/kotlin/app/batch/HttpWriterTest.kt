@@ -9,6 +9,7 @@ import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.services.SuccessService
 import app.utils.FilterBlockedTopicsUtils
+import app.utils.NiFiUtility
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.*
@@ -75,6 +76,9 @@ class HttpWriterTest {
 
     @MockBean
     private lateinit var filterBlockedTopicsUtils: FilterBlockedTopicsUtils
+
+    @MockBean
+    private lateinit var niFiUtility: NiFiUtility
 
     val mockAppender: Appender<ILoggingEvent> = mock()
 
@@ -159,6 +163,10 @@ class HttpWriterTest {
 
     @Test
     fun test_will_write_to_nifi_when_valid_file_with_embedded_hyphens_in_dbname() {
+//        given(niFiUtility.setNifiHeaders(, )).willAnswer {
+//            it.getArgument(2).
+//        }
+
         val filename = "db.core-with-hyphen.addressDeclaration-045-050-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)

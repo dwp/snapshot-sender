@@ -2,6 +2,7 @@ package app.services.impl
 
 import app.configuration.HttpClientProvider
 import app.services.SuccessService
+import app.utils.NiFiUtility
 import com.nhaarman.mockitokotlin2.*
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -50,6 +51,9 @@ class SuccessServiceImplTest {
 
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
+
+    @MockBean
+    private lateinit var niFiUtility: NiFiUtility
 
     @Test
     fun willPostPayloadWithAppropriateHeaders() {

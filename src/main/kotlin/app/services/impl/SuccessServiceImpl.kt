@@ -4,7 +4,7 @@ import app.configuration.HttpClientProvider
 import app.domain.NifiHeaders
 import app.exceptions.SuccessException
 import app.services.SuccessService
-import app.utils.NiFiUtility.setNifiHeaders
+import app.utils.NiFiUtility
 import app.utils.PropertyUtility.correlationId
 import app.utils.PropertyUtility.topicName
 import org.apache.http.client.methods.HttpPost
@@ -20,7 +20,7 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
 
 @Component
-class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): SuccessService {
+class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, private val nifiUtility: NiFiUtility): SuccessService {
 
     @Retryable(
         value = [Exception::class],
@@ -39,21 +39,13 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
             httpClientProvider.client().use {
                 val headers = NifiHeaders(
                     filename = fileName,
-                    environment = "aws/${System.getProperty("environment")}",
-                    exportDate = exportDate,
                     database = database,
                     collection = collection,
-                    snapshotType = snapshotType,
-                    topic = topicName(),
-                    statusTableName = statusTableName,
-                    correlationId = correlationId(),
-                    s3Prefix = s3Prefix,
-                    reprocessFiles=reprocessFiles,
-                    shutdownFlag = shutdownFlag)
+                    topic = topicName())
 
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(inputStream, -1, ContentType.DEFAULT_BINARY)
-                    setNifiHeaders(headers)
+                    nifiUtility.setNifiHeaders(this, headers)
                 }
 
                 it.execute(post).use { response ->
