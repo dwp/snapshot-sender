@@ -47,8 +47,9 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
                     topic = topicName(),
                     statusTableName = statusTableName,
                     correlationId = correlationId(),
-                    s3Prefix = s3Prefix
-                )
+                    s3Prefix = s3Prefix,
+                    reprocessFiles=reprocessFiles,
+                    shutdownFlag = shutdownFlag)
 
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(inputStream, -1, ContentType.DEFAULT_BINARY)
@@ -117,6 +118,12 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider): Su
 
     @Value("\${s3.prefix.folder}")
     lateinit var s3Prefix: String
+
+    @Value("\${reprocess.files:false}")
+    private lateinit var reprocessFiles: String
+
+    @Value("\${shutdown.flag}")
+    private lateinit var shutdownFlag: String
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())

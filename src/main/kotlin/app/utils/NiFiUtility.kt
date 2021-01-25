@@ -15,5 +15,7 @@ object NiFiUtility {
         setHeader("status_table_name", headers.statusTableName)
         setHeader("correlation_id", headers.correlationId)
         setHeader("s3_prefix", headers.s3Prefix)
+        setHeader("shutdown_flag", headers.shutdownFlag)
+        setHeader("reprocess_files", headers.reprocessFiles)
     }
 }

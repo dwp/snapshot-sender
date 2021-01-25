@@ -52,6 +52,7 @@ import java.io.ByteArrayInputStream
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
     "snapshot.type=incremental",
+    "shutdown.flag=true",
     "dynamodb.status.table.name=test_table"
 ])
 class HttpWriterTest {
@@ -122,6 +123,8 @@ class HttpWriterTest {
         assertEquals(STATUS_TABLE_HEADER, httpCaptor.firstValue.allHeaders[7].toString())
         assertEquals(CORRELATION_ID_HEADER, httpCaptor.firstValue.allHeaders[8].toString())
         assertEquals(S3_PREFIX_HEADER, httpCaptor.firstValue.allHeaders[9].toString())
+        assertEquals(SHUTDOWN_FLAG_HEADER, httpCaptor.firstValue.allHeaders[10].toString())
+        assertEquals(REPROCESS_FILES_HEADER, httpCaptor.firstValue.allHeaders[11].toString())
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
@@ -163,6 +166,8 @@ class HttpWriterTest {
         assertEquals(STATUS_TABLE_HEADER, httpCaptor.firstValue.allHeaders[7].toString())
         assertEquals(CORRELATION_ID_HEADER, httpCaptor.firstValue.allHeaders[8].toString())
         assertEquals(S3_PREFIX_HEADER, httpCaptor.firstValue.allHeaders[9].toString())
+        assertEquals(SHUTDOWN_FLAG_HEADER, httpCaptor.firstValue.allHeaders[10].toString())
+        assertEquals(REPROCESS_FILES_HEADER, httpCaptor.firstValue.allHeaders[11].toString())
 
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
@@ -201,6 +206,8 @@ class HttpWriterTest {
             assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
             assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
             assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
+            assertEquals(SHUTDOWN_FLAG_HEADER, firstValue.allHeaders[10].toString())
+            assertEquals(REPROCESS_FILES_HEADER, firstValue.allHeaders[11].toString())
 
 
             verify(httpClient, once()).execute(any(HttpPost::class.java))
@@ -234,6 +241,8 @@ class HttpWriterTest {
             assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
             assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
             assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
+            assertEquals(SHUTDOWN_FLAG_HEADER, firstValue.allHeaders[10].toString())
+            assertEquals(REPROCESS_FILES_HEADER, firstValue.allHeaders[11].toString())
         }
     }
 
@@ -263,6 +272,8 @@ class HttpWriterTest {
             assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
             assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
             assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
+            assertEquals(SHUTDOWN_FLAG_HEADER, firstValue.allHeaders[10].toString())
+            assertEquals(REPROCESS_FILES_HEADER, firstValue.allHeaders[11].toString())
         }
     }
 
@@ -413,10 +424,12 @@ class HttpWriterTest {
         private const val DATABASE_HEADER = "database: core"
         private const val DATABASE_WITH_HYPHEN_HEADER = "database: core-with-hyphen"
         private const val ENVIRONMENT_HEADER = "environment: aws/test"
-        private const val NIFI_HEADER_COUNT: Int = 10
+        private const val NIFI_HEADER_COUNT: Int = 12
         private const val S3_PREFIX_HEADER = "s3_prefix: exporter-output/job01"
         private const val SNAPSHOT_TYPE_HEADER = "snapshot_type: incremental"
         private const val STATUS_TABLE_HEADER = "status_table_name: test_table"
         private const val TOPIC_HEADER = "topic: db.core.addressDeclaration"
+        private const val REPROCESS_FILES_HEADER = "reprocess_files: false"
+        private const val SHUTDOWN_FLAG_HEADER = "shutdown_flag: true"
     }
 }

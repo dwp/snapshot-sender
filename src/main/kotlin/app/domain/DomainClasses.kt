@@ -43,4 +43,6 @@ data class NifiHeaders(val filename: String,
                        val topic: String,
                        val statusTableName: String,
                        val correlationId: String,
-                       val s3Prefix: String)
+                       val s3Prefix: String,
+                       val shutdownFlag: String,
+                       val reprocessFiles: String)

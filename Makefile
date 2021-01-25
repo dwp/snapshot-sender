@@ -25,15 +25,15 @@ git-hooks: ## Set up hooks in .git/hooks
 		done \
 	}
 
-build-jar: ## Build all code including tests and main jar
+jar: ## Build all code including tests and main jar
 	./gradlew clean build test
 
-.PHONY: build-images
-build-images: ## Build all ecosystem of images
+.PHONY: images
+images: ## Build all ecosystem of images
 	docker-compose build
 
-.PHONY: build-all
-build-all: build-jar build-images ## Build the jar file and then all docker images
+.PHONY: all
+all: jar images ## Build the jar file and then all docker images
 
 services:
 	@{ \
@@ -56,7 +56,7 @@ up: services ## Run the ecosystem of containers
 	docker-compose up snapshot-sender snapshot-sender-no-exports
 
 .PHONY: up-all
-up-all: build-images up
+up-all: images up
 
 .PHONY: destroy
 destroy: ## Bring down the services then delete all volumes

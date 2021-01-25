@@ -68,7 +68,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                     topic = topic,
                     statusTableName = statusTableName,
                     correlationId = correlationId(),
-                    s3Prefix = s3Prefix))
+                    s3Prefix = s3Prefix,
+                    reprocessFiles=reprocessFiles,
+                    shutdownFlag = shutdownFlag))
             }
 
             it.execute(post).use { response ->
@@ -122,6 +124,12 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${s3.prefix.folder}")
     lateinit var s3Prefix: String
+
+    @Value("\${reprocess.files:false}")
+    private lateinit var reprocessFiles: String
+
+    @Value("\${shutdown.flag}")
+    private lateinit var shutdownFlag: String
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())

@@ -41,7 +41,8 @@ import java.io.ByteArrayInputStream
     "s3.htme.root.folder=exporter-output",
     "nifi.url=http://nifi:9090",
     "export.date=2019-01-01",
-    "snapshot.type=full"
+    "snapshot.type=full",
+    "shutdown.flag=false"
 ])
 class S3DirectoryReaderTest {
 

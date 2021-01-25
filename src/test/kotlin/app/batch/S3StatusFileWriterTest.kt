@@ -35,7 +35,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
-    "snapshot.type=full"
+    "snapshot.type=full",
+    "shutdown.flag=false"
 ])
 class S3StatusFileWriterTest {
 
