@@ -40,8 +40,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, pri
                 val headers = NifiHeaders(
                     filename = fileName,
                     database = database,
-                    collection = collection,
-                    topic = topicName())
+                    collection = collection)
 
                 val post = HttpPost(nifiUrl).apply {
                     entity = InputStreamEntity(inputStream, -1, ContentType.DEFAULT_BINARY)
@@ -107,15 +106,6 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, pri
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
-
-    @Value("\${s3.prefix.folder}")
-    lateinit var s3Prefix: String
-
-    @Value("\${reprocess.files:false}")
-    private lateinit var reprocessFiles: String
-
-    @Value("\${shutdown.flag}")
-    private lateinit var shutdownFlag: String
 
     companion object {
         val logger = DataworksLogger.getLogger(SuccessServiceImpl::class.toString())

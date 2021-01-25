@@ -1,6 +1,5 @@
 package app.batch
 
-import app.TestUtils.Companion.once
 import app.domain.EncryptedStream
 import app.domain.EncryptionMetadata
 import app.exceptions.DataKeyDecryptionException
@@ -138,9 +137,9 @@ class S3DirectoryReaderTest {
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
 
         //then
-        verify(mockS3Client, once()).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-        verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verify(mockS3Client, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY1)
+        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)
 
         assertObjectMetadata(objectMetadata1, actualMetadata1)
@@ -168,11 +167,11 @@ class S3DirectoryReaderTest {
         val encryptedStream2 = s3DirectorReader.read()
 
         //then
-        verify(mockS3Client, once()).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-        verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY2)
-        verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY2)
+        verify(mockS3Client, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY1)
+        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY2)
+        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY2)
         verifyNoMoreInteractions(mockS3Client)
 
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
@@ -211,9 +210,9 @@ class S3DirectoryReaderTest {
             assertEquals("Couldn't get the metadata for 'exporter-output/job01/file1'", ex.message)
         }
 
-        verify(mockS3Client, once()).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-        verify(mockS3Client, once()).getObject(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, once()).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verify(mockS3Client, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY1)
+        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(mockS3Client)
     }
 

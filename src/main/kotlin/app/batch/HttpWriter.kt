@@ -60,9 +60,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
             val post = HttpPost(nifiUrl).apply {
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
                 nifiUtility.setNifiHeaders(this, NifiHeaders(filename = filenameHeader,
-                    database = database,
-                    collection = collection,
-                    topic = topic))
+                                                                    database = database,
+                                                                    collection = collection))
             }
 
             it.execute(post).use { response ->

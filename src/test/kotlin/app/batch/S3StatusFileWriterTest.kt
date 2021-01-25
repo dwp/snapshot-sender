@@ -1,6 +1,5 @@
 package app.batch
 
-import app.TestUtils.Companion.once
 import app.services.ExportStatusService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
@@ -78,7 +77,7 @@ class S3StatusFileWriterTest {
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, once()).putObject(awsCaptor.capture())
+        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 
@@ -99,7 +98,7 @@ class S3StatusFileWriterTest {
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, once()).putObject(awsCaptor.capture())
+        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 
@@ -120,7 +119,7 @@ class S3StatusFileWriterTest {
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, once()).putObject(awsCaptor.capture())
+        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 

@@ -28,13 +28,6 @@ git-hooks: ## Set up hooks in .git/hooks
 jar: ## Build all code including tests and main jar
 	./gradlew clean build test
 
-.PHONY: images
-images: ## Build all ecosystem of images
-	docker-compose build
-
-.PHONY: all
-all: jar images ## Build the jar file and then all docker images
-
 services:
 	@{ \
 		docker-compose up -d aws; \
@@ -54,15 +47,6 @@ services:
 .PHONY: up
 up: services ## Run the ecosystem of containers
 	docker-compose up snapshot-sender snapshot-sender-no-exports snapshot-sender-sent
-
-.PHONY: up-all
-up-all: images up
-
-.PHONY: destroy
-destroy: ## Bring down the services then delete all volumes
-	docker-compose down
-	docker network prune -f
-	docker volume prune -f
 
 .PHONY: integration-tests
 integration-tests: ## Run the integration tests

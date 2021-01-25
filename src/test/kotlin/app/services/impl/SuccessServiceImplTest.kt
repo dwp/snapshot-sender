@@ -26,7 +26,7 @@ import java.net.URI
 
 @RunWith(SpringRunner::class)
 @EnableRetry
-@SpringBootTest(classes = [SuccessServiceImpl::class])
+@SpringBootTest(classes = [SuccessServiceImpl::class, NiFiUtility::class])
 @TestPropertySource(properties = [
     "nifi.url=https://nifi:8091/dummy",
     "export.date=2019-01-01",
@@ -52,7 +52,7 @@ class SuccessServiceImplTest {
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
 
-    @MockBean
+    @Autowired
     private lateinit var niFiUtility: NiFiUtility
 
     @Test

@@ -1,6 +1,7 @@
 package app.utils
 
 import app.domain.NifiHeaders
+import app.utils.PropertyUtility.topicName
 import org.apache.http.client.methods.HttpPost
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -15,7 +16,7 @@ class NiFiUtility {
         httpPost.setHeader("database", headers.database)
         httpPost.setHeader("collection", headers.collection)
         httpPost.setHeader("snapshot_type", snapshotType)
-        httpPost.setHeader("topic", headers.topic)
+        httpPost.setHeader("topic", topicName())
         httpPost.setHeader("status_table_name", statusTableName)
         httpPost.setHeader("correlation_id", PropertyUtility.correlationId())
         httpPost.setHeader("s3_prefix", s3Prefix)
@@ -40,5 +41,4 @@ class NiFiUtility {
 
     @Value("\${shutdown.flag}")
     private lateinit var shutdownFlag: String
-
 }
