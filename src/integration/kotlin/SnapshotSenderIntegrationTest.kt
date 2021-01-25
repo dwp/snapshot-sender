@@ -46,20 +46,24 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             outputs shouldContainExactlyInAnyOrder inputs
         }
 
-        "There should be a success file for each topic" {
+        "There should be a success file for each successful topic" {
             val successes = File(NIFI_OUTPUT_FOLDER).walkTopDown()
                 .filter(File::isFile).map(File::getName)
                 .filter { it.endsWith("_successful.gz") }
                 .toList()
-            successes shouldContainExactlyInAnyOrder listOf("_core_claimant_successful.gz", "_database_empty_successful.gz")
+            successes shouldContainExactlyInAnyOrder listOf("_database_empty_successful.gz", "_database_sent_successful.gz")
         }
 
-        "Export status is sent for no files exported topic" {
-            validateResult(getItemResult("321", "db.database.empty").item, "0", "0")
+        "Export status is 'Success' for no files exported topic" {
+            validateResult(getItemResult("321", "db.database.empty").item, "Success", "0", "0")
         }
 
-        "Export status is sent" {
-            validateResult(getItemResult("123", "db.core.claimant").item, "100", "100")
+        "Export status is 'Success' for sent topic" {
+            validateResult(getItemResult("111", "db.database.sent").item, "Success", "10", "10")
+        }
+
+        "Export status is 'Sent' for sent topic" {
+            validateResult(getItemResult("123", "db.core.claimant").item, "Sent", "100", "100")
         }
 
         "Nifi output files are valid compressed jsonl" {
@@ -89,12 +93,12 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
    }
 
-    private fun validateResult(item: MutableMap<String, AttributeValue>, expectedExported: String, expectedSent: String) {
+    private fun validateResult(item: MutableMap<String, AttributeValue>, expectedStatus: String, expectedExported: String, expectedSent: String) {
         val status = item["CollectionStatus"]
         val filesExported = item["FilesExported"]
         val filesSent = item["FilesSent"]
         status.shouldNotBeNull()
-        status.s shouldBe "Sent"
+        status.s shouldBe expectedStatus
         filesExported.shouldNotBeNull()
         filesExported.n shouldBe expectedExported
         filesSent.shouldNotBeNull()

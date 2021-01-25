@@ -56,6 +56,10 @@ add_empty_status_item() {
     add_item "$(empty_status_item_id)" 0
 }
 
+add_sent_status_item() {
+    add_item "$(sent_status_item_id)" 10 10 Sent
+}
+
 add_htme_outputs() {
   ./s3_files.py
 }
@@ -63,6 +67,8 @@ add_htme_outputs() {
 add_item() {
     local id=${1:?Usage: $FUNCNAME id files-exported}
     local files_exported=${2:?Usage: $FUNCNAME id files-exported}
+    local files_sent=${3:-0}
+    local collection_status=${4:-Exported}
 
     aws_local dynamodb delete-item \
               --table-name "UCExportToCrownStatus" \
@@ -75,7 +81,7 @@ add_item() {
               --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
               --return-values "ALL_NEW" \
               --expression-attribute-values \
-              '{":cs": {"S":"Exported"}, ":fe": {"N":"'$files_exported'"}, ":fs": {"N":"0"}}'
+              '{":cs": {"S":"'$collection_status'"}, ":fe": {"N":"'$files_exported'"}, ":fs": {"N":"'$files_sent'"}}'
 
 }
 
@@ -85,6 +91,10 @@ status_item_id() {
 
 empty_status_item_id() {
     echo '{"CorrelationId":{"S":"321"},"CollectionName":{"S":"db.database.empty"}}'
+}
+
+sent_status_item_id() {
+    echo '{"CorrelationId":{"S":"111"},"CollectionName":{"S":"db.database.sent"}}'
 }
 
 get_status_item() {

@@ -1,5 +1,6 @@
 package app.services.impl
 
+import app.services.CollectionStatus
 import app.services.ExportStatusService
 import app.utils.PropertyUtility.correlationId
 import app.utils.PropertyUtility.topicName
@@ -16,7 +17,6 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Service
 class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportStatusService {
 
-
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
@@ -32,25 +32,54 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
             multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
-    override fun setSentStatus(): Boolean =
-            if (collectionIsComplete()) {
-                val result = dynamoDB.updateItem(setStatusSentRequest())
-                logger.info("Collection status after update",
+    override fun setSuccessStatus() {
+        dynamoDB.updateItem(setStatusSuccessRequest())
+    }
+
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+    override fun setCollectionStatus(): CollectionStatus =
+            when (collectionStatus()) {
+                CollectionStatus.SENT -> {
+                    val result = dynamoDB.updateItem(setStatusSentRequest())
+                    logger.info("Collection status after update",
                         "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
-                true
-            }
-            else {
-                false
+                    CollectionStatus.SENT
+                }
+
+                CollectionStatus.NO_FILES_EXPORTED -> {
+                    val result = dynamoDB.updateItem(setStatusSuccessRequest())
+                    logger.info("Collection status after update",
+                        "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
+                    CollectionStatus.NO_FILES_EXPORTED
+                }
+
+                else -> {
+                    CollectionStatus.IN_PROGRESS
+                }
             }
 
-    private fun collectionIsComplete(): Boolean {
+    private fun collectionStatus(): CollectionStatus {
         val (currentStatus, filesExported, filesSent) = currentStatusAndCounts()
-        val isComplete = currentStatus == "Exported" && filesExported == filesSent
-        logger.info("Collection status", "current_status" to currentStatus,
-                "files_exported" to "$filesExported",
-                "files_sent" to "$filesSent",
-                "is_complete" to "$isComplete")
-        return isComplete
+
+        logger.info("Collection status",
+            "current_status" to currentStatus,
+            "files_exported" to "$filesExported",
+            "files_sent" to "$filesSent")
+
+        return when {
+            currentStatus == "Exported" && filesExported == filesSent && filesExported > 0 -> {
+                CollectionStatus.SENT
+            }
+            currentStatus == "Exported" && filesExported == filesSent && filesExported == 0 -> {
+                CollectionStatus.NO_FILES_EXPORTED
+            }
+            else -> {
+                CollectionStatus.IN_PROGRESS
+            }
+        }
     }
 
     private fun currentStatusAndCounts(): Triple<String, Int, Int> {
@@ -72,12 +101,15 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
             }
 
 
-    private fun setStatusSentRequest() =
+    private fun setStatusSentRequest() = setStatusRequest("Sent")
+    private fun setStatusSuccessRequest() = setStatusRequest("Success")
+
+    private fun setStatusRequest(status: String) =
             UpdateItemRequest().apply {
                 tableName = statusTableName
                 key = primaryKey
                 updateExpression = "SET CollectionStatus = :x"
-                expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = "Sent" })
+                expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = status })
                 returnValues = "ALL_NEW"
             }
 
