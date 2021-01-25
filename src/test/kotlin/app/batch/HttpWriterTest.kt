@@ -108,23 +108,10 @@ class HttpWriterTest {
         httpWriter.write(mutableListOf(decryptedStream))
 
         //then
-        val httpCaptor = argumentCaptor<HttpPost>()
-        verify(httpClient, once()).execute(httpCaptor.capture())
-        assertEquals(CONTENT_TYPE_HEADER, httpCaptor.firstValue.entity.contentType.toString())
-        assertEquals(NIFI_HEADER_COUNT, httpCaptor.firstValue.allHeaders.size)
+        argumentCaptor<HttpPost> {
+            verifyPostHeaders(httpClient, filename)
+        }
 
-
-        assertEquals("filename: ${filename.replace("txt", "json")}", httpCaptor.firstValue.allHeaders[0].toString())
-        assertEquals(ENVIRONMENT_HEADER, httpCaptor.firstValue.allHeaders[1].toString())
-        assertEquals(DATABASE_HEADER, httpCaptor.firstValue.allHeaders[3].toString())
-        assertEquals(COLLECTION_HEADER, httpCaptor.firstValue.allHeaders[4].toString())
-        assertEquals(SNAPSHOT_TYPE_HEADER, httpCaptor.firstValue.allHeaders[5].toString())
-        assertEquals(TOPIC_HEADER, httpCaptor.firstValue.allHeaders[6].toString())
-        assertEquals(STATUS_TABLE_HEADER, httpCaptor.firstValue.allHeaders[7].toString())
-        assertEquals(CORRELATION_ID_HEADER, httpCaptor.firstValue.allHeaders[8].toString())
-        assertEquals(S3_PREFIX_HEADER, httpCaptor.firstValue.allHeaders[9].toString())
-        assertEquals(SHUTDOWN_FLAG_HEADER, httpCaptor.firstValue.allHeaders[10].toString())
-        assertEquals(REPROCESS_FILES_HEADER, httpCaptor.firstValue.allHeaders[11].toString())
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
@@ -135,6 +122,7 @@ class HttpWriterTest {
         assertEquals("""Posting file name to collection", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"db.core.addressDeclaration-001-002-000001.txt.gz", "full_path":"exporter-output\/job01\/db.core.addressDeclaration-001-002-000001.txt.gz", "nifi_url":"nifi:8091\/dummy", "filename_header":"db.core.addressDeclaration-001-002-000001.json.gz", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[2])
         assertEquals("""Successfully posted file", "database":"core", "collection":"addressDeclaration", "topic":"db.core.addressDeclaration", "file_name":"exporter-output\/job01\/db.core.addressDeclaration-001-002-000001.txt.gz", "response":"200", "nifi_url":"nifi:8091\/dummy", "export_date":"2019-01-01", "snapshot_type":"incremental", "status_table_name":"test_table"""", formattedMessages[3])
     }
+
 
     @Test
     fun test_will_write_to_nifi_when_valid_file_without_prefix() {
@@ -153,21 +141,9 @@ class HttpWriterTest {
         httpWriter.write(mutableListOf(decryptedStream))
 
         //then
-        val httpCaptor = argumentCaptor<HttpPost>()
-        verify(httpClient, once()).execute(httpCaptor.capture())
-        assertEquals(CONTENT_TYPE_HEADER, httpCaptor.firstValue.entity.contentType.toString())
-        assertEquals(NIFI_HEADER_COUNT, httpCaptor.firstValue.allHeaders.size)
-        assertEquals("filename: core.addressDeclaration-045-050-000001.json.gz", httpCaptor.firstValue.allHeaders[0].toString())
-        assertEquals(ENVIRONMENT_HEADER, httpCaptor.firstValue.allHeaders[1].toString())
-        assertEquals(DATABASE_HEADER, httpCaptor.firstValue.allHeaders[3].toString())
-        assertEquals(COLLECTION_HEADER, httpCaptor.firstValue.allHeaders[4].toString())
-        assertEquals(SNAPSHOT_TYPE_HEADER, httpCaptor.firstValue.allHeaders[5].toString())
-        assertEquals("topic: core.addressDeclaration", httpCaptor.firstValue.allHeaders[6].toString())
-        assertEquals(STATUS_TABLE_HEADER, httpCaptor.firstValue.allHeaders[7].toString())
-        assertEquals(CORRELATION_ID_HEADER, httpCaptor.firstValue.allHeaders[8].toString())
-        assertEquals(S3_PREFIX_HEADER, httpCaptor.firstValue.allHeaders[9].toString())
-        assertEquals(SHUTDOWN_FLAG_HEADER, httpCaptor.firstValue.allHeaders[10].toString())
-        assertEquals(REPROCESS_FILES_HEADER, httpCaptor.firstValue.allHeaders[11].toString())
+        argumentCaptor<HttpPost>() {
+            verifyPostHeaders(httpClient, filename, "database: core", "topic: core.addressDeclaration")
+        }
 
         verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
 
@@ -188,31 +164,17 @@ class HttpWriterTest {
         val httpClient = Mockito.mock(CloseableHttpClient::class.java)
         given(httpClientProvider.client()).willReturn(httpClient)
         val httpResponse = Mockito.mock(CloseableHttpResponse::class.java)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val statusLine = Mockito.mock(StatusLine::class.java)
+        given(statusLine.statusCode).willReturn(200)
+        given(httpResponse.statusLine).willReturn(statusLine)
+        httpWriter.write(mutableListOf(decryptedStream))
 
         argumentCaptor<HttpPost> {
-            given(httpClient.execute(capture())).willReturn(httpResponse)
-            val statusLine = Mockito.mock(StatusLine::class.java)
-            given(statusLine.statusCode).willReturn(200)
-            given(httpResponse.statusLine).willReturn(statusLine)
-            httpWriter.write(mutableListOf(decryptedStream))
-            assertEquals(CONTENT_TYPE_HEADER, firstValue.entity.contentType.toString())
-            assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
-            assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
-            assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
-            assertEquals(DATABASE_WITH_HYPHEN_HEADER, firstValue.allHeaders[3].toString())
-            assertEquals(COLLECTION_HEADER, firstValue.allHeaders[4].toString())
-            assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
-            assertEquals("topic: db.core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
-            assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
-            assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
-            assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
-            assertEquals(SHUTDOWN_FLAG_HEADER, firstValue.allHeaders[10].toString())
-            assertEquals(REPROCESS_FILES_HEADER, firstValue.allHeaders[11].toString())
-
-
-            verify(httpClient, once()).execute(any(HttpPost::class.java))
-            verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
+            verifyPostHeaders(httpClient, filename, "database: core-with-hyphen",
+                "topic: db.core-with-hyphen.addressDeclaration")
         }
+        verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
     }
 
     @Test
@@ -226,23 +188,9 @@ class HttpWriterTest {
         val statusLine = Mockito.mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
+        httpWriter.write(mutableListOf(decryptedStream))
         argumentCaptor<HttpPost> {
-            httpWriter.write(mutableListOf(decryptedStream))
-            verify(httpClient, once()).execute(capture())
-            verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
-            assertEquals(CONTENT_TYPE_HEADER, firstValue.entity.contentType.toString())
-            assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
-            assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
-            assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
-            assertEquals(DATABASE_WITH_HYPHEN_HEADER, firstValue.allHeaders[3].toString())
-            assertEquals(COLLECTION_HEADER, firstValue.allHeaders[4].toString())
-            assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
-            assertEquals("topic: core-with-hyphen.addressDeclaration", firstValue.allHeaders[6].toString())
-            assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
-            assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
-            assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
-            assertEquals(SHUTDOWN_FLAG_HEADER, firstValue.allHeaders[10].toString())
-            assertEquals(REPROCESS_FILES_HEADER, firstValue.allHeaders[11].toString())
+            verifyPostHeaders(httpClient, filename, "database: core-with-hyphen", "topic: core-with-hyphen.addressDeclaration")
         }
     }
 
@@ -257,23 +205,11 @@ class HttpWriterTest {
         val statusLine = Mockito.mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
+        httpWriter.write(mutableListOf(decryptedStream))
         argumentCaptor<HttpPost> {
-            httpWriter.write(mutableListOf(decryptedStream))
-            verify(httpClient, once()).execute(capture())
-            verify(mockS3StatusFileWriter, once()).writeStatus(decryptedStream.fullPath)
-            assertEquals(CONTENT_TYPE_HEADER, firstValue.entity.contentType.toString())
-            assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
-            assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
-            assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
-            assertEquals(DATABASE_WITH_HYPHEN_HEADER, firstValue.allHeaders[3].toString())
-            assertEquals("collection: address-declaration-has-hyphen", firstValue.allHeaders[4].toString())
-            assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
-            assertEquals("topic: db.core-with-hyphen.address-declaration-has-hyphen", firstValue.allHeaders[6].toString())
-            assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
-            assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
-            assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
-            assertEquals(SHUTDOWN_FLAG_HEADER, firstValue.allHeaders[10].toString())
-            assertEquals(REPROCESS_FILES_HEADER, firstValue.allHeaders[11].toString())
+            verifyPostHeaders(httpClient, filename, "database: core-with-hyphen",
+            "topic: db.core-with-hyphen.address-declaration-has-hyphen",
+                "collection: address-declaration-has-hyphen")
         }
     }
 
@@ -415,6 +351,26 @@ class HttpWriterTest {
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"
 
         verifyZeroInteractions(exportStatusService)
+    }
+
+    private fun KArgumentCaptor<HttpPost>.verifyPostHeaders(httpClient: CloseableHttpClient, filename: String,
+                                                            databaseHeader: String = DATABASE_HEADER,
+                                                            topicHeader: String = TOPIC_HEADER,
+                                                            collectionHeader: String = COLLECTION_HEADER) {
+        verify(httpClient, once()).execute(capture())
+        assertEquals(CONTENT_TYPE_HEADER, firstValue.entity.contentType.toString())
+        assertEquals(NIFI_HEADER_COUNT, firstValue.allHeaders.size)
+        assertEquals("filename: ${filename.replace("txt", "json")}", firstValue.allHeaders[0].toString())
+        assertEquals(ENVIRONMENT_HEADER, firstValue.allHeaders[1].toString())
+        assertEquals(databaseHeader, firstValue.allHeaders[3].toString())
+        assertEquals(collectionHeader, firstValue.allHeaders[4].toString())
+        assertEquals(SNAPSHOT_TYPE_HEADER, firstValue.allHeaders[5].toString())
+        assertEquals(topicHeader, firstValue.allHeaders[6].toString())
+        assertEquals(STATUS_TABLE_HEADER, firstValue.allHeaders[7].toString())
+        assertEquals(CORRELATION_ID_HEADER, firstValue.allHeaders[8].toString())
+        assertEquals(S3_PREFIX_HEADER, firstValue.allHeaders[9].toString())
+        assertEquals(SHUTDOWN_FLAG_HEADER, firstValue.allHeaders[10].toString())
+        assertEquals(REPROCESS_FILES_HEADER, firstValue.allHeaders[11].toString())
     }
 
     companion object {
