@@ -6,8 +6,7 @@ import app.domain.NifiHeaders
 import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.utils.FilterBlockedTopicsUtils
-import app.utils.NiFiUtility.setNifiHeaders
-import app.utils.PropertyUtility.correlationId
+import app.utils.NiFiUtility
 import app.utils.TextParsingUtility
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -21,7 +20,8 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Component
 class HttpWriter(private val httpClientProvider: HttpClientProvider,
                  private val exportStatusService: ExportStatusService,
-                 private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemWriter<DecryptedStream> {
+                 private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
+                 private val nifiUtility: NiFiUtility) : ItemWriter<DecryptedStream> {
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
@@ -59,16 +59,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
             val post = HttpPost(nifiUrl).apply {
                 entity = InputStreamEntity(item.inputStream, -1, ContentType.DEFAULT_BINARY)
-                setNifiHeaders(NifiHeaders(filename = filenameHeader,
-                    environment = "aws/${System.getProperty("environment")}",
-                    exportDate = exportDate,
-                    database = database,
-                    collection = collection,
-                    snapshotType = snapshotType,
-                    topic = topic,
-                    statusTableName = statusTableName,
-                    correlationId = correlationId(),
-                    s3Prefix = s3Prefix))
+                nifiUtility.setNifiHeaders(this, NifiHeaders(filename = filenameHeader,
+                                                                    database = database,
+                                                                    collection = collection))
             }
 
             it.execute(post).use { response ->
@@ -119,9 +112,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${dynamodb.status.table.name:UCExportToCrownStatus}")
     private lateinit var statusTableName: String
-
-    @Value("\${s3.prefix.folder}")
-    lateinit var s3Prefix: String
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpWriter::class.toString())

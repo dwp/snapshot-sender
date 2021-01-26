@@ -1,6 +1,5 @@
 package app.batch
 
-import app.TestUtils.Companion.once
 import app.services.ExportStatusService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
@@ -35,7 +34,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
-    "snapshot.type=full"
+    "snapshot.type=full",
+    "shutdown.flag=false"
 ])
 class S3StatusFileWriterTest {
 
@@ -77,7 +77,7 @@ class S3StatusFileWriterTest {
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, once()).putObject(awsCaptor.capture())
+        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 
@@ -98,7 +98,7 @@ class S3StatusFileWriterTest {
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, once()).putObject(awsCaptor.capture())
+        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 
@@ -119,7 +119,7 @@ class S3StatusFileWriterTest {
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, once()).putObject(awsCaptor.capture())
+        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 

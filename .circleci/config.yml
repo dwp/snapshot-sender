@@ -75,7 +75,7 @@ jobs:
             ./generate-developer-certs.sh
             cd -
 
-            make build-jar
+            make jar
             docker-compose build
             make up
             make integration-tests

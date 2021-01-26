@@ -27,10 +27,10 @@ $ make help
 | Target                       | Description |
 |------------------------------|-------------|
 | add-containers-to-hosts      | Update laptop hosts file with reference to containers |
-| build-all                    | Build the jar file and then all docker images |
+| all                    | Build the jar file and then all docker images |
 | build-base-images            | Build base images to avoid rebuilding frequently |
-| build-images                 | Build all ecosystem of images |
-| build-jar                    | Build the jar file |
+| images                 | Build all ecosystem of images |
+| jar                    | Build the jar file |
 | destroy                      | Bring down the hbase and other services then delete all volumes |
 | dist                         | Assemble distribution files in build/dist |
 | generate-developer-certs     | Generate temporary local certs and stores for the local developer containers to use |
@@ -44,7 +44,7 @@ $ make help
 
 Ensure a JVM is installed and run gradle.
 
-    make build-all
+    make all
 
 ## Run full local stack
 
