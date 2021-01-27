@@ -60,7 +60,7 @@ class JobCompletionNotificationListenerTest {
     }
 
     @Test
-    fun willWriteSuccessIndicatorOnSuccessfulCompletionAndNoFilesExported() {
+    fun willCallSetStatusOnSuccessfulCompletionAndNoFilesExported() {
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
@@ -79,8 +79,7 @@ class JobCompletionNotificationListenerTest {
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(successService, times(1)).postSuccessIndicator()
-        verify(exportStatusService, times(1)).setSuccessStatus()
-        verifyNoMoreInteractions(exportStatusService)
+        verifyZeroInteractions(exportStatusService)
         ReflectionTestUtils.setField(jobCompletionNotificationListener, "sendSuccessIndicator", "false")
     }
 

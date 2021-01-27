@@ -54,12 +54,12 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             successes shouldContainExactlyInAnyOrder listOf("_database_empty_successful.gz", "_database_sent_successful.gz")
         }
 
-        "Export status is 'Success' for no files exported topic" {
-            validateResult(getItemResult("321", "db.database.empty").item, "Success", "0", "0")
+        "Export status is 'Received' for no files exported topic" {
+            validateResult(getItemResult("321", "db.database.empty").item, "Received", "0", "0")
         }
 
-        "Export status is 'Success' for sent topic" {
-            validateResult(getItemResult("111", "db.database.sent").item, "Success", "10", "10")
+        "Export status is 'Sent' for successful topic" {
+            validateResult(getItemResult("111", "db.database.sent").item, "Sent", "10", "10")
         }
 
         "Export status is 'Sent' for sent topic" {

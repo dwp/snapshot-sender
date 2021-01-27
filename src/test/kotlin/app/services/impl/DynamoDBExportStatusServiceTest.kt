@@ -96,7 +96,7 @@ class DynamoDBExportStatusServiceTest {
     }
 
     @Test
-    fun setSentStatusSetsSuccessStatusIfExportedAndNoFilesExported() {
+    fun setSentStatusSetsReceivedStatusIfExportedAndNoFilesExported() {
 
         val status = mock<AttributeValue> {
             on { s } doReturn "Exported"
@@ -122,7 +122,7 @@ class DynamoDBExportStatusServiceTest {
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
         given(amazonDynamoDB.updateItem(any())).willReturn(mock())
         exportStatusService.setCollectionStatus()
-        verifyUpdateItemRequest("Success")
+        verifyUpdateItemRequest("Received")
     }
 
     @Test
