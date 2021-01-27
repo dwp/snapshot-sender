@@ -50,7 +50,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
                 }
 
                 CollectionStatus.NO_FILES_EXPORTED -> {
-                    val result = dynamoDB.updateItem(setStatusSuccessRequest())
+                    val result = dynamoDB.updateItem(setStatusReceivedRequest())
                     logger.info("Collection status after update",
                         "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
                     CollectionStatus.NO_FILES_EXPORTED
@@ -103,6 +103,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     private fun setStatusSentRequest() = setStatusRequest("Sent")
     private fun setStatusSuccessRequest() = setStatusRequest("Success")
+    private fun setStatusReceivedRequest() = setStatusRequest("Received")
 
     private fun setStatusRequest(status: String) =
             UpdateItemRequest().apply {

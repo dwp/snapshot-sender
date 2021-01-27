@@ -19,7 +19,6 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
         if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
             if (sendSuccessIndicator.toBoolean()) {
                 successService.postSuccessIndicator()
-                exportStatusService.setSuccessStatus()
             } else {
                 val status = exportStatusService.setCollectionStatus()
                 if (status == CollectionStatus.NO_FILES_EXPORTED) {
