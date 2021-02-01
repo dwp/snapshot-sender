@@ -23,10 +23,4 @@ class TestContextConfiguration {
     fun dataKeyService(): KeyService {
         return Mockito.mock(KeyService::class.java)
     }
-
-    @Bean
-    @Profile("unitTest")
-    fun amazonSNS(): AmazonSNS {
-        return Mockito.mock(AmazonSNS::class.java)
-    }
 }
