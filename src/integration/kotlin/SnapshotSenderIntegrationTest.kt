@@ -97,8 +97,23 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             }
         }
 
-        "It should send the monitoring message" {
+        "It should send the monitoring messages" {
             validateQueueMessage(monitoringQueueUrl, """{
+                    "severity": "Critical",
+                    "notification_type": "Information",
+                    "slack_username": "Crown Export Poller",
+                    "title_text": "Full - All files sent - Completed successfully",
+                    "custom_elements":[
+                        {
+                            "key":"Export date",
+                            "value":"2019-01-01"
+                        },
+                        {
+                            "key":"Correlation Id",
+                            "value":"321"
+                        }
+                    ]
+                }""", """{
                     "severity": "Critical",
                     "notification_type": "Information",
                     "slack_username": "Crown Export Poller",
@@ -117,14 +132,15 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
     }
 
-    private fun validateQueueMessage(queueUrl: String, expectedMessage: String) {
+    private fun validateQueueMessage(queueUrl: String, expectedMessageOne: String, expectedMessageTwo: String) {
         val received = queueMessages(queueUrl)
             .map(Message::getBody)
             .map {Gson().fromJson(it, JsonObject::class.java)}
             .mapNotNull { it["Message"] }
 
-        received shouldHaveSize 1
-        received.first().asString shouldMatchJson expectedMessage
+        received shouldHaveSize 2
+        received.first().asString shouldMatchJson expectedMessageOne
+        received.second().asString shouldMatchJson expectedMessageTwo
     }
 
     private tailrec fun queueMessages(queueUrl: String, accumulated: List<Message> = listOf()): List<Message> {
