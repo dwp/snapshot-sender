@@ -46,6 +46,7 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         given(exportStatusService.setCollectionStatus()).willReturn(CollectionStatus.SENT)
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(successService)
         verify(exportStatusService, times(1)).setCollectionStatus()
@@ -58,6 +59,7 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         given(exportStatusService.setCollectionStatus()).willReturn(CollectionStatus.IN_PROGRESS)
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(successService)
         verify(exportStatusService, times(1)).setCollectionStatus()
@@ -70,6 +72,7 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         given(exportStatusService.setCollectionStatus()).willReturn(CollectionStatus.NO_FILES_EXPORTED)
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(successService, times(1)).postSuccessIndicator()
         verify(exportStatusService, times(1)).setCollectionStatus()
@@ -107,7 +110,7 @@ class JobCompletionNotificationListenerTest {
         given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(exportStatusService, times(1)).sendingCompletionStatus()
-        verify(snsService, times(1)).sendMonitoringMessage(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
+        verify(snsService, times(1)).sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         verifyNoMoreInteractions(snsService)
     }
 

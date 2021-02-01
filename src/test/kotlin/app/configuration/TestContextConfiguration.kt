@@ -6,6 +6,7 @@ import org.mockito.Mockito
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import com.amazonaws.services.sns.AmazonSNS
 
 @Configuration
 class TestContextConfiguration {
@@ -17,6 +18,10 @@ class TestContextConfiguration {
     @Bean
     @Profile("unitTest")
     fun httpClient() = Mockito.mock(HttpClient::class.java)!!
+
+    @Bean
+    @Profile("unitTest")
+    fun amazonSns() = Mockito.mock(AmazonSNS::class.java)!!
 
     @Bean
     @Profile("decryptionTest")

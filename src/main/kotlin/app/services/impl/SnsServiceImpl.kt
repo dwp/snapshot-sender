@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
-class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
+class SnsServiceImpl(private val amazonSns: AmazonSNS): SnsService {
 
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${sns.retry.maxAttempts:5}",
@@ -24,7 +24,7 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
     private fun sendMessage(topicArn: String, payload: String) {
         topicArn.takeIf(String::isNotBlank)?.let { arn ->
             logger.info("Publishing message to topic", "arn" to arn)
-            val result = sns.publish(request(arn, payload))
+            val result = amazonSns.publish(request(arn, payload))
             logger.info("Published message to topic", "arn" to arn,
                 "message_id" to result.messageId, "snapshot_type" to snapshotType)
         } ?: run {
