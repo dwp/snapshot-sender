@@ -18,13 +18,6 @@ import org.springframework.context.annotation.Profile
 @Profile("localStackConfiguration")
 class LocalStackConfiguration {
 
-
-    with (AmazonS3ClientBuilder.standard()) {
-        withPathStyleAccessEnabled(true)
-        disableChunkedEncoding()
-        localstack()
-    }
-
     @Bean
     fun amazonS3(): AmazonS3 =
         with (AmazonS3ClientBuilder.standard()) {
