@@ -11,6 +11,9 @@ import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.dynamodbv2.model.GetItemResult
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.sqs.AmazonSQS
+import com.amazonaws.services.sqs.model.Message
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -91,7 +94,48 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 }
             }
         }
-   }
+
+        "It should send the monitoring message" {
+            validateQueueMessage(monitoringQueueUrl, """{
+                    "severity": "Critical",
+                    "notification_type": "Information",
+                    "slack_username": "Crown Export Poller",
+                    "title_text": "Full - All files sent - Completed successfully",
+                    "custom_elements":[
+                        {
+                            "key":"Export date",
+                            "value":"2019-01-01"
+                        },
+                        {
+                            "key":"Correlation Id",
+                            "value":"123"
+                        }
+                    ]
+                }""")
+        }
+    }
+
+    private fun validateQueueMessage(queueUrl: String, expectedMessage: String) {
+        val received = queueMessages(queueUrl)
+            .map(Message::getBody)
+            .map {Gson().fromJson(it, JsonObject::class.java)}
+            .mapNotNull { it["Message"] }
+
+        received shouldHaveSize 1
+        received.first().asString shouldMatchJson expectedMessage
+    }
+
+    private tailrec fun queueMessages(queueUrl: String, accumulated: List<Message> = listOf()): List<Message> {
+        val messages = amazonSqs.receiveMessage(queueUrl).messages
+
+        if (messages == null || messages.isEmpty()) {
+            return accumulated
+        }
+        messages.forEach{ deleteMessage(queueUrl, it) }
+        return queueMessages(queueUrl, accumulated + messages)
+    }
+
+    private fun deleteMessage(queueUrl: String, it: Message) = amazonSqs.deleteMessage(queueUrl, it.receiptHandle)
 
     private fun validateResult(item: MutableMap<String, AttributeValue>, expectedStatus: String, expectedExported: String, expectedSent: String) {
         val status = item["CollectionStatus"]
@@ -131,6 +175,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         private const val ACCESS_KEY = "accessKey"
         private const val SECRET_KEY = "secretKey"
 
+        private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-queue"
+
         private val s3: AmazonS3 by lazy {
             with (AmazonS3ClientBuilder.standard()) {
                 withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(S3_SERVICE_ENDPOINT, SIGNING_REGION))
@@ -144,9 +190,18 @@ class SnapshotSenderIntegrationTest : StringSpec() {
 
         val dynamoDB: AmazonDynamoDB by lazy {
             with (AmazonDynamoDBClientBuilder.standard()) {
-                withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration("http://aws:4566", "eu-west-2"))
+                withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(S3_SERVICE_ENDPOINT, SIGNING_REGION))
                 withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-                withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials("access-key", "secret-key")))
+                withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(ACCESS_KEY, SECRET_KEY)))
+                build()
+            }
+        }
+
+        val amazonSqs: AmazonSQS by lazy {
+            with (AmazonSNSClientBuilder.standard()) {
+                withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(S3_SERVICE_ENDPOINT, SIGNING_REGION))
+                withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+                withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(ACCESS_KEY, SECRET_KEY)))
                 build()
             }
         }
