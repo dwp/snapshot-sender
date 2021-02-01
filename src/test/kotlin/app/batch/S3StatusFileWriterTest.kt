@@ -48,6 +48,9 @@ class S3StatusFileWriterTest {
     @MockBean
     private lateinit var exportStatusService: ExportStatusService
 
+    @MockBean
+    private lateinit var amazonS3: AmazonS3
+
     val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
 
     @Before

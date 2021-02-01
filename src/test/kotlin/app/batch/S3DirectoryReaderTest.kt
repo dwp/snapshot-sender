@@ -66,6 +66,9 @@ class S3DirectoryReaderTest {
     @MockBean
     private lateinit var exportStatusService: ExportStatusService
 
+    @MockBean
+    private lateinit var amazonS3: AmazonS3
+
     @Before
     fun setUp() {
 
