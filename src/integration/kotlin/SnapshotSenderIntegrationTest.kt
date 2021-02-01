@@ -139,8 +139,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             .mapNotNull { it["Message"] }
 
         received shouldHaveSize 2
-        received.first().asString shouldMatchJson expectedMessageOne
-        received.second().asString shouldMatchJson expectedMessageTwo
+        received.get(0).asString shouldMatchJson expectedMessageOne
+        received.get(1).asString shouldMatchJson expectedMessageTwo
     }
 
     private tailrec fun queueMessages(queueUrl: String, accumulated: List<Message> = listOf()): List<Message> {
