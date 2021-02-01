@@ -18,24 +18,34 @@ import org.springframework.context.annotation.Profile
 @Profile("localStackConfiguration")
 class LocalStackConfiguration {
 
-    @Bean
-    fun amazonS3(): AmazonS3 =
-        AmazonS3ClientBuilder.standard()
-            .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint, signingRegion))
-            .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-            .withCredentials(
-                AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
-            .withPathStyleAccessEnabled(true)
-            .disableChunkedEncoding()
-            .build()
+
+    with (AmazonS3ClientBuilder.standard()) {
+        withPathStyleAccessEnabled(true)
+        disableChunkedEncoding()
+        localstack()
+    }
 
     @Bean
-    fun amazonDynamoDb(): AmazonDynamoDB =
-            AmazonDynamoDBClientBuilder.standard()
-                .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint, signingRegion))
-                .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-                .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
-                .build()
+    fun amazonS3(): AmazonS3 =
+        with (AmazonS3ClientBuilder.standard()) {
+            withPathStyleAccessEnabled(true)
+            disableChunkedEncoding()
+            localstack()
+        }
+
+    @Bean
+    fun amazonDynamoDb(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().localstack()
+
+    @Bean
+    fun amazonSns(): AmazonSNS = AmazonSNSClientBuilder.standard().localstack()
+
+    fun <B: AwsClientBuilder<B, C>, C> AwsClientBuilder<B, C>.localstack(): C =
+        run {
+            withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint, signingRegion))
+            withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+            withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
+            build()
+        }
 
     private companion object {
         const val serviceEndPoint = "http://aws:4566/"
