@@ -1,5 +1,6 @@
 package app.services.impl
 
+import app.services.SendingCompletionStatus
 import app.services.CollectionStatus
 import app.services.ExportStatusService
 import app.utils.PropertyUtility.correlationId
@@ -8,6 +9,10 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -60,6 +65,42 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
                     CollectionStatus.IN_PROGRESS
                 }
             }
+
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+        override fun sendingCompletionStatus(): SendingCompletionStatus =
+            exportStatusTable().query(statusQuerySpec()).map(::collectionStatus).run {
+                when {
+                    all(::completedSuccessfully) -> {
+                        SendingCompletionStatus.COMPLETED_SUCCESSFULLY
+                    }
+                    any(::completedUnsuccessfully) -> {
+                        SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY
+                    }
+                    else -> {
+                        SendingCompletionStatus.NOT_COMPLETED
+                    }
+                }
+            }
+
+    private fun collectionStatus(item: Item): String = item[COLLECTION_STATUS_ATTRIBUTE_NAME] as String
+
+    private fun completedSuccessfully(status: Any): Boolean =
+        successfulCompletionStatuses.contains(status)
+
+    private fun completedUnsuccessfully(status: Any): Boolean =
+        unsuccessfulCompletionStatuses.contains(status)
+
+    private fun exportStatusTable(): Table = DynamoDB(dynamoDB).getTable(statusTableName)
+
+    private fun statusQuerySpec(): QuerySpec =
+        QuerySpec().apply {
+            withKeyConditionExpression("#cId = :s")
+            withNameMap(mapOf("#cId" to "CorrelationId"))
+            withValueMap(mapOf(":s" to correlationId()))
+        }
 
     private fun collectionStatus(): CollectionStatus {
         val (currentStatus, filesExported, filesSent) = currentStatusAndCounts()
@@ -133,5 +174,8 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
+        private const val COLLECTION_STATUS_ATTRIBUTE_NAME = "CollectionStatus"
+        private val successfulCompletionStatuses = listOf("Sent", "Received", "Success", "Table_Unavailable", "Blocked_Topic")
+        private val unsuccessfulCompletionStatuses = listOf("Export_Failed")
     }
 }
