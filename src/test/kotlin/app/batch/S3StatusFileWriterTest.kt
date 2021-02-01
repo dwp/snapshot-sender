@@ -46,9 +46,6 @@ class S3StatusFileWriterTest {
     private lateinit var s3StatusFileWriter: S3StatusFileWriter
 
     @MockBean
-    private lateinit var mockS3Client: AmazonS3
-
-    @MockBean
     private lateinit var exportStatusService: ExportStatusService
 
     val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
@@ -58,7 +55,7 @@ class S3StatusFileWriterTest {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         root.addAppender(mockAppender)
 
-        reset(mockS3Client)
+        reset(amazonS3)
         reset(mockAppender)
     }
 
@@ -77,7 +74,7 @@ class S3StatusFileWriterTest {
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
+        verify(amazonS3, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 
@@ -91,14 +88,14 @@ class S3StatusFileWriterTest {
     @Test
     fun will_log_error_when_aws_throws_service_exception() {
         //given
-        given(mockS3Client.putObject(any())).willThrow(AmazonServiceException("boom"))
+        given(amazonS3.putObject(any())).willThrow(AmazonServiceException("boom"))
 
         //when
         s3StatusFileWriter.writeStatus(htmeFileName)
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
+        verify(amazonS3, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 
@@ -112,14 +109,14 @@ class S3StatusFileWriterTest {
     @Test
     fun will_log_error_when_aws_throws_sdk_exception() {
         //given
-        given(mockS3Client.putObject(any())).willThrow(SdkClientException("boom"))
+        given(amazonS3.putObject(any())).willThrow(SdkClientException("boom"))
 
         //when
         s3StatusFileWriter.writeStatus(htmeFileName)
 
         //then
         val awsCaptor = argumentCaptor<PutObjectRequest>()
-        verify(mockS3Client, times(1)).putObject(awsCaptor.capture())
+        verify(amazonS3, times(1)).putObject(awsCaptor.capture())
 
         assertCorrectPutObject(awsCaptor)
 
