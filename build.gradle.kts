@@ -74,17 +74,7 @@ tasks.register<Test>("integration") {
     group = "verification"
     testClassesDirs = sourceSets["integration"].output.classesDirs
     classpath = sourceSets["integration"].runtimeClasspath
-    environment("S3_BUCKET", System.getenv("S3_BUCKET"))
-    environment("S3_PREFIX_FOLDER", System.getenv("S3_PREFIX_FOLDER"))
-    environment("S3_HTME_ROOT_FOLDER", System.getenv("S3_HTME_ROOT_FOLDER"))
-    environment("S3_STATUS_FOLDER", System.getenv("S3_STATUS_FOLDER"))
-    environment("S3_SERVICE_ENDPOINT", System.getenv("S3_SERVICE_ENDPOINT"))
-    environment("NIFI_ROOT_FOLDER", System.getenv("NIFI_ROOT_FOLDER"))
-    environment("NIFI_FILE_NAMES_CSV", System.getenv("NIFI_FILE_NAMES_CSV"))
-    environment("NIFI_TIME_STAMPS_CSV", System.getenv("NIFI_TIME_STAMPS_CSV"))
-    environment("NIFI_LINE_COUNTS_CSV", System.getenv("NIFI_LINE_COUNTS_CSV"))
-
-    useJUnitPlatform { }
+    useJUnitPlatform()
     testLogging {
         exceptionFormat = TestExceptionFormat.FULL
         events = setOf(TestLogEvent.SKIPPED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT)
