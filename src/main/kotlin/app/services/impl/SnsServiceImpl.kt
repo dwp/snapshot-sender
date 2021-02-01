@@ -37,7 +37,7 @@ class SnsServiceImpl(private val amazonSns: AmazonSNS): SnsService {
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "Crown Export Poller",
-                "title_text": "${snapshotType.capitalize()} - All files sent - $sendingCompletionStatus",
+                "title_text": "${snapshotType.capitalize()} - All files sent - ${sendingCompletionStatus.description}",
                 "custom_elements": [
                     { "key": "Export date", "value": "$exportDate" },
                     { "key": "Correlation Id", "value": "${PropertyUtility.correlationId()}" }
