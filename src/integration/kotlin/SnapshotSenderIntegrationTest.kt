@@ -26,6 +26,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.assertions.json.shouldMatchJson
 
 class SnapshotSenderIntegrationTest : StringSpec() {
 
