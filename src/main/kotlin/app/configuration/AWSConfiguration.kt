@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import com.amazonaws.client.builder.AwsClientBuilder
+import com.amazonaws.services.sns.AmazonSNS
+import com.amazonaws.services.sns.AmazonSNSClientBuilder
 
 @Configuration
 @Profile("awsConfiguration")
@@ -18,23 +21,29 @@ class AWSConfiguration {
 
     @Bean
     fun amazonS3(): AmazonS3  =
-            AmazonS3ClientBuilder.standard()
-                .withCredentials(DefaultAWSCredentialsProviderChain())
-                .withRegion(awsRegion)
-                .withClientConfiguration(ClientConfiguration().apply {
-                    maxConnections = maximumS3Connections.toInt()
-                    socketTimeout = socketTimeOut.toInt()
-                })
-                .build()
+        with(AmazonS3ClientBuilder.standard()) {
+            withClientConfiguration(ClientConfiguration().apply {
+                maxConnections = maximumS3Connections.toInt()
+                socketTimeout = socketTimeOut.toInt()
+            })
+            .aws()
+        }
+
 
     @Bean
-    fun amazonDynamoDb(): AmazonDynamoDB =
-            AmazonDynamoDBClientBuilder.standard()
-            .withCredentials(DefaultAWSCredentialsProviderChain())
-            .withRegion(awsRegion)
-            .build()
+    fun amazonDynamoDb(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().aws()
 
-    private val awsRegion by lazy {
+    @Bean
+    fun amazonSns(): AmazonSNS = AmazonSNSClientBuilder.standard().aws()
+
+    fun <B: AwsClientBuilder<B, C>, C> AwsClientBuilder<B, C>.aws(): C =
+        run {
+            withCredentials(DefaultAWSCredentialsProviderChain())
+            withRegion(signingRegion)
+            build()
+        }
+
+    private val signingRegion by lazy {
         Regions.valueOf(region.toUpperCase().replace("-", "_"))
     }
 

@@ -61,13 +61,13 @@ class S3DirectoryReaderTest {
     private lateinit var s3DirectorReader: S3DirectoryReader
 
     @MockBean
-    private lateinit var mockS3Client: AmazonS3
-
-    @MockBean
     private lateinit var s3Utils: S3Utils
 
     @MockBean
     private lateinit var exportStatusService: ExportStatusService
+
+    @MockBean
+    private lateinit var amazonS3: AmazonS3
 
     @Before
     fun setUp() {
@@ -118,7 +118,7 @@ class S3DirectoryReaderTest {
         given(s3Utils.objectContents(s3Object2)).willReturn(OBJECT_CONTENT2.toByteArray())
 
         s3DirectorReader.reset()
-        Mockito.reset(mockS3Client)
+        Mockito.reset(amazonS3)
     }
 
     @Test
@@ -126,10 +126,10 @@ class S3DirectoryReaderTest {
         //given one object on results
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
 
-        given(mockS3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
-        given(mockS3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
-        given(mockS3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
-        given(mockS3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
+        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
+        given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
+        given(amazonS3.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
+        given(amazonS3.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
 
         //when it is read
         val encryptedStream1 = s3DirectorReader.read()
@@ -137,10 +137,10 @@ class S3DirectoryReaderTest {
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
 
         //then
-        verify(mockS3Client, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
-        verifyNoMoreInteractions(mockS3Client)
+        verify(amazonS3, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
+        verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verifyNoMoreInteractions(amazonS3)
 
         assertObjectMetadata(objectMetadata1, actualMetadata1)
         assertEquals(OBJECT_CONTENT1, String(actualStream1))
@@ -154,25 +154,25 @@ class S3DirectoryReaderTest {
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary2)
 
-        given(mockS3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
-        given(mockS3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
-        given(mockS3Client.doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)).willReturn(false)
-        given(mockS3Client.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
-        given(mockS3Client.getObject(BUCKET_NAME1, KEY2)).willReturn(s3Object2)
-        given(mockS3Client.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
-        given(mockS3Client.getObjectMetadata(BUCKET_NAME1, KEY2)).willReturn(objectMetadata2)
+        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
+        given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
+        given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)).willReturn(false)
+        given(amazonS3.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
+        given(amazonS3.getObject(BUCKET_NAME1, KEY2)).willReturn(s3Object2)
+        given(amazonS3.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
+        given(amazonS3.getObjectMetadata(BUCKET_NAME1, KEY2)).willReturn(objectMetadata2)
 
         //when read in turn
         val encryptedStream1 = s3DirectorReader.read()
         val encryptedStream2 = s3DirectorReader.read()
 
         //then
-        verify(mockS3Client, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY2)
-        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY2)
-        verifyNoMoreInteractions(mockS3Client)
+        verify(amazonS3, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
+        verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY2)
+        verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY2)
+        verifyNoMoreInteractions(amazonS3)
 
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
         val actualStream1 = encryptedStream1?.contents ?: ByteArray(0)
@@ -195,10 +195,10 @@ class S3DirectoryReaderTest {
         //given an object with blank metadata
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
 
-        given(mockS3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
-        given(mockS3Client.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
-        given(mockS3Client.getObject(anyString(), anyString())).willReturn(s3Object1)
-        given(mockS3Client.getObjectMetadata(anyString(), anyString())).willReturn(ObjectMetadata())
+        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
+        given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
+        given(amazonS3.getObject(anyString(), anyString())).willReturn(s3Object1)
+        given(amazonS3.getObjectMetadata(anyString(), anyString())).willReturn(ObjectMetadata())
 
         try {
             //when
@@ -210,10 +210,10 @@ class S3DirectoryReaderTest {
             assertEquals("Couldn't get the metadata for 'exporter-output/job01/file1'", ex.message)
         }
 
-        verify(mockS3Client, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-        verify(mockS3Client, times(1)).getObject(BUCKET_NAME1, KEY1)
-        verify(mockS3Client, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
-        verifyNoMoreInteractions(mockS3Client)
+        verify(amazonS3, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
+        verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verifyNoMoreInteractions(amazonS3)
     }
 
     @Test
@@ -243,7 +243,7 @@ class S3DirectoryReaderTest {
             on { isTruncated } doReturn false
         }
 
-        given(mockS3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
+        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
             .willReturn(resultsPage1)
             .willReturn(resultsPage2)
 
@@ -252,10 +252,10 @@ class S3DirectoryReaderTest {
         val page2Object1 = mockS3Object()
         val page2Object2 = mockS3Object()
 
-        given(mockS3Client.getObject(bucket, page1Object1Key)).willReturn(page1Object1)
-        given(mockS3Client.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
-        given(mockS3Client.getObject(bucket, page2Object1Key)).willReturn(page2Object1)
-        given(mockS3Client.getObject(bucket, page2Object2Key)).willReturn(page2Object2)
+        given(amazonS3.getObject(bucket, page1Object1Key)).willReturn(page1Object1)
+        given(amazonS3.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
+        given(amazonS3.getObject(bucket, page2Object1Key)).willReturn(page2Object1)
+        given(amazonS3.getObject(bucket, page2Object2Key)).willReturn(page2Object2)
 
         val objectMetadata = mock<ObjectMetadata> {
             on { userMetadata } doReturn mapOf("iv" to "INITIALISATION_VECTOR",
@@ -263,14 +263,14 @@ class S3DirectoryReaderTest {
                 "cipherText" to "CIPHER_TEXT")
         }
 
-        given(mockS3Client.getObjectMetadata(anyString(), anyString()))
+        given(amazonS3.getObjectMetadata(anyString(), anyString()))
             .willReturn(objectMetadata)
 
         given(s3Utils.objectContents(any())).willReturn("TEXT".toByteArray())
 
         s3DirectorReader.read()
 
-        verify(mockS3Client, times(2))
+        verify(amazonS3, times(2))
             .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
 
     }
@@ -291,14 +291,14 @@ class S3DirectoryReaderTest {
         }
 
 
-        given(mockS3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
+        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
             .willReturn(resultsPage1)
 
         val page1Object1 = mockS3Object()
         val page1Object2 = mockS3Object()
 
-        given(mockS3Client.getObject(bucket, page1Object1Key)).willReturn(page1Object1)
-        given(mockS3Client.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
+        given(amazonS3.getObject(bucket, page1Object1Key)).willReturn(page1Object1)
+        given(amazonS3.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
 
         val objectMetadata = mock<ObjectMetadata> {
             on { userMetadata } doReturn mapOf("iv" to "INITIALISATION_VECTOR",
@@ -306,14 +306,14 @@ class S3DirectoryReaderTest {
                 "cipherText" to "CIPHER_TEXT")
         }
 
-        given(mockS3Client.getObjectMetadata(anyString(), anyString()))
+        given(amazonS3.getObjectMetadata(anyString(), anyString()))
             .willReturn(objectMetadata)
 
         given(s3Utils.objectContents(any())).willReturn("TEXT".toByteArray())
 
         s3DirectorReader.read()
 
-        verify(mockS3Client, times(1))
+        verify(amazonS3, times(1))
             .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
 
     }

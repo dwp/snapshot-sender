@@ -8,7 +8,7 @@ services:
       - '8055:8080'
     container_name: aws
     environment:
-      - SERVICES=s3,dynamodb
+      - SERVICES=s3,dynamodb,sqs,sns
 
   aws-init:
     image: aws-init

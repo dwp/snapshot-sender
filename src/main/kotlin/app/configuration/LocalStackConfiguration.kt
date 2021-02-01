@@ -8,6 +8,8 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
+import com.amazonaws.services.sns.AmazonSNS
+import com.amazonaws.services.sns.AmazonSNSClientBuilder
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.springframework.context.annotation.Bean
@@ -20,22 +22,25 @@ class LocalStackConfiguration {
 
     @Bean
     fun amazonS3(): AmazonS3 =
-        AmazonS3ClientBuilder.standard()
-            .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint, signingRegion))
-            .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-            .withCredentials(
-                AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
-            .withPathStyleAccessEnabled(true)
-            .disableChunkedEncoding()
-            .build()
+        with (AmazonS3ClientBuilder.standard()) {
+            withPathStyleAccessEnabled(true)
+            disableChunkedEncoding()
+            localstack()
+        }
 
     @Bean
-    fun amazonDynamoDb(): AmazonDynamoDB =
-            AmazonDynamoDBClientBuilder.standard()
-                .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint, signingRegion))
-                .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-                .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
-                .build()
+    fun amazonDynamoDb(): AmazonDynamoDB = AmazonDynamoDBClientBuilder.standard().localstack()
+
+    @Bean
+    fun amazonSns(): AmazonSNS = AmazonSNSClientBuilder.standard().localstack()
+
+    fun <B: AwsClientBuilder<B, C>, C> AwsClientBuilder<B, C>.localstack(): C =
+        run {
+            withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint, signingRegion))
+            withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+            withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
+            build()
+        }
 
     private companion object {
         const val serviceEndPoint = "http://aws:4566/"

@@ -3,6 +3,8 @@ package app.batch
 import app.services.CollectionStatus
 import app.services.ExportStatusService
 import app.services.SuccessService
+import app.services.SendingCompletionStatus
+import app.services.SnsService
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
@@ -12,7 +14,8 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 class JobCompletionNotificationListener(private val successService: SuccessService,
-                                        private val exportStatusService: ExportStatusService):
+                                        private val exportStatusService: ExportStatusService,
+                                        private val snsService: SnsService):
         JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
@@ -24,11 +27,23 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
                 if (status == CollectionStatus.NO_FILES_EXPORTED) {
                     successService.postSuccessIndicator()
                 }
+                sendMonitoringSnsMessage()
             }
         }
         else {
             logger.error("Not setting status or sending success indicator",
                     "job_exit_status" to "${jobExecution.exitStatus}")
+        }
+    }
+
+    private fun sendMonitoringSnsMessage() {
+        when (val completionStatus = exportStatusService.sendingCompletionStatus()) {
+            SendingCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+                snsService.sendMonitoringMessage(completionStatus)
+            }
+            SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
+                snsService.sendMonitoringMessage(completionStatus)
+            }
         }
     }
 

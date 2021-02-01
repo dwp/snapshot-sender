@@ -3,6 +3,8 @@ package app.batch
 import app.services.CollectionStatus
 import app.services.ExportStatusService
 import app.services.SuccessService
+import app.services.SendingCompletionStatus
+import app.services.SnsService
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Before
 import org.junit.Test
@@ -30,6 +32,9 @@ class JobCompletionNotificationListenerTest {
     @MockBean
     private lateinit var successService: SuccessService
 
+    @MockBean
+    private lateinit var snsService: SnsService
+
     @Before
     fun setUp() {
         System.setProperty("topic_name", "db.core.toDo")
@@ -41,9 +46,11 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         given(exportStatusService.setCollectionStatus()).willReturn(CollectionStatus.SENT)
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(successService)
         verify(exportStatusService, times(1)).setCollectionStatus()
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
         verifyNoMoreInteractions(exportStatusService)
     }
 
@@ -53,9 +60,11 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         given(exportStatusService.setCollectionStatus()).willReturn(CollectionStatus.IN_PROGRESS)
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(successService)
         verify(exportStatusService, times(1)).setCollectionStatus()
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
         verifyNoMoreInteractions(exportStatusService)
     }
 
@@ -65,9 +74,11 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         given(exportStatusService.setCollectionStatus()).willReturn(CollectionStatus.NO_FILES_EXPORTED)
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(successService, times(1)).postSuccessIndicator()
         verify(exportStatusService, times(1)).setCollectionStatus()
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
         verifyNoMoreInteractions(exportStatusService)
     }
 
@@ -84,12 +95,60 @@ class JobCompletionNotificationListenerTest {
     }
 
     @Test
-    fun willNotWriteSuccessIndicatorOnUnsuccessfulCompletion() {
+    fun willNotWriteSuccessIndicatorOrSendSnsMonitoringMessageOnUnsuccessfulCompletion() {
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(successService)
         verifyZeroInteractions(exportStatusService)
+        verifyZeroInteractions(snsService)
+    }
+
+    @Test
+    fun willSendSuccessSnsMonitoringMessageOnSuccessfulCompletionAndNotSendSuccessIndicator() {
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
+        jobCompletionNotificationListener.afterJob(jobExecution)
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
+        verify(snsService, times(1)).sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
+        verifyNoMoreInteractions(snsService)
+    }
+
+    @Test
+    fun willSendFailureSnsMonitoringMessageOnSuccessfulCompletionAndNotSendSuccessIndicator() {
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
+        jobCompletionNotificationListener.afterJob(jobExecution)
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
+        verify(snsService, times(1)).sendMonitoringMessage(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
+        verifyNoMoreInteractions(snsService)
+    }
+
+    @Test
+    fun willNotSendSnsMonitoringMessageOnNotCompletedStatus() {
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.NOT_COMPLETED)
+        jobCompletionNotificationListener.afterJob(jobExecution)
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
+        verifyZeroInteractions(snsService)
+    }
+
+    @Test
+    fun willNotSendSnsMonitoringMessageOnSendSuccessIndicator() {
+        ReflectionTestUtils.setField(jobCompletionNotificationListener, "sendSuccessIndicator", "true")
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        given(exportStatusService.sendingCompletionStatus()).willReturn(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
+        jobCompletionNotificationListener.afterJob(jobExecution)
+        verifyZeroInteractions(snsService)
+        ReflectionTestUtils.setField(jobCompletionNotificationListener, "sendSuccessIndicator", "false")
     }
 }

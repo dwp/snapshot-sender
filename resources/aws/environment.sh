@@ -48,6 +48,19 @@ create_uc_ecc_table() {
 
 }
 
+create_sns_monitoring_topic() {
+    aws_local sns create-topic --name "monitoring-topic"
+}
+
+create_sqs_monitoring_queue() {
+    aws_local sqs create-queue --queue-name "monitoring-queue"
+}
+
+subscribe_sns_to_sqs() {
+    aws_local sns subscribe --topic-arn "arn:aws:sns:us-east-1:000000000000:monitoring-topic" \
+     --protocol "sqs" --notification-endpoint "http://localhost:4566/000000000000/monitoring-queue"
+}
+
 add_status_item() {
     add_item "$(status_item_id)" 100
 }
