@@ -200,7 +200,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
 
         val amazonSqs: AmazonSQS by lazy {
-            with (AmazonSNSClientBuilder.standard()) {
+            with (AmazonSQSClientBuilder.standard()) {
                 withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(S3_SERVICE_ENDPOINT, SIGNING_REGION))
                 withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
                 withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(ACCESS_KEY, SECRET_KEY)))
