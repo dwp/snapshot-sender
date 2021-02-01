@@ -50,6 +50,7 @@ class JobCompletionNotificationListenerTest {
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(successService)
         verify(exportStatusService, times(1)).setCollectionStatus()
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
         verifyNoMoreInteractions(exportStatusService)
     }
 
@@ -63,6 +64,7 @@ class JobCompletionNotificationListenerTest {
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(successService)
         verify(exportStatusService, times(1)).setCollectionStatus()
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
         verifyNoMoreInteractions(exportStatusService)
     }
 
@@ -76,6 +78,7 @@ class JobCompletionNotificationListenerTest {
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(successService, times(1)).postSuccessIndicator()
         verify(exportStatusService, times(1)).setCollectionStatus()
+        verify(exportStatusService, times(1)).sendingCompletionStatus()
         verifyNoMoreInteractions(exportStatusService)
     }
 
