@@ -102,7 +102,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                     "severity": "Critical",
                     "notification_type": "Information",
                     "slack_username": "Crown Export Poller",
-                    "title_text": "Full - All files sent - Completed successfully",
+                    "title_text": "Full - All files sent - success",
                     "custom_elements":[
                         {
                             "key":"Export date",
@@ -117,7 +117,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                     "severity": "Critical",
                     "notification_type": "Information",
                     "slack_username": "Crown Export Poller",
-                    "title_text": "Full - All files sent - Completed successfully",
+                    "title_text": "Full - All files sent - success",
                     "custom_elements":[
                         {
                             "key":"Export date",

@@ -39,7 +39,7 @@ class SnsServiceImplTest {
     }
 
     @Test
-    fun sendsTheCorrectMonitoringMessage() {
+    fun sendsTheCorrectMonitoringMessageOnSuccess() {
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         argumentCaptor<PublishRequest> {
@@ -49,7 +49,28 @@ class SnsServiceImplTest {
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "Crown Export Poller",
-                "title_text": "Full - All files sent - Completed successfully",
+                "title_text": "Full - All files sent - success",
+                "custom_elements": [
+                    { "key": "Export date", "value": "2020-01-01" },
+                    { "key": "Correlation Id", "value": "correlation.id" }
+                ]
+            }""", firstValue.message)
+        }
+        verifyNoMoreInteractions(amazonSNS)
+    }
+
+    @Test
+    fun sendsTheCorrectMonitoringMessageOnFailure() {
+        given(amazonSNS.publish(any())).willReturn(mock())
+        snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
+        argumentCaptor<PublishRequest> {
+            verify(amazonSNS, times(1)).publish(capture())
+            assertEquals(TOPIC_ARN, firstValue.topicArn)
+            assertEquals("""{
+                "severity": "High",
+                "notification_type": "Error",
+                "slack_username": "Crown Export Poller",
+                "title_text": "Full - All files sent - failed",
                 "custom_elements": [
                     { "key": "Export date", "value": "2020-01-01" },
                     { "key": "Correlation Id", "value": "correlation.id" }
