@@ -7,8 +7,7 @@ import com.amazonaws.AmazonServiceException
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
-import com.nhaarman.mockitokotlin2.KArgumentCaptor
-import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -52,7 +51,7 @@ class S3StatusFileWriterTest {
     @MockBean
     private lateinit var amazonS3: AmazonS3
 
-    val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
+    val mockAppender: Appender<ILoggingEvent> = mock()
 
     @Before
     fun setUp() {
