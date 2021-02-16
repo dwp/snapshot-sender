@@ -16,7 +16,7 @@ class JobCompletionNotificationListenerTest {
 
     @Before
     fun before() {
-        reset(messagingService)
+        reset(successService)
         reset(snsService)
         reset(pushgatewayService)
         reset(postProcessor)
