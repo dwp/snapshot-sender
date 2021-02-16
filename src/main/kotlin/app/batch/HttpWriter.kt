@@ -125,7 +125,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         } catch (ex: MetadataException) {
             rejectedFilesCounter.labels(filename).inc(1.toDouble())
             throw ex
-        }}
+        }
 
     @Value("\${nifi.url}")
     private lateinit var nifiUrl: String
