@@ -1,38 +1,41 @@
 package app.batch
 
-import app.services.CollectionStatus
-import app.services.ExportStatusService
-import app.services.SuccessService
-import app.services.SendingCompletionStatus
-import app.services.SnsService
+import app.services.*
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import io.prometheus.client.Counter
 
 @Component
 class JobCompletionNotificationListener(private val successService: SuccessService,
                                         private val exportStatusService: ExportStatusService,
-                                        private val snsService: SnsService):
+                                        private val snsService: SnsService,
+                                        private val pushGatewayService: PushGatewayService):
         JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-        if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
-            if (sendSuccessIndicator.toBoolean()) {
-                successService.postSuccessIndicator()
-            } else {
-                val status = exportStatusService.setCollectionStatus()
-                if (status == CollectionStatus.NO_FILES_EXPORTED) {
+        try
+        {
+            if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
+                if (sendSuccessIndicator.toBoolean()) {
                     successService.postSuccessIndicator()
+                } else {
+                    val status = exportStatusService.setCollectionStatus()
+                    if (status == CollectionStatus.NO_FILES_EXPORTED) {
+                        successService.postSuccessIndicator()
+                    }
+                    sendMonitoringSnsMessage()
                 }
-                sendMonitoringSnsMessage()
             }
-        }
-        else {
-            logger.error("Not setting status or sending success indicator",
-                    "job_exit_status" to "${jobExecution.exitStatus}")
+            else {
+                logger.error("Not setting status or sending success indicator",
+                        "job_exit_status" to "${jobExecution.exitStatus}")
+            }
+        } finally {
+            pushGatewayService.pushFinalMetrics()
         }
     }
 

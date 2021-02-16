@@ -19,10 +19,12 @@ repositories {
 }
 
 dependencies {
+    // spring
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework.retry:spring-retry")
     implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -32,6 +34,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.commons:commons-compress:1.20")
     implementation("org.apache.commons:commons-text:1.8")
+    implementation("com.github.dwp:dataworks-common-logging:0.0.6")
 
     // sdk v1
     implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.946")
@@ -40,18 +43,29 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-sns:1.11.946")
     implementation("com.amazonaws:aws-java-sdk-sqs:1.11.946")
 
+    //metrics
+    implementation("io.micrometer:micrometer-core:1.6.3")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.6.3")
+    implementation("io.prometheus:simpleclient:0.9.0")
+    implementation("io.prometheus:simpleclient_pushgateway:0.9.0")
+    implementation("io.prometheus:simpleclient_logback:0.9.0")
+    implementation("io.prometheus:simpleclient_caffeine:0.9.0")
+    implementation("io.prometheus:simpleclient_spring_web:0.9.0")
+
     // tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     testImplementation("com.beust", "klaxon", "4.0.2")
+
     // integration tests
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.2")
     testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.2")
     testImplementation("org.apache.httpcomponents:fluent-hc:4.5.13")
-
-    implementation("com.github.dwp:dataworks-common-logging:0.0.6")
+    testImplementation("io.ktor:ktor-client-core:1.5.1")
+    testImplementation("io.ktor:ktor-client-gson:1.5.1")
+    testImplementation("io.ktor:ktor-client-apache:1.5.1")
 }
 
 tasks.withType<KotlinCompile> {

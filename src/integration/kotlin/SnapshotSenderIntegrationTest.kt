@@ -26,8 +26,12 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.assertions.json.shouldMatchJson
+import io.ktor.client.*
+import io.ktor.client.features.json.*
+import io.ktor.client.request.*
 
 class SnapshotSenderIntegrationTest : StringSpec() {
 
@@ -130,6 +134,78 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                     ]
                 }""")
         }
+
+        "It should have pushed metrics " {
+            val response = client.get<JsonObject>("http://prometheus:9090/api/v1/targets/metadata")
+            val metricNames = response["data"].asJsonArray
+                .map(JsonElement::getAsJsonObject)
+                .filter {
+                    it["target"].asJsonObject["job"].asJsonPrimitive.asString == "pushgateway"
+                }
+                .map {
+                    it["metric"].asJsonPrimitive.asString
+                }
+                .filterNot {
+                    it.startsWith("go_") || it.startsWith("process_") ||
+                            it.startsWith("pushgateway_") || it.startsWith("push_")
+                }
+
+            metricNames.sorted().forEach(::println)
+
+            metricNames shouldContainAll listOf("snapshot_sender_files_posted_successfully",
+                "snapshot_sender_process_key_duration",
+                "snapshot_sender_decrypt_item_duration",
+                "snapshot_sender_filter_items_duration",
+                "snapshot_sender_files_retried_post",
+                "snapshot_sender_rejected_files",
+                "snapshot_sender_blocked_topic_files",
+                "snapshot_sender_post_file_duration",
+                "snapshot_sender_read_s3_duration",
+                "snapshot_sender_items_read_from_s3",
+                "snapshot_sender_increment_sent_count_duration",
+                "snapshot_sender_set_success_status_duration",
+                "snapshot_sender_set_collection_status_duration",
+                "snapshot_sender_get_completion_status_duration",
+                "snapshot_sender_successful_collections",
+                "snapshot_sender_completed_non_empty_collections",
+                "snapshot_sender_completed_empty_collections",
+                "snapshot_sender_incremented_files_sent",
+                "snapshot_sender_succcessful_runs",
+                "snapshot_sender_failed_runs",
+                "snapshot_sender_decrypt_key_duration",
+                "snapshot_sender_dks_keys_decrypted",
+                "snapshot_sender_dks_key_decryption_retries",
+                "snapshot_sender_monitoring_messages_sent",
+                "snapshot_sender_monitoring_message_send_duration",
+                "snapshot_sender_post_success_file_duration",
+                "snapshot_sender_success_files_sent",
+                "snapshot_sender_success_file_sending_retries",
+            )
+        }
+
+        "It should have pushed correct records post metrics " {
+            validateMetric("""snapshot_sender_files_posted_successfully{topic="db.core.claimant"}""", "100")
+        }
+
+        "It should have pushed correct successful runs metrics " {
+            validateMetric("""snapshot_sender_succcessful_runs{correlation_id="123"}""", "1")
+        }
+
+        "It should have pushed correct incremented files sent metrics " {
+            validateMetric("""snapshot_sender_incremented_files_sent{topic="db.core.claimant"}""", "100")
+        }
+
+        "It should have pushed correct successful collections metrics " {
+            validateMetric("""snapshot_sender_successful_collections""", "1")
+        }
+
+        "It should have pushed correct completed non empty collections metrics " {
+            validateMetric("""snapshot_sender_completed_non_empty_collections""", "1")
+        }
+
+        "It should have pushed correct completed empty collections metrics " {
+            validateMetric("""snapshot_sender_completed_empty_collections""", "1")
+        }
     }
 
     private fun validateQueueMessage(queueUrl: String, expectedMessageOne: String, expectedMessageTwo: String) {
@@ -151,6 +227,14 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         }
         messages.forEach{ deleteMessage(queueUrl, it) }
         return queueMessages(queueUrl, accumulated + messages)
+    }
+
+    private suspend fun validateMetric(resource: String, expected: String) {
+        val response = client.get<JsonObject>("http://prometheus:9090/api/v1/query?query=$resource")
+        val results = response["data"].asJsonObject["result"].asJsonArray
+        results.size() shouldBe 1
+        val result = results[0].asJsonObject["value"].asJsonArray[1].asJsonPrimitive.asString
+        result shouldBe expected
     }
 
     private fun deleteMessage(queueUrl: String, it: Message) = amazonSqs.deleteMessage(queueUrl, it.receiptHandle)
@@ -194,6 +278,14 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         private const val SECRET_KEY = "secretKey"
 
         private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-queue"
+
+        val client = HttpClient {
+            install(JsonFeature) {
+                serializer = GsonSerializer {
+                    setPrettyPrinting()
+                }
+            }
+        }
 
         private val s3: AmazonS3 by lazy {
             with (AmazonS3ClientBuilder.standard()) {

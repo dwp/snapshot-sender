@@ -23,6 +23,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.net.SocketTimeoutException
 import java.net.URI
+import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
@@ -43,6 +44,8 @@ class SuccessServiceImplTest {
         System.setProperty("environment", "test")
         System.setProperty("correlation_id", "123")
         reset(httpClientProvider)
+        reset(successFilesSentCounter)
+        reset(successFilesRetriedCounter)
     }
 
     @SpyBean
@@ -55,8 +58,16 @@ class SuccessServiceImplTest {
     @Autowired
     private lateinit var niFiUtility: NiFiUtility
 
+    @MockBean(name = "successFilesSentCounter")
+    private lateinit var successFilesSentCounter: Counter
+
+    @MockBean(name = "successFilesRetriedCounter")
+    private lateinit var successFilesRetriedCounter: Counter
+
     @Test
     fun willPostPayloadWithAppropriateHeaders() {
+        val successFilesSentCounterChild = mock<Counter.Child>()
+        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
 
         System.setProperty("topic_name", "db.core.toDo")
 
@@ -105,10 +116,16 @@ class SuccessServiceImplTest {
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
+
+        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
+        verifyZeroInteractions(successFilesRetriedCounter)
     }
 
     @Test
     fun willPostPayloadWithAppropriateHeadersWhenNoPrefixForTopic() {
+        val successFilesSentCounterChild = mock<Counter.Child>()
+        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
+
         System.setProperty("topic_name", "core.toDo")
 
         val status = mock<StatusLine> {
@@ -155,10 +172,19 @@ class SuccessServiceImplTest {
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
+
+        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
+        verifyZeroInteractions(successFilesRetriedCounter)
     }
 
     @Test
     fun testRetriesOnNotOkResponseUntilSuccessful() {
+        val successFilesSentCounterChild = mock<Counter.Child>()
+        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
+
+        val successFilesRetriedCounterChild = mock<Counter.Child>()
+        given(successFilesRetriedCounter.labels(any())).willReturn(successFilesRetriedCounterChild)
+
         System.setProperty("topic_name", "db.core.toDo")
 
         val statusOk = mock<StatusLine> {
@@ -188,10 +214,19 @@ class SuccessServiceImplTest {
         given(httpClientProvider.client()).willReturn(failureClient).willReturn(failureClient).willReturn(successfulClient)
         successService.postSuccessIndicator()
         verify(successService, times(3)).postSuccessIndicator()
+
+        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
+        verify(successFilesRetriedCounterChild, times(2)).inc(1.toDouble())
     }
 
     @Test
     fun testRetriesOnTimeoutUntilSuccessful() {
+        val successFilesSentCounterChild = mock<Counter.Child>()
+        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
+
+        val successFilesRetriedCounterChild = mock<Counter.Child>()
+        given(successFilesRetriedCounter.labels(any())).willReturn(successFilesRetriedCounterChild)
+
         System.setProperty("topic_name", "db.core.toDo")
 
         val statusOk = mock<StatusLine> {
@@ -214,5 +249,8 @@ class SuccessServiceImplTest {
         given(httpClientProvider.client()).willReturn(failureClient).willReturn(successfulClient)
         successService.postSuccessIndicator()
         verify(successService, times(2)).postSuccessIndicator()
+
+        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
+        verify(successFilesRetriedCounterChild, times(1)).inc(1.toDouble())
     }
 }

@@ -12,11 +12,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import io.prometheus.client.spring.web.PrometheusTimeMethod
+import io.prometheus.client.Counter
 
 @Component
 @Profile("!noOpReader")
 class S3DirectoryReader(private val s3Client: AmazonS3,
-                        private val s3Utils: S3Utils) : ItemReader<EncryptedStream> {
+                        private val s3Utils: S3Utils,
+                        private val s3ItemsCounter: Counter) : ItemReader<EncryptedStream> {
 
     private var iterator: ListIterator<S3ObjectSummary>? = null
 
@@ -24,6 +27,7 @@ class S3DirectoryReader(private val s3Client: AmazonS3,
     lateinit var s3BucketName: String
 
     @Synchronized
+    @PrometheusTimeMethod(name = "snapshot_sender_read_s3_duration", help = "Duration of reading files from s3")
     override fun read(): EncryptedStream? {
         val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
         return if (iterator.hasNext()) {
@@ -67,6 +71,8 @@ class S3DirectoryReader(private val s3Client: AmazonS3,
                     "export_date" to exportDate,
                     "snapshot_type" to snapshotType
             )
+
+            s3ItemsCounter.labels(s3Utils.s3PrefixFolder).inc(objectSummaries.count().toDouble())
 
             iterator = objectSummaries.listIterator()
         }

@@ -9,7 +9,34 @@
         </layout>
     </appender>
 
+    <appender name="METRICS" class="io.prometheus.client.logback.InstrumentedAppender" />
+
     <root level="${LOG_LEVEL}">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="METRICS"/>
     </root>
+
+    <logger name="org.apache.http" level="ERROR" additivity="true">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.springframework.retry" level="ERROR" additivity="true">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.springframework.batch" level="ERROR" additivity="true">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="com.amazonaws" level="ERROR" additivity="true">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="com.github.benmanes" level="DEBUG" additivity="true">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.springframework.cache" level="TRACE">
+        <appender-ref ref="CONSOLE" />
+    </logger>
 </configuration>

@@ -19,11 +19,15 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.URLEncoder
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Service
 class HttpKeyService(
         private val httpClientProvider: HttpClientProvider,
-        private val uuidGenerator: UUIDGenerator) : KeyService {
+        private val uuidGenerator: UUIDGenerator,
+        private val keysDecryptedCounter: Counter,
+        private val keyDecryptionRetriesCounter: Counter) : KeyService {
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpKeyService::class.toString())
@@ -35,6 +39,7 @@ class HttpKeyService(
         backoff = Backoff(delayExpression = "\${dks.retry.delay:1000}",
             multiplierExpression = "\${dks.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
+    @PrometheusTimeMethod(name = "snapshot_sender_decrypt_key_duration", help = "Duration of decrypting a key")
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
 
         val dksCorrelationId = uuidGenerator.randomUUID()
@@ -60,6 +65,7 @@ class HttpKeyService(
 
                         return when (statusCode) {
                             200 -> {
+                                keysDecryptedCounter.inc(1.toDouble())
                                 val entity = response.entity
                                 val text = BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
                                 EntityUtils.consume(entity)
@@ -78,6 +84,7 @@ class HttpKeyService(
                 }
             }
         } catch (ex: Exception) {
+            keyDecryptionRetriesCounter.inc(1.toDouble())
             when (ex) {
                 is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {
                     throw ex

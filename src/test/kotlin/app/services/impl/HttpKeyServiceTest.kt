@@ -27,6 +27,7 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
+import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HttpKeyService::class])
@@ -48,6 +49,12 @@ class HttpKeyServiceTest {
     @MockBean
     private lateinit var uuidGenerator: UUIDGenerator
 
+    @MockBean(name = "keysDecryptedCounter")
+    private lateinit var keysDecryptedCounter: Counter
+
+    @MockBean(name = "keyDecryptionRetriesCounter")
+    private lateinit var keyDecryptionRetriesCounter: Counter
+
     companion object {
         private var dksCorrelationId = 0
 
@@ -61,10 +68,15 @@ class HttpKeyServiceTest {
         keyService.clearCache()
         reset(this.httpClientProvider)
         reset(this.uuidGenerator)
+        reset(keysDecryptedCounter)
+        reset(keyDecryptionRetriesCounter)
     }
 
     @Test
     fun test_decrypt_key_will_call_server_and_decrypt() {
+        val keysDecryptedCounterChild = mock<Counter.Child>()
+        given(keysDecryptedCounter.labels(any())).willReturn(keysDecryptedCounterChild)
+
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -92,6 +104,8 @@ class HttpKeyServiceTest {
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
         assertEquals("http://dummydks/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        verify(keysDecryptedCounterChild, times(1)).inc(1.toDouble())
+        verifyZeroInteractions(keyDecryptionRetriesCounter)
     }
 
     @Test
@@ -152,6 +166,9 @@ class HttpKeyServiceTest {
 
     @Test
     fun test_decrypt_key_with_server_error_will_retry_with_max_calls() {
+        val keyDecryptionRetriesCounterChild = mock<Counter.Child>()
+        given(keyDecryptionRetriesCounter.labels(any())).willReturn(keyDecryptionRetriesCounterChild)
+
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(503)
         val httpResponse = mock(CloseableHttpResponse::class.java)
@@ -171,6 +188,8 @@ class HttpKeyServiceTest {
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("http://dummydks/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
+
+        verify(keyDecryptionRetriesCounterChild, times(5)).inc(1.toDouble())
     }
 
     @Test

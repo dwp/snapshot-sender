@@ -14,6 +14,10 @@ The following settings are typically set by Terraform and must match as follows:
 |  `--s3.prefix.folder`    | business-data-export/JobNumber/2019-12-31 | Where the sender will search for file to pick up |
 |  `--s3.htme.root.folder` | business-data-export | The root location the htme will output into - should be the start of `s3.prefix.folder` |
 |  `--s3.status.folder`    | business-sender-export | Where the sender records its progress - should be a sibling folder of `s3.htme.root.folder` |
+| `--delete.metrics` | true | Wipe the metrics from the pushgateway at the end of the run |
+| `--prometheus.scrape.interval` | 70000 | How long to wait before deleting matrics from the pushgateway |
+| `--pushgateway.host` | | The name of the pushgateway instance to which metrics must be pushed |
+| `--pushgateway.port` | 9091 | The port on which the pushgateway instance is listening |
 
 ## Makefile targets
 

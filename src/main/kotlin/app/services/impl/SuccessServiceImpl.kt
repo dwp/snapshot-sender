@@ -18,9 +18,14 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Component
-class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, private val nifiUtility: NiFiUtility): SuccessService {
+class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, 
+    private val nifiUtility: NiFiUtility,
+    private val successFilesSentCounter: Counter,
+    private val successFilesRetriedCounter: Counter): SuccessService {
 
     @Retryable(
         value = [Exception::class],
@@ -30,6 +35,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, pri
             multiplierExpression = "\${success.retry.multiplier:2}"
         )
     )
+    @PrometheusTimeMethod(name = "snapshot_sender_post_success_file_duration", help = "Duration of posting a success file")
     override fun postSuccessIndicator() {
         databaseAndCollectionMatchResult()?.let { match ->
             val (database, collection) = match.destructured
@@ -63,6 +69,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, pri
                                 "status_table_name" to statusTableName,
                                 "correlation_id" to correlationId()
                             )
+                            successFilesSentCounter.inc(1.toDouble())
                         }
                         else -> {
                             logger.warn(
@@ -78,6 +85,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, pri
                                 "status_table_name" to statusTableName,
                                 "correlation_id" to correlationId()
                             )
+                            successFilesRetriedCounter.inc(1.toDouble())
                             throw SuccessException("Failed to post success indicator $fileName, response: ${response.statusLine.statusCode}")
                         }
                     }

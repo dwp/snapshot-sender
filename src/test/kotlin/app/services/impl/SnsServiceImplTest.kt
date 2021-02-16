@@ -17,6 +17,7 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
+import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
@@ -28,6 +29,9 @@ import org.springframework.test.util.ReflectionTestUtils
 ])
 class SnsServiceImplTest {
 
+    @MockBean(name = "monitoringMessagesSentCounter")
+    private lateinit var monitoringMessagesSentCounter: Counter
+
     @Before
     fun before() {
         System.setProperty("correlation_id", "correlation.id")
@@ -36,10 +40,14 @@ class SnsServiceImplTest {
         ReflectionTestUtils.setField(snsService, "s3prefix", "prefix")
         ReflectionTestUtils.setField(snsService, "exportDate", "2020-01-01")
         reset(amazonSNS)
+        reset(monitoringMessagesSentCounter)
     }
 
     @Test
     fun sendsTheCorrectMonitoringMessageOnSuccess() {
+        val monitoringMessagesSentCounterChild = mock<Counter.Child>()
+        given(monitoringMessagesSentCounter.labels(any())).willReturn(monitoringMessagesSentCounterChild)
+
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         argumentCaptor<PublishRequest> {
@@ -56,11 +64,15 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
+        verify(monitoringMessagesSentCounterChild, times(1)).inc(1.toDouble(), "Critical", "Information")
         verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
     fun sendsTheCorrectMonitoringMessageOnFailure() {
+        val monitoringMessagesSentCounterChild = mock<Counter.Child>()
+        given(monitoringMessagesSentCounter.labels(any())).willReturn(monitoringMessagesSentCounterChild)
+
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
         argumentCaptor<PublishRequest> {
@@ -77,6 +89,7 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
+        verify(monitoringMessagesSentCounterChild, times(1)).inc(1.toDouble(), "High", "Error")
         verifyNoMoreInteractions(amazonSNS)
     }
 
@@ -85,6 +98,7 @@ class SnsServiceImplTest {
         ReflectionTestUtils.setField(snsService, "monitoringTopicArn", "")
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         verifyZeroInteractions(amazonSNS)
+        verifyZeroInteractions(monitoringMessagesSentCounter)
     }
 
     @Test

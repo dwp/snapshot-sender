@@ -16,17 +16,26 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import io.prometheus.client.Counter
+import app.exceptions.MetadataException
+import app.exceptions.BlockedTopicException
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Component
 class HttpWriter(private val httpClientProvider: HttpClientProvider,
                  private val exportStatusService: ExportStatusService,
                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
-                 private val nifiUtility: NiFiUtility) : ItemWriter<DecryptedStream> {
+                 private val nifiUtility: NiFiUtility,
+                 private val successPostFileCounter: Counter,
+                 private val retriedPostFilesCounter: Counter,
+                 private val rejectedFilesCounter: Counter,
+                 private val blockedTopicCounter: Counter) : ItemWriter<DecryptedStream> {
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
 
     @Throws(Exception::class)
+    @PrometheusTimeMethod(name = "snapshot_sender_post_file_duration", help = "Duration of posting a file")
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing items to S3", "number_of_items" to items.size.toString())
         items.forEach(::postItem)
@@ -34,12 +43,24 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     private fun postItem(item: DecryptedStream) {
 
-        logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
-        val (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
+        logger.info("Checking item to write", "file_name" to item.fileName, "full_path" to item.fullPath)
+
+        try {
+            val (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
+        } catch (ex: MetadataException) {
+            rejectedFilesCounter.labels(item.fileName).inc(1.toDouble())
+            throw ex
+        }
+        
         val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
         val topic = "$topicPrefix$database.$collection"
 
-        filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
+        try {
+            filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
+        } catch (ex: BlockedTopicException) {
+            blockedTopicCounter.labels(item.fileName).inc(1.toDouble())
+            throw ex
+        }
 
         val filenameHeader = item.fileName.replace(Regex("""\.txt\.gz$"""), ".json.gz")
 
@@ -66,7 +87,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
             it.execute(post).use { response ->
                 when (response.statusLine.statusCode) {
-                    200 -> {
+                    200 -> {                    
+                        successPostFileCounter.labels(item.fileName).inc(1.toDouble())
                         logger.info("Successfully posted file",
                                 "database" to database,
                                 "collection" to collection,
@@ -85,6 +107,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                         response.allHeaders.forEach {
                             headers.add(it.name to it.value)
                         }
+
+                        retriedPostFilesCounter.labels(item.fileName).inc(1.toDouble())
 
                         logger.warn("Failed to post the provided item",
                                 "file_name" to item.fullPath,
