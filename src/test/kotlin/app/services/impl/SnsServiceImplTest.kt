@@ -22,7 +22,6 @@ import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
-@ActiveProfiles("unitTest")
 @SpringBootTest(classes = [SnsServiceImpl::class])
 @TestPropertySource(properties = [
     "sns.retry.maxAttempts=10",
@@ -41,6 +40,9 @@ class SnsServiceImplTest {
     @MockBean(name = "monitoringMessagesSentCounter")
     private lateinit var monitoringMessagesSentCounter: Counter
 
+    @MockBean
+    private lateinit var monitoringMessagesSentCounterChild: Counter.Child
+
     @Before
     fun before() {
         System.setProperty("correlation_id", "correlation.id")
@@ -50,6 +52,8 @@ class SnsServiceImplTest {
         ReflectionTestUtils.setField(snsService, "exportDate", "2020-01-01")
         reset(amazonSNS)
         reset(monitoringMessagesSentCounter)
+
+        given(monitoringMessagesSentCounter.labels(any())).willReturn(monitoringMessagesSentCounterChild)
     }
 
     @Test

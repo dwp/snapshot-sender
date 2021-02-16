@@ -36,7 +36,6 @@ import java.io.ByteArrayInputStream
 import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "unitTest", "httpWriter")
 @SpringBootTest(classes = [HttpWriter::class, NiFiUtility::class])
 @TestPropertySource(properties = [
     "data.key.service.url=datakey.service:8090",
@@ -78,14 +77,26 @@ class HttpWriterTest {
     @MockBean(name = "successPostFileCounter")
     private lateinit var successPostFileCounter: Counter
 
+    @MockBean
+    private lateinit var successPostFileCounterChild: Counter.Child
+
     @MockBean(name = "retriedPostFilesCounter")
     private lateinit var retriedPostFilesCounter: Counter
+
+    @MockBean
+    private lateinit var retriedPostFilesCounterChild: Counter.Child
 
     @MockBean(name = "rejectedFilesCounter")
     private lateinit var rejectedFilesCounter: Counter
 
+    @MockBean
+    private lateinit var rejectedFilesCounterChild: Counter.Child
+
     @MockBean(name = "blockedTopicFileCounter")
     private lateinit var blockedTopicFileCounter: Counter
+
+    @MockBean
+    private lateinit var blockedTopicFileCounterChild: Counter.Child
 
     val mockAppender: Appender<ILoggingEvent> = mock()
 
@@ -105,6 +116,11 @@ class HttpWriterTest {
         reset(retriedPostFilesCounter)
         reset(rejectedFilesCounter)
         reset(blockedTopicFileCounter)
+
+        given(successPostFileCounter.labels(any())).willReturn(successPostFileCounterChild)
+        given(retriedPostFilesCounter.labels(any())).willReturn(retriedPostFilesCounterChild)
+        given(rejectedFilesCounter.labels(any())).willReturn(rejectedFilesCounterChild)
+        given(blockedTopicFileCounter.labels(any())).willReturn(blockedTopicFileCounterChild)
     }
 
     @Test
@@ -118,9 +134,6 @@ class HttpWriterTest {
         val statusLine = mock<StatusLine>()
         given(statusLine.statusCode).willReturn(200)
         given(httpResponse.statusLine).willReturn((statusLine))
-
-        val successPostFileCounterChild = mock<Counter.Child>()
-        given(successPostFileCounter.labels(any())).willReturn(successPostFileCounterChild)
 
         httpWriter.write(mutableListOf(decryptedStream))
 
@@ -143,7 +156,6 @@ class HttpWriterTest {
         given(httpResponse.statusLine).willReturn((statusLine))
 
         val retriedPostFilesCounterChild = mock<Counter.Child>()
-        given(retriedPostFilesCounter.labels(any())).willReturn(retriedPostFilesCounterChild)
 
         val header = mock<Header>()
         given(header.name).willReturn("HEADER_NAME")
@@ -322,7 +334,6 @@ class HttpWriterTest {
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         val rejectedFilesCounterChild = mock<Counter.Child>()
-        given(rejectedFilesCounter.labels(any())).willReturn(rejectedFilesCounterChild)
 
         try {
             httpWriter.write(mutableListOf(decryptedStream))
@@ -435,7 +446,6 @@ class HttpWriterTest {
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
         val blockedTopicFileCounterChild = mock<Counter.Child>()
-        given(blockedTopicFileCounter.labels(any())).willReturn(blockedTopicFileCounterChild)
 
         whenever(filterBlockedTopicsUtils.checkIfTopicIsBlocked("db.crypto.unencrypted", decryptedStream.fullPath)).doThrow(BlockedTopicException("Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"))
 
