@@ -131,7 +131,7 @@ class S3DirectoryReaderTest {
         verify(amazonS3, times(1)).listObjectsV2(any<ListObjectsV2Request>())
         verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
         verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
-        verify(s3ItemsCounterChild, times(1)).inc()
+        verify(s3ItemsCounterChild, times(1)).inc(1.toDouble())
         verifyNoMoreInteractions(amazonS3)
 
         assertObjectMetadata(objectMetadata1, actualMetadata1)
@@ -210,7 +210,7 @@ class S3DirectoryReaderTest {
         verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
         verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(amazonS3)
-        verifyZeroInteractions(s3ItemsCounter)
+        verify(s3ItemsCounterChild, times(1)).inc(1.toDouble())
     }
 
     @Test
