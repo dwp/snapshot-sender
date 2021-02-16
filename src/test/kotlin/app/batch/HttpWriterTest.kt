@@ -155,8 +155,6 @@ class HttpWriterTest {
         given(statusLine.statusCode).willReturn(400)
         given(httpResponse.statusLine).willReturn((statusLine))
 
-        val retriedPostFilesCounterChild = mock<Counter.Child>()
-
         val header = mock<Header>()
         given(header.name).willReturn("HEADER_NAME")
         given(header.value).willReturn("HEADER_VALUE")
@@ -333,8 +331,6 @@ class HttpWriterTest {
         val filename = "dbcoreaddressDeclaration-000001"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
-        val rejectedFilesCounterChild = mock<Counter.Child>()
-
         try {
             httpWriter.write(mutableListOf(decryptedStream))
             fail("Expected MetadataException")
@@ -444,8 +440,6 @@ class HttpWriterTest {
 
         val filename = "db.crypto.unencrypted-045-050-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
-
-        val blockedTopicFileCounterChild = mock<Counter.Child>()
 
         whenever(filterBlockedTopicsUtils.checkIfTopicIsBlocked("db.crypto.unencrypted", decryptedStream.fullPath)).doThrow(BlockedTopicException("Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"))
 
