@@ -107,7 +107,7 @@ class HttpWriterTest {
     }
 
     @Test
-    fun test_write_to_nifi_increments_success_counter() {
+    fun testWriteToNifiIncrementsSuccessCounter() {
         val filename = "db.core.addressDeclaration-001-002-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = mock<CloseableHttpClient>()
@@ -130,7 +130,7 @@ class HttpWriterTest {
     }
 
     @Test
-    fun test_failed_send_increments_retry_counter() {
+    fun testFailedSendIncrementsRetryCounter() {
         val filename = "db.a.b-045-050-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
         val httpClient = mock<CloseableHttpClient>()
