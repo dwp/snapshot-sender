@@ -45,16 +45,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
         logger.info("Checking item to write", "file_name" to item.fileName, "full_path" to item.fullPath)
 
-        var database = ""
-        var collection = ""
-
-        try {
-            (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
-        } catch (ex: MetadataException) {
-            rejectedFilesCounter.labels(item.fileName).inc(1.toDouble())
-            throw ex
-        }
-        
+        val (database, collection) = getDatabaseAndCollection(item.fileName)
         val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
         val topic = "$topicPrefix$database.$collection"
 
@@ -127,6 +118,14 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
             }
         }
     }
+
+    private fun getDatabaseAndCollection(filename: String) =
+        try {
+            TextParsingUtility.databaseAndCollection(filename)
+        } catch (ex: MetadataException) {
+            rejectedFilesCounter.labels(filename).inc(1.toDouble())
+            throw ex
+        }}
 
     @Value("\${nifi.url}")
     private lateinit var nifiUrl: String
