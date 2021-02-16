@@ -23,15 +23,16 @@ class SnsServiceImpl(private val amazonSns: AmazonSNS,
             multiplierExpression = "\${sns.retry.multiplier:2}"))
     @PrometheusTimeMethod(name = "snapshot_sender_monitoring_message_send_duration", help = "Duration of sending a monitoring message")
     override fun sendMonitoringMessage(completionStatus: SendingCompletionStatus) =
-        sendMessage(monitoringTopicArn, monitoringPayload(completionStatus))
+        sendMessage(monitoringTopicArn, monitoringPayload(completionStatus), completionStatus)
 
-    private fun sendMessage(topicArn: String, payload: String) {
+    private fun sendMessage(topicArn: String, payload: String, completionStatus: SendingCompletionStatus) {
         topicArn.takeIf(String::isNotBlank)?.let { arn ->
             logger.info("Publishing message to topic", "arn" to arn)
             val result = amazonSns.publish(request(arn, payload))
             logger.info("Published message to topic", "arn" to arn,
                 "message_id" to result.messageId, "snapshot_type" to snapshotType)
-            monitoringMessagesSentCounter.labels(payload["severity"], payload["notification_type"]).inc(1.toDouble())
+            monitoringMessagesSentCounter.labels(severity(completionStatus), 
+                notificationType(completionStatus)).inc(1.toDouble())
         } ?: run {
             logger.info("Not publishing message to topic", "reason" to "No arn configured")
         }
