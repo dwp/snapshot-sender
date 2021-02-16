@@ -29,6 +29,12 @@ import io.prometheus.client.Counter
 ])
 class SnsServiceImplTest {
 
+    @MockBean
+    private lateinit var amazonSNS: AmazonSNS
+
+    @Autowired
+    private lateinit var snsService: SnsService
+
     @MockBean(name = "monitoringMessagesSentCounter")
     private lateinit var monitoringMessagesSentCounter: Counter
 
@@ -123,12 +129,6 @@ class SnsServiceImplTest {
         verify(amazonSNS, times(10)).publish(any())
         verifyNoMoreInteractions(amazonSNS)
     }
-
-    @MockBean
-    private lateinit var amazonSNS: AmazonSNS
-
-    @Autowired
-    private lateinit var snsService: SnsService
 
     companion object {
         private const val TOPIC_ARN = "arn:sns"

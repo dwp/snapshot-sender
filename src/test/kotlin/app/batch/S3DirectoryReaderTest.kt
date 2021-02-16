@@ -29,7 +29,7 @@ import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("httpDataKeyService", "unitTest", "S3SourceData")
-@SpringBootTest
+@SpringBootTest(classes = [S3DirectoryReader::class])
 @TestPropertySource(properties = [
     "data.key.service.url=dummy.com:8090",
     "s3.bucket=bucket1",

@@ -179,12 +179,6 @@ class SuccessServiceImplTest {
 
     @Test
     fun testRetriesOnNotOkResponseUntilSuccessful() {
-        val successFilesSentCounterChild = mock<Counter.Child>()
-        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
-
-        val successFilesRetriedCounterChild = mock<Counter.Child>()
-        given(successFilesRetriedCounter.labels(any())).willReturn(successFilesRetriedCounterChild)
-
         System.setProperty("topic_name", "db.core.toDo")
 
         val statusOk = mock<StatusLine> {
@@ -214,19 +208,10 @@ class SuccessServiceImplTest {
         given(httpClientProvider.client()).willReturn(failureClient).willReturn(failureClient).willReturn(successfulClient)
         successService.postSuccessIndicator()
         verify(successService, times(3)).postSuccessIndicator()
-
-        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
-        verify(successFilesRetriedCounterChild, times(2)).inc(1.toDouble())
     }
 
     @Test
     fun testRetriesOnTimeoutUntilSuccessful() {
-        val successFilesSentCounterChild = mock<Counter.Child>()
-        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
-
-        val successFilesRetriedCounterChild = mock<Counter.Child>()
-        given(successFilesRetriedCounter.labels(any())).willReturn(successFilesRetriedCounterChild)
-
         System.setProperty("topic_name", "db.core.toDo")
 
         val statusOk = mock<StatusLine> {
@@ -249,8 +234,5 @@ class SuccessServiceImplTest {
         given(httpClientProvider.client()).willReturn(failureClient).willReturn(successfulClient)
         successService.postSuccessIndicator()
         verify(successService, times(2)).postSuccessIndicator()
-
-        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
-        verify(successFilesRetriedCounterChild, times(1)).inc(1.toDouble())
     }
 }
