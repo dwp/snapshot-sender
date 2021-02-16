@@ -64,7 +64,7 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
-        verify(monitoringMessagesSentCounterChild, times(1)).inc(1.toDouble(), "Critical", "Information")
+        verify(monitoringMessagesSentCounterChild, times(1)).labels("Critical", "Information").inc(1.toDouble())
         verifyNoMoreInteractions(amazonSNS)
     }
 
@@ -89,7 +89,7 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
-        verify(monitoringMessagesSentCounterChild, times(1)).inc(1.toDouble(), "High", "Error")
+        verify(monitoringMessagesSentCounterChild, times(1)).labels("High", "Error").inc(1.toDouble())
         verifyNoMoreInteractions(amazonSNS)
     }
 

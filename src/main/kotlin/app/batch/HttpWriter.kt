@@ -45,6 +45,9 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
         logger.info("Checking item to write", "file_name" to item.fileName, "full_path" to item.fullPath)
 
+        var database = ""
+        var collection = ""
+
         try {
             val (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
         } catch (ex: MetadataException) {
