@@ -10,8 +10,14 @@ import org.springframework.batch.core.JobExecution
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor
+import org.springframework.test.context.TestPropertySource
+import org.springframework.test.context.ActiveProfiles
 
 @RunWith(SpringRunner::class)
+@ActiveProfiles("unitTest")
+@TestPropertySource(properties = [
+    "pushgateway.host=pushgateway",
+])
 class JobCompletionNotificationListenerTest {
 
     @Before

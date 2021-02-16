@@ -29,7 +29,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                  private val successPostFileCounter: Counter,
                  private val retriedPostFilesCounter: Counter,
                  private val rejectedFilesCounter: Counter,
-                 private val blockedTopicCounter: Counter) : ItemWriter<DecryptedStream> {
+                 private val blockedTopicFileCounter: Counter) : ItemWriter<DecryptedStream> {
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
@@ -52,7 +52,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         try {
             filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
         } catch (ex: BlockedTopicException) {
-            blockedTopicCounter.labels(item.fileName).inc(1.toDouble())
+            blockedTopicFileCounter.labels(item.fileName).inc()
             throw ex
         }
 
@@ -82,7 +82,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
             it.execute(post).use { response ->
                 when (response.statusLine.statusCode) {
                     200 -> {                    
-                        successPostFileCounter.labels(item.fileName).inc(1.toDouble())
+                        successPostFileCounter.labels(item.fileName).inc()
                         logger.info("Successfully posted file",
                                 "database" to database,
                                 "collection" to collection,
@@ -102,7 +102,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                             headers.add(it.name to it.value)
                         }
 
-                        retriedPostFilesCounter.labels(item.fileName).inc(1.toDouble())
+                        retriedPostFilesCounter.labels(item.fileName).inc()
 
                         logger.warn("Failed to post the provided item",
                                 "file_name" to item.fullPath,
@@ -123,7 +123,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         try {
             TextParsingUtility.databaseAndCollection(filename)
         } catch (ex: MetadataException) {
-            rejectedFilesCounter.labels(filename).inc(1.toDouble())
+            rejectedFilesCounter.labels(filename).inc()
             throw ex
         }
 

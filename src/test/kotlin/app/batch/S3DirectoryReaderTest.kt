@@ -39,11 +39,10 @@ import io.prometheus.client.Counter
     "nifi.url=http://nifi:9090",
     "export.date=2019-01-01",
     "snapshot.type=full",
-    "shutdown.flag=false"
+    "shutdown.flag=false",
+    "pushgateway.host=pushgateway",
 ])
 class S3DirectoryReaderTest {
-
-
     private lateinit var listObjectsV2Result: ListObjectsV2Result
     private lateinit var s3ObjectSummary1: S3ObjectSummary
     private lateinit var s3ObjectSummary2: S3ObjectSummary
@@ -146,7 +145,7 @@ class S3DirectoryReaderTest {
         verify(amazonS3, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
         verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
         verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
-        verify(s3ItemsCounterChild, times(1)).inc(1.toDouble())
+        verify(s3ItemsCounterChild, times(1)).inc()
         verifyNoMoreInteractions(amazonS3)
 
         assertObjectMetadata(objectMetadata1, actualMetadata1)

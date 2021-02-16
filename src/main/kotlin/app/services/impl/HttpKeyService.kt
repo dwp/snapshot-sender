@@ -65,7 +65,7 @@ class HttpKeyService(
 
                         return when (statusCode) {
                             200 -> {
-                                keysDecryptedCounter.inc(1.toDouble())
+                                keysDecryptedCounter.inc()
                                 val entity = response.entity
                                 val text = BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
                                 EntityUtils.consume(entity)
@@ -84,7 +84,7 @@ class HttpKeyService(
                 }
             }
         } catch (ex: Exception) {
-            keyDecryptionRetriesCounter.inc(1.toDouble())
+            keyDecryptionRetriesCounter.inc()
             when (ex) {
                 is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {
                     throw ex

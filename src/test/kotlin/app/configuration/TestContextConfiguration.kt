@@ -27,11 +27,4 @@ class TestContextConfiguration {
     fun dataKeyService(): KeyService {
         return Mockito.mock(KeyService::class.java)
     }
-
-    @Bean
-    fun counter(): Counter = with(Counter.build()) {
-        name("test_counter")
-        help("Test help")
-        register()
-    }
 }

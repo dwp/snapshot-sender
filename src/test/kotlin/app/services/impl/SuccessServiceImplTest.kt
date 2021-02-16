@@ -20,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 import java.net.SocketTimeoutException
 import java.net.URI
@@ -27,6 +28,7 @@ import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
+@ActiveProfiles("unitTest")
 @SpringBootTest(classes = [SuccessServiceImpl::class, NiFiUtility::class])
 @TestPropertySource(properties = [
     "nifi.url=https://nifi:8091/dummy",
@@ -35,7 +37,8 @@ import io.prometheus.client.Counter
     "dynamodb.status.table.name=test_table",
     "success.retry.maxAttempts=5",
     "success.retry.delay=5",
-    "success.retry.multiplier=1"
+    "success.retry.multiplier=1",
+    "pushgateway.host=pushgateway",
 ])
 class SuccessServiceImplTest {
 
@@ -66,9 +69,6 @@ class SuccessServiceImplTest {
 
     @Test
     fun willPostPayloadWithAppropriateHeaders() {
-        val successFilesSentCounterChild = mock<Counter.Child>()
-        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
-
         System.setProperty("topic_name", "db.core.toDo")
 
         val status = mock<StatusLine> {
@@ -117,15 +117,12 @@ class SuccessServiceImplTest {
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
 
-        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
+        verify(successFilesSentCounter, times(1)).inc()
         verifyZeroInteractions(successFilesRetriedCounter)
     }
 
     @Test
     fun willPostPayloadWithAppropriateHeadersWhenNoPrefixForTopic() {
-        val successFilesSentCounterChild = mock<Counter.Child>()
-        given(successFilesSentCounter.labels(any())).willReturn(successFilesSentCounterChild)
-
         System.setProperty("topic_name", "core.toDo")
 
         val status = mock<StatusLine> {
@@ -173,7 +170,7 @@ class SuccessServiceImplTest {
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
 
-        verify(successFilesSentCounterChild, times(1)).inc(1.toDouble())
+        verify(successFilesSentCounter, times(1)).inc()
         verifyZeroInteractions(successFilesRetriedCounter)
     }
 

@@ -17,15 +17,18 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
+import org.springframework.test.context.ActiveProfiles
 import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
+@ActiveProfiles("unitTest")
 @SpringBootTest(classes = [SnsServiceImpl::class])
 @TestPropertySource(properties = [
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
-    "sns.retry.multiplier=1"
+    "sns.retry.multiplier=1",
+    "pushgateway.host=pushgateway",
 ])
 class SnsServiceImplTest {
 
@@ -52,7 +55,7 @@ class SnsServiceImplTest {
     @Test
     fun sendsTheCorrectMonitoringMessageOnSuccess() {
         val monitoringMessagesSentCounterChild = mock<Counter.Child>()
-        given(monitoringMessagesSentCounter.labels(any())).willReturn(monitoringMessagesSentCounterChild)
+        given(monitoringMessagesSentCounter.labels(any(), any())).willReturn(monitoringMessagesSentCounterChild)
 
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
@@ -70,14 +73,14 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
-        verify(monitoringMessagesSentCounterChild, times(1)).inc(1.toDouble())
+        verify(monitoringMessagesSentCounterChild, times(1)).inc()
         verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
     fun sendsTheCorrectMonitoringMessageOnFailure() {
         val monitoringMessagesSentCounterChild = mock<Counter.Child>()
-        given(monitoringMessagesSentCounter.labels(any())).willReturn(monitoringMessagesSentCounterChild)
+        given(monitoringMessagesSentCounter.labels(any(), any())).willReturn(monitoringMessagesSentCounterChild)
 
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
@@ -95,7 +98,7 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
-        verify(monitoringMessagesSentCounterChild, times(1)).inc(1.toDouble())
+        verify(monitoringMessagesSentCounterChild, times(1)).inc()
         verifyNoMoreInteractions(amazonSNS)
     }
 

@@ -69,7 +69,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider,
                                 "status_table_name" to statusTableName,
                                 "correlation_id" to correlationId()
                             )
-                            successFilesSentCounter.inc(1.toDouble())
+                            successFilesSentCounter.inc()
                         }
                         else -> {
                             logger.warn(
@@ -85,7 +85,7 @@ class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider,
                                 "status_table_name" to statusTableName,
                                 "correlation_id" to correlationId()
                             )
-                            successFilesRetriedCounter.inc(1.toDouble())
+                            successFilesRetriedCounter.inc()
                             throw SuccessException("Failed to post success indicator $fileName, response: ${response.statusLine.statusCode}")
                         }
                     }

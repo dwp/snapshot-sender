@@ -32,7 +32,7 @@ class SnsServiceImpl(private val amazonSns: AmazonSNS,
             logger.info("Published message to topic", "arn" to arn,
                 "message_id" to result.messageId, "snapshot_type" to snapshotType)
             monitoringMessagesSentCounter.labels(severity(completionStatus), 
-                notificationType(completionStatus)).inc(1.toDouble())
+                notificationType(completionStatus)).inc()
         } ?: run {
             logger.info("Not publishing message to topic", "reason" to "No arn configured")
         }

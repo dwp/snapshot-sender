@@ -38,7 +38,7 @@ class DynamoDBExportStatusService(
     @PrometheusTimeMethod(name = "snapshot_sender_increment_sent_count_duration", help = "Duration of incrementing sent count")
     override fun incrementSentCount(fileSent: String) {
         val result = dynamoDB.updateItem(incrementFilesSentRequest())
-        filesSentIncrementedCounter.inc(1.toDouble())
+        filesSentIncrementedCounter.inc()
         logger.info("Incremented files sent",
                 "file_sent" to fileSent,
                 "files_sent" to "${result.attributes["FilesSent"]?.n}")
@@ -51,7 +51,7 @@ class DynamoDBExportStatusService(
     @PrometheusTimeMethod(name = "snapshot_sender_set_success_status_duration", help = "Duration of setting success status")
     override fun setSuccessStatus() {
         dynamoDB.updateItem(setStatusSuccessRequest())
-        successfulCollectionCounter.inc(1.toDouble())
+        successfulCollectionCounter.inc()
     }
 
     @Retryable(value = [Exception::class],
@@ -63,7 +63,7 @@ class DynamoDBExportStatusService(
             when (collectionStatus()) {
                 CollectionStatus.SENT -> {
                     val result = dynamoDB.updateItem(setStatusSentRequest())
-                    sentNonEmptyCollectionCounter.inc(1.toDouble())
+                    sentNonEmptyCollectionCounter.inc()
                     logger.info("Collection status after update",
                         "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
                     CollectionStatus.SENT
@@ -71,7 +71,7 @@ class DynamoDBExportStatusService(
 
                 CollectionStatus.NO_FILES_EXPORTED -> {
                     val result = dynamoDB.updateItem(setStatusReceivedRequest())
-                    sentEmptyCollectionCounter.inc(1.toDouble())
+                    sentEmptyCollectionCounter.inc()
                     logger.info("Collection status after update",
                         "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
                     CollectionStatus.NO_FILES_EXPORTED
@@ -91,11 +91,11 @@ class DynamoDBExportStatusService(
             exportStatusTable().query(statusQuerySpec()).map(::collectionStatus).run {
                 when {
                     all(::completedSuccessfully) -> {
-                        successfulFullRunCounter.inc(1.toDouble())
+                        successfulFullRunCounter.inc()
                         SendingCompletionStatus.COMPLETED_SUCCESSFULLY
                     }
                     any(::completedUnsuccessfully) -> {
-                        failedFullRunCounter.inc(1.toDouble())
+                        failedFullRunCounter.inc()
                         SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY
                     }
                     else -> {

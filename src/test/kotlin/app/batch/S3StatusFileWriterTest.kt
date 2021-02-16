@@ -22,6 +22,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
+import io.prometheus.client.exporter.PushGateway
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("httpDataKeyService", "unitTest", "S3SourceData")
@@ -35,7 +36,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
     "snapshot.type=full",
-    "shutdown.flag=false"
+    "shutdown.flag=false",
+    "pushgateway.host=pushgateway",
 ])
 class S3StatusFileWriterTest {
 
@@ -50,6 +52,9 @@ class S3StatusFileWriterTest {
 
     @MockBean
     private lateinit var amazonS3: AmazonS3
+
+    @MockBean
+    private lateinit var pushGateway: PushGateway
 
     val mockAppender: Appender<ILoggingEvent> = mock()
 

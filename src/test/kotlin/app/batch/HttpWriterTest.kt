@@ -48,7 +48,8 @@ import io.prometheus.client.Counter
     "s3.htme.root.folder=exporter-output",
     "snapshot.type=incremental",
     "shutdown.flag=true",
-    "dynamodb.status.table.name=test_table"
+    "dynamodb.status.table.name=test_table",
+    "pushgateway.host=pushgateway",
 ])
 class HttpWriterTest {
 
@@ -83,8 +84,8 @@ class HttpWriterTest {
     @MockBean(name = "rejectedFilesCounter")
     private lateinit var rejectedFilesCounter: Counter
 
-    @MockBean(name = "blockedTopicCounter")
-    private lateinit var blockedTopicCounter: Counter
+    @MockBean(name = "blockedTopicFileCounter")
+    private lateinit var blockedTopicFileCounter: Counter
 
     val mockAppender: Appender<ILoggingEvent> = mock()
 
@@ -103,7 +104,7 @@ class HttpWriterTest {
         reset(successPostFileCounter)
         reset(retriedPostFilesCounter)
         reset(rejectedFilesCounter)
-        reset(blockedTopicCounter)
+        reset(blockedTopicFileCounter)
     }
 
     @Test
@@ -123,10 +124,10 @@ class HttpWriterTest {
 
         httpWriter.write(mutableListOf(decryptedStream))
 
-        verify(successPostFileCounterChild, times(1)).inc(1.toDouble())
+        verify(successPostFileCounterChild, times(1)).inc()
         verifyZeroInteractions(retriedPostFilesCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -152,10 +153,10 @@ class HttpWriterTest {
             httpWriter.write(mutableListOf(decryptedStream))
         }
         
-        verify(retriedPostFilesCounterChild, times(1)).inc(1.toDouble())
+        verify(retriedPostFilesCounterChild, times(1)).inc()
         verifyZeroInteractions(successPostFileCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -177,7 +178,7 @@ class HttpWriterTest {
         verify(mockS3StatusFileWriter, times(1)).writeStatus(decryptedStream.fullPath)
         verifyZeroInteractions(retriedPostFilesCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(4)).doAppend(logCaptor.capture())
@@ -208,7 +209,7 @@ class HttpWriterTest {
         verify(mockS3StatusFileWriter, times(1)).writeStatus(decryptedStream.fullPath)
         verifyZeroInteractions(retriedPostFilesCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(4)).doAppend(logCaptor.capture())
@@ -239,7 +240,7 @@ class HttpWriterTest {
         verify(mockS3StatusFileWriter, times(1)).writeStatus(decryptedStream.fullPath)
         verifyZeroInteractions(retriedPostFilesCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -259,7 +260,7 @@ class HttpWriterTest {
         }
         verifyZeroInteractions(retriedPostFilesCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -279,7 +280,7 @@ class HttpWriterTest {
         }
         verifyZeroInteractions(retriedPostFilesCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -304,7 +305,7 @@ class HttpWriterTest {
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
         verifyZeroInteractions(successPostFileCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
 
         val logCaptor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(4)).doAppend(logCaptor.capture())
@@ -331,10 +332,10 @@ class HttpWriterTest {
             assertEquals("""Rejecting 'dbcoreaddressDeclaration-000001': does not match '^(?:\w+\.)?(?<database>[\w-]+)\.(?<collection>[\w-]+)-\d{3}-\d{3}-\d+\.\w+\.\w+${'$'}'""", ex.message)
         }
         verify(mockS3StatusFileWriter, never()).writeStatus(decryptedStream.fullPath)
-        verify(rejectedFilesCounterChild, times(1)).inc(1.toDouble())
+        verify(rejectedFilesCounterChild, times(1)).inc()
         verifyZeroInteractions(successPostFileCounter)
         verifyZeroInteractions(retriedPostFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test(expected = MetadataException::class)
@@ -367,7 +368,7 @@ class HttpWriterTest {
         verify(exportStatusService, times(1)).incrementSentCount(filename)
         verifyZeroInteractions(rejectedFilesCounter)
         verifyZeroInteractions(retriedPostFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -397,7 +398,7 @@ class HttpWriterTest {
         verifyZeroInteractions(exportStatusService)
         verifyZeroInteractions(successPostFileCounter)
         verifyZeroInteractions(rejectedFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -411,7 +412,7 @@ class HttpWriterTest {
         verifyZeroInteractions(exportStatusService)
         verifyZeroInteractions(successPostFileCounter)
         verifyZeroInteractions(retriedPostFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -424,7 +425,7 @@ class HttpWriterTest {
         verifyZeroInteractions(exportStatusService)
         verifyZeroInteractions(successPostFileCounter)
         verifyZeroInteractions(retriedPostFilesCounter)
-        verifyZeroInteractions(blockedTopicCounter)
+        verifyZeroInteractions(blockedTopicFileCounter)
     }
 
     @Test
@@ -433,8 +434,8 @@ class HttpWriterTest {
         val filename = "db.crypto.unencrypted-045-050-000001.txt.gz"
         val decryptedStream = DecryptedStream(ByteArrayInputStream(byteArray), filename, "$s3Path/$filename")
 
-        val blockedTopicCounterChild = mock<Counter.Child>()
-        given(blockedTopicCounter.labels(any())).willReturn(blockedTopicCounterChild)
+        val blockedTopicFileCounterChild = mock<Counter.Child>()
+        given(blockedTopicFileCounter.labels(any())).willReturn(blockedTopicFileCounterChild)
 
         whenever(filterBlockedTopicsUtils.checkIfTopicIsBlocked("db.crypto.unencrypted", decryptedStream.fullPath)).doThrow(BlockedTopicException("Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"))
 
@@ -444,7 +445,7 @@ class HttpWriterTest {
 
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.unencrypted'"
 
-        verify(blockedTopicCounterChild, times(1)).inc(1.toDouble())
+        verify(blockedTopicFileCounterChild, times(1)).inc()
         verifyZeroInteractions(exportStatusService)
         verifyZeroInteractions(successPostFileCounter)
         verifyZeroInteractions(retriedPostFilesCounter)

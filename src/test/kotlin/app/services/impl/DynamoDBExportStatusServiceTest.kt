@@ -20,15 +20,18 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.context.ActiveProfiles
 import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
+@ActiveProfiles("unitTest")
 @SpringBootTest(classes = [DynamoDBExportStatusService::class])
 @TestPropertySource(properties = [
     "dynamodb.retry.maxAttempts=5",
     "dynamodb.retry.delay=5",
-    "dynamodb.retry.multiplier=1"
+    "dynamodb.retry.multiplier=1",
+    "pushgateway.host=pushgateway",
 ])
 class DynamoDBExportStatusServiceTest {
 
@@ -72,15 +75,13 @@ class DynamoDBExportStatusServiceTest {
 
     @Test
     fun incrementSentCountRetries() {
-        val filesSentIncrementedCounterChild = mock<Counter.Child>()
-        given(filesSentIncrementedCounter.labels(any())).willReturn(filesSentIncrementedCounterChild)
         given(amazonDynamoDB.updateItem(any()))
                 .willThrow(SdkClientException(""))
                 .willThrow(SdkClientException(""))
                 .willReturn(mock())
         exportStatusService.incrementSentCount("")
         verify(exportStatusService, times(3)).incrementSentCount("")
-        verify(filesSentIncrementedCounterChild, times(1)).inc(1.toDouble())
+        verify(filesSentIncrementedCounter, times(1)).inc()
     }
 
     @Test
@@ -95,9 +96,6 @@ class DynamoDBExportStatusServiceTest {
 
     @Test
     fun setSentStatusSetsSentStatusIfFinished() {
-        val sentNonEmptyCollectionCounterChild = mock<Counter.Child>()
-        given(sentNonEmptyCollectionCounter.labels(any())).willReturn(sentNonEmptyCollectionCounterChild)
-
         val status = mock<AttributeValue> {
             on { s } doReturn "Exported"
         }
@@ -123,15 +121,12 @@ class DynamoDBExportStatusServiceTest {
         val newStatus = exportStatusService.setCollectionStatus()
         assertEquals(CollectionStatus.SENT, newStatus)
         verifyUpdateItemRequest("Sent")
-        verify(sentNonEmptyCollectionCounterChild, times(1)).inc(1.toDouble())
+        verify(sentNonEmptyCollectionCounter, times(1)).inc()
         verifyZeroInteractions(sentEmptyCollectionCounter)
     }
 
     @Test
     fun setSentStatusSetsReceivedStatusIfExportedAndNoFilesExported() {
-        val sentEmptyCollectionCounterChild = mock<Counter.Child>()
-        given(sentEmptyCollectionCounter.labels(any())).willReturn(sentEmptyCollectionCounterChild)
-
         val status = mock<AttributeValue> {
             on { s } doReturn "Exported"
         }
@@ -157,7 +152,7 @@ class DynamoDBExportStatusServiceTest {
         given(amazonDynamoDB.updateItem(any())).willReturn(mock())
         exportStatusService.setCollectionStatus()
         verifyUpdateItemRequest("Received")
-        verify(sentEmptyCollectionCounterChild, times(1)).inc(1.toDouble())
+        verify(sentEmptyCollectionCounter, times(1)).inc()
         verifyZeroInteractions(sentEmptyCollectionCounter)
     }
 
