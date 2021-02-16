@@ -49,7 +49,7 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
         var collection = ""
 
         try {
-            val (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
+            (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
         } catch (ex: MetadataException) {
             rejectedFilesCounter.labels(item.fileName).inc(1.toDouble())
             throw ex
