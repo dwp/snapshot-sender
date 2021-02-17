@@ -5,6 +5,7 @@ import app.services.SnsService
 import com.amazonaws.services.sns.AmazonSNS
 import com.amazonaws.services.sns.model.PublishRequest
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -17,8 +18,6 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
-import org.springframework.test.context.ActiveProfiles
-import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
@@ -27,7 +26,6 @@ import io.prometheus.client.Counter
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
     "sns.retry.multiplier=1",
-    "pushgateway.host=pushgateway",
 ])
 class SnsServiceImplTest {
 

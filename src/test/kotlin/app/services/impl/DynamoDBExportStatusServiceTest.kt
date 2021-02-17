@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.GetItemResult
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,18 +21,14 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.test.context.ActiveProfiles
-import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
-@ActiveProfiles("unitTest")
 @SpringBootTest(classes = [DynamoDBExportStatusService::class])
 @TestPropertySource(properties = [
     "dynamodb.retry.maxAttempts=5",
     "dynamodb.retry.delay=5",
     "dynamodb.retry.multiplier=1",
-    "pushgateway.host=pushgateway",
 ])
 class DynamoDBExportStatusServiceTest {
 

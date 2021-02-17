@@ -4,6 +4,7 @@ import app.configuration.HttpClientProvider
 import app.services.SuccessService
 import app.utils.NiFiUtility
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpPost
@@ -20,15 +21,12 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 import java.net.SocketTimeoutException
 import java.net.URI
-import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
 @EnableRetry
-@ActiveProfiles("unitTest")
 @SpringBootTest(classes = [SuccessServiceImpl::class, NiFiUtility::class])
 @TestPropertySource(properties = [
     "nifi.url=https://nifi:8091/dummy",
@@ -38,7 +36,6 @@ import io.prometheus.client.Counter
     "success.retry.maxAttempts=5",
     "success.retry.delay=5",
     "success.retry.multiplier=1",
-    "pushgateway.host=pushgateway",
 ])
 class SuccessServiceImplTest {
 

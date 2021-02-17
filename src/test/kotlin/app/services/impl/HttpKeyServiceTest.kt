@@ -6,6 +6,7 @@ import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import app.utils.UUIDGenerator
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -18,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,12 +26,9 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.test.context.ActiveProfiles
 import java.io.ByteArrayInputStream
-import io.prometheus.client.Counter
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("unitTest")
 @SpringBootTest(classes = [HttpKeyService::class])
 @EnableRetry
 @TestPropertySource(properties = [
@@ -39,7 +36,6 @@ import io.prometheus.client.Counter
     "dks.retry.maxAttempts=5",
     "dks.retry.delay=5",
     "dks.retry.multiplier=1",
-    "pushgateway.host=pushgateway",
 ])
 class HttpKeyServiceTest {
 
