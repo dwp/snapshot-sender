@@ -37,10 +37,6 @@ services:
 		done; \
 		docker-compose up -d dks ; \
 		docker-compose up -d mock-nifi; \
-		while ! docker exec dks cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do \
-		  echo "Waiting for dks"; \
-		  sleep 2; \
-		done; \
 		docker-compose up aws-init; \
 	}
 
