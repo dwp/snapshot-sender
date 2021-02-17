@@ -36,16 +36,9 @@ service-aws: ## bring up aws and prepare the services.
 			sleep 2; \
 		done; \
 	}
-	docker-compose up aws-init
 
 service-dks: # bring up the data key service
-	docker-compose up -d dks
-	@{ \
-		while ! docker exec dks cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do \
-			echo "Waiting for dks"; \
-			sleep 2; \
-		done; \
-	}
+		docker-compose up -d dks ; \
 
 service-mock-nifi:
 	docker-compose up -d mock-nifi
