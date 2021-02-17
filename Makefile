@@ -37,8 +37,8 @@ service-aws: ## bring up aws and prepare the services.
 		done; \
 	}
 
-service-dks: # bring up the data key service
-		docker-compose up -d dks ; \
+service-dks:
+	docker-compose up -d dks ;
 
 service-mock-nifi:
 	docker-compose up -d mock-nifi
