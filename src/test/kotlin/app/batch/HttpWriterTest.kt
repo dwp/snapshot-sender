@@ -89,17 +89,6 @@ class HttpWriterTest {
     @MockBean(name = "blockedTopicFileCounter")
     private lateinit var blockedTopicFileCounter: Counter
 
-/*
-    @MockBean
-    private lateinit var blockedTopicFileCounterChild: Counter.Child
-
-    @MockBean
-    private lateinit var retriedPostFilesCounterChild: Counter.Child
-
-    @MockBean
-    private lateinit var rejectedFilesCounterChild: Counter.Child
-*/
-
     val mockAppender: Appender<ILoggingEvent> = mock()
 
     val byteArray = "hello, world".toByteArray()
@@ -120,9 +109,6 @@ class HttpWriterTest {
         reset(blockedTopicFileCounter)
 
         given(successPostFileCounter.labels(any())).willReturn(successPostFileCounterChild)
-//        given(retriedPostFilesCounter.labels(any())).willReturn(retriedPostFilesCounterChild)
-//        given(rejectedFilesCounter.labels(any())).willReturn(rejectedFilesCounterChild)
-//        given(blockedTopicFileCounter.labels(any())).willReturn(blockedTopicFileCounterChild)
     }
 
     @Test

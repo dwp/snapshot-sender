@@ -16,19 +16,21 @@ import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotlintest.matchers.types.shouldNotBeNull
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.assertions.json.shouldMatchJson
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.assertions.json.shouldMatchJson
 import io.ktor.client.*
 import io.ktor.client.features.json.*
 import io.ktor.client.request.*
@@ -135,7 +137,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 }""")
         }
 
-        "It should have pushed metrics " {
+        "It should have pushed metrics" {
             val response = client.get<JsonObject>("http://prometheus:9090/api/v1/targets/metadata")
             val metricNames = response["data"].asJsonArray
                 .map(JsonElement::getAsJsonObject)
