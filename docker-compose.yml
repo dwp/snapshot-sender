@@ -23,9 +23,11 @@ services:
     container_name: snapshot-sender
     depends_on:
       - mock-nifi
+      - pushgateway
     environment:
       - CORRELATION_ID=123
       - TOPIC_NAME=db.core.claimant
+      - DELETE_METRICS=false
 
   snapshot-sender-no-exports:
     image: snapshot-sender
@@ -34,10 +36,12 @@ services:
     container_name: snapshot-sender-no-exports
     depends_on:
       - mock-nifi
+      - pushgateway
     environment:
       - CORRELATION_ID=321
       - TOPIC_NAME=db.database.empty
       - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
+      - DELETE_METRICS=false
 
   snapshot-sender-sent:
     image: snapshot-sender
@@ -46,12 +50,14 @@ services:
     container_name: snapshot-sender-sent
     depends_on:
       - mock-nifi
+      - pushgateway
     command: >-
       --send.success.indicator=true
     environment:
       - CORRELATION_ID=111
       - TOPIC_NAME=db.database.sent
       - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
+      - DELETE_METRICS=false
 
   dks:
     image: dks
