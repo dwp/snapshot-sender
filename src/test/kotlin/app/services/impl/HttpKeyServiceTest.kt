@@ -5,8 +5,8 @@ import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import app.utils.UUIDGenerator
-import com.nhaarman.mockitokotlin2.firstValue
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -19,7 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -35,7 +35,7 @@ import java.io.ByteArrayInputStream
     "data.key.service.url=http://dummydks",
     "dks.retry.maxAttempts=5",
     "dks.retry.delay=5",
-    "dks.retry.multiplier=1"
+    "dks.retry.multiplier=1",
 ])
 class HttpKeyServiceTest {
 
@@ -47,6 +47,12 @@ class HttpKeyServiceTest {
 
     @MockBean
     private lateinit var uuidGenerator: UUIDGenerator
+
+    @MockBean(name = "keysDecryptedCounter")
+    private lateinit var keysDecryptedCounter: Counter
+
+    @MockBean(name = "keyDecryptionRetriesCounter")
+    private lateinit var keyDecryptionRetriesCounter: Counter
 
     companion object {
         private var dksCorrelationId = 0
@@ -61,6 +67,8 @@ class HttpKeyServiceTest {
         keyService.clearCache()
         reset(this.httpClientProvider)
         reset(this.uuidGenerator)
+        reset(keysDecryptedCounter)
+        reset(keyDecryptionRetriesCounter)
     }
 
     @Test
@@ -73,15 +81,15 @@ class HttpKeyServiceTest {
         """.trimMargin()
 
         val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
-        val statusLine = mock(StatusLine::class.java)
-        val entity = mock(HttpEntity::class.java)
+        val statusLine = mock<StatusLine>()
+        val entity = mock<HttpEntity>()
         given(entity.content).willReturn(byteArrayInputStream)
         given(statusLine.statusCode).willReturn(200)
-        val httpResponse = mock(CloseableHttpResponse::class.java)
+        val httpResponse = mock<CloseableHttpResponse>()
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
-        val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val httpClient = mock<CloseableHttpClient>()
+        given(httpClient.execute(any())).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
         val dksCallId = nextDksCorrelationId()
         whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
@@ -92,6 +100,8 @@ class HttpKeyServiceTest {
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
         assertEquals("http://dummydks/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        verify(keysDecryptedCounter, times(1)).inc()
+        verifyZeroInteractions(keyDecryptionRetriesCounter)
     }
 
     @Test
@@ -104,15 +114,15 @@ class HttpKeyServiceTest {
         """.trimMargin()
 
         val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
-        val statusLine = mock(StatusLine::class.java)
-        val entity = mock(HttpEntity::class.java)
+        val statusLine = mock<StatusLine>()
+        val entity = mock<HttpEntity>()
         given(entity.content).willReturn(byteArrayInputStream)
         given(statusLine.statusCode).willReturn(200)
-        val httpResponse = mock(CloseableHttpResponse::class.java)
+        val httpResponse = mock<CloseableHttpResponse>()
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
-        val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val httpClient = mock<CloseableHttpClient>()
+        given(httpClient.execute(any())).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
         val dksCallId = nextDksCorrelationId()
         whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
@@ -129,12 +139,12 @@ class HttpKeyServiceTest {
 
     @Test
     fun test_decrypt_key_with_bad_key_will_call_server_and_not_retry() {
-        val statusLine = mock(StatusLine::class.java)
+        val statusLine = mock<StatusLine>()
         given(statusLine.statusCode).willReturn(400)
-        val httpResponse = mock(CloseableHttpResponse::class.java)
+        val httpResponse = mock<CloseableHttpResponse>()
         given(httpResponse.statusLine).willReturn(statusLine)
-        val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val httpClient = mock<CloseableHttpClient>()
+        given(httpClient.execute(any())).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
         val dksCallId = nextDksCorrelationId()
         whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
@@ -152,12 +162,12 @@ class HttpKeyServiceTest {
 
     @Test
     fun test_decrypt_key_with_server_error_will_retry_with_max_calls() {
-        val statusLine = mock(StatusLine::class.java)
+        val statusLine = mock<StatusLine>()
         given(statusLine.statusCode).willReturn(503)
-        val httpResponse = mock(CloseableHttpResponse::class.java)
+        val httpResponse = mock<CloseableHttpResponse>()
         given(httpResponse.statusLine).willReturn(statusLine)
-        val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val httpClient = mock<CloseableHttpClient>()
+        given(httpClient.execute(any())).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
         val dksCallId = nextDksCorrelationId()
         whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
@@ -171,16 +181,18 @@ class HttpKeyServiceTest {
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("http://dummydks/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
+
+        verify(keyDecryptionRetriesCounter, times(5)).inc()
     }
 
     @Test
     fun test_decrypt_key_with_http_error_will_retry_until_max_calls() {
-        val statusLine = mock(StatusLine::class.java)
+        val statusLine = mock<StatusLine>()
         given(statusLine.statusCode).willReturn(200)
-        val httpResponse = mock(CloseableHttpResponse::class.java)
+        val httpResponse = mock<CloseableHttpResponse>()
         given(httpResponse.statusLine).willReturn(statusLine)
-        val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(any(HttpPost::class.java))).willThrow(RuntimeException("Boom"))
+        val httpClient = mock<CloseableHttpClient>()
+        given(httpClient.execute(any())).willThrow(RuntimeException("Boom"))
         given(httpClientProvider.client()).willReturn(httpClient)
         val dksCallId = nextDksCorrelationId()
         whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
@@ -206,15 +218,15 @@ class HttpKeyServiceTest {
         """.trimMargin()
 
         val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
-        val statusLine = mock(StatusLine::class.java)
-        val entity = mock(HttpEntity::class.java)
+        val statusLine = mock<StatusLine>()
+        val entity = mock<HttpEntity>()
         given(entity.content).willReturn(byteArrayInputStream)
         given(statusLine.statusCode).willReturn(503, 503, 200)
-        val httpResponse = mock(CloseableHttpResponse::class.java)
+        val httpResponse = mock<CloseableHttpResponse>()
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
-        val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        val httpClient = mock<CloseableHttpClient>()
+        given(httpClient.execute(any())).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
         val dksCallId = nextDksCorrelationId()
         whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)

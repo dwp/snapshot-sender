@@ -4,6 +4,7 @@ import app.configuration.HttpClientProvider
 import app.services.SuccessService
 import app.utils.NiFiUtility
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpPost
@@ -34,7 +35,7 @@ import java.net.URI
     "dynamodb.status.table.name=test_table",
     "success.retry.maxAttempts=5",
     "success.retry.delay=5",
-    "success.retry.multiplier=1"
+    "success.retry.multiplier=1",
 ])
 class SuccessServiceImplTest {
 
@@ -43,6 +44,8 @@ class SuccessServiceImplTest {
         System.setProperty("environment", "test")
         System.setProperty("correlation_id", "123")
         reset(httpClientProvider)
+        reset(successFilesSentCounter)
+        reset(successFilesRetriedCounter)
     }
 
     @SpyBean
@@ -55,9 +58,14 @@ class SuccessServiceImplTest {
     @Autowired
     private lateinit var niFiUtility: NiFiUtility
 
+    @MockBean(name = "successFilesSentCounter")
+    private lateinit var successFilesSentCounter: Counter
+
+    @MockBean(name = "successFilesRetriedCounter")
+    private lateinit var successFilesRetriedCounter: Counter
+
     @Test
     fun willPostPayloadWithAppropriateHeaders() {
-
         System.setProperty("topic_name", "db.core.toDo")
 
         val status = mock<StatusLine> {
@@ -105,6 +113,9 @@ class SuccessServiceImplTest {
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
+
+        verify(successFilesSentCounter, times(1)).inc()
+        verifyZeroInteractions(successFilesRetriedCounter)
     }
 
     @Test
@@ -155,6 +166,9 @@ class SuccessServiceImplTest {
 
         val payload = put.entity.content.readBytes()
         assertEquals(20, payload.size)
+
+        verify(successFilesSentCounter, times(1)).inc()
+        verifyZeroInteractions(successFilesRetriedCounter)
     }
 
     @Test

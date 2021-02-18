@@ -3,10 +3,9 @@ package app.configuration
 import app.services.KeyService
 import org.apache.http.client.HttpClient
 import org.mockito.Mockito
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
+import org.springframework.context.annotation.*
 import com.amazonaws.services.sns.AmazonSNS
+import io.prometheus.client.Counter
 
 @Configuration
 class TestContextConfiguration {

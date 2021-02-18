@@ -14,6 +14,7 @@ import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Component
 class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
@@ -25,6 +26,7 @@ class DecryptionProcessor : ItemProcessor<EncryptedStream, DecryptedStream> {
     private val decryptionRegEx = Regex("""\.enc$""")
     private val cipherAlgorithm = "AES/CTR/NoPadding"
 
+    @PrometheusTimeMethod(name = "snapshot_sender_decrypt_item_duration", help = "Duration of item decryption")
     override fun process(item: EncryptedStream): DecryptedStream? {
         logger.info("Processing Decryption on item", "file_name" to item.fullPath)
         val dataKey = item.encryptionMetadata.plaintext

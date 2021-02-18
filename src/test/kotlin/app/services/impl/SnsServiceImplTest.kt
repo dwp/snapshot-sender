@@ -5,6 +5,7 @@ import app.services.SnsService
 import com.amazonaws.services.sns.AmazonSNS
 import com.amazonaws.services.sns.model.PublishRequest
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -24,9 +25,21 @@ import org.springframework.test.util.ReflectionTestUtils
 @TestPropertySource(properties = [
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
-    "sns.retry.multiplier=1"
+    "sns.retry.multiplier=1",
 ])
 class SnsServiceImplTest {
+
+    @MockBean
+    private lateinit var amazonSNS: AmazonSNS
+
+    @Autowired
+    private lateinit var snsService: SnsService
+
+    @MockBean(name = "monitoringMessagesSentCounter")
+    private lateinit var monitoringMessagesSentCounter: Counter
+
+    @MockBean
+    private lateinit var monitoringMessagesSentCounterChild: Counter.Child
 
     @Before
     fun before() {
@@ -36,10 +49,16 @@ class SnsServiceImplTest {
         ReflectionTestUtils.setField(snsService, "s3prefix", "prefix")
         ReflectionTestUtils.setField(snsService, "exportDate", "2020-01-01")
         reset(amazonSNS)
+        reset(monitoringMessagesSentCounter)
+
+        given(monitoringMessagesSentCounter.labels(any())).willReturn(monitoringMessagesSentCounterChild)
     }
 
     @Test
     fun sendsTheCorrectMonitoringMessageOnSuccess() {
+        val monitoringMessagesSentCounterChild = mock<Counter.Child>()
+        given(monitoringMessagesSentCounter.labels(any(), any())).willReturn(monitoringMessagesSentCounterChild)
+
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         argumentCaptor<PublishRequest> {
@@ -56,11 +75,15 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
+        verify(monitoringMessagesSentCounterChild, times(1)).inc()
         verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
     fun sendsTheCorrectMonitoringMessageOnFailure() {
+        val monitoringMessagesSentCounterChild = mock<Counter.Child>()
+        given(monitoringMessagesSentCounter.labels(any(), any())).willReturn(monitoringMessagesSentCounterChild)
+
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
         argumentCaptor<PublishRequest> {
@@ -77,6 +100,7 @@ class SnsServiceImplTest {
                 ]
             }""", firstValue.message)
         }
+        verify(monitoringMessagesSentCounterChild, times(1)).inc()
         verifyNoMoreInteractions(amazonSNS)
     }
 
@@ -85,6 +109,7 @@ class SnsServiceImplTest {
         ReflectionTestUtils.setField(snsService, "monitoringTopicArn", "")
         snsService.sendMonitoringMessage(SendingCompletionStatus.COMPLETED_SUCCESSFULLY)
         verifyZeroInteractions(amazonSNS)
+        verifyZeroInteractions(monitoringMessagesSentCounter)
     }
 
     @Test
@@ -109,12 +134,6 @@ class SnsServiceImplTest {
         verify(amazonSNS, times(10)).publish(any())
         verifyNoMoreInteractions(amazonSNS)
     }
-
-    @MockBean
-    private lateinit var amazonSNS: AmazonSNS
-
-    @Autowired
-    private lateinit var snsService: SnsService
 
     companion object {
         private const val TOPIC_ARN = "arn:sns"

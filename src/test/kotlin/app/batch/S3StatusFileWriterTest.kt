@@ -7,35 +7,27 @@ import com.amazonaws.AmazonServiceException
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
-import com.nhaarman.mockitokotlin2.KArgumentCaptor
-import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.exporter.PushGateway
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "unitTest", "S3SourceData")
-@SpringBootTest
+@SpringBootTest(classes = [S3StatusFileWriter::class, S3Utils::class])
 @TestPropertySource(properties = [
-    "data.key.service.url=datakey.service:8090",
-    "nifi.url=nifi:8091/dummy",
-    "export.date=2019-01-01",
     "s3.bucket=bucket1",
-    "s3.prefix.folder=exporter-output/job01",
     "s3.status.folder=sender-status",
     "s3.htme.root.folder=exporter-output",
-    "snapshot.type=full",
-    "shutdown.flag=false"
 ])
 class S3StatusFileWriterTest {
 
@@ -51,7 +43,10 @@ class S3StatusFileWriterTest {
     @MockBean
     private lateinit var amazonS3: AmazonS3
 
-    val mockAppender: Appender<ILoggingEvent> = com.nhaarman.mockitokotlin2.mock()
+    @MockBean
+    private lateinit var pushGateway: PushGateway
+
+    val mockAppender: Appender<ILoggingEvent> = mock()
 
     @Before
     fun setUp() {

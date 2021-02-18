@@ -3,11 +3,15 @@ package app.batch
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
 import app.domain.NifiHeaders
+import app.exceptions.BlockedTopicException
+import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.NiFiUtility
 import app.utils.TextParsingUtility
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -21,12 +25,17 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 class HttpWriter(private val httpClientProvider: HttpClientProvider,
                  private val exportStatusService: ExportStatusService,
                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
-                 private val nifiUtility: NiFiUtility) : ItemWriter<DecryptedStream> {
+                 private val nifiUtility: NiFiUtility,
+                 private val successPostFileCounter: Counter,
+                 private val retriedPostFilesCounter: Counter,
+                 private val rejectedFilesCounter: Counter,
+                 private val blockedTopicFileCounter: Counter) : ItemWriter<DecryptedStream> {
 
     @Autowired
     lateinit var s3StatusFileWriter: S3StatusFileWriter
 
     @Throws(Exception::class)
+    @PrometheusTimeMethod(name = "snapshot_sender_post_file_duration", help = "Duration of posting a file")
     override fun write(items: MutableList<out DecryptedStream>) {
         logger.info("Writing items to S3", "number_of_items" to items.size.toString())
         items.forEach(::postItem)
@@ -34,12 +43,17 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
     private fun postItem(item: DecryptedStream) {
 
-        logger.info("Checking item to  write", "file_name" to item.fileName, "full_path" to item.fullPath)
-        val (database, collection) = TextParsingUtility.databaseAndCollection(item.fileName)
+        logger.info("Checking item to write", "file_name" to item.fileName, "full_path" to item.fullPath)
+        val (database, collection) = getDatabaseAndCollection(item.fileName)
         val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
         val topic = "$topicPrefix$database.$collection"
 
-        filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
+        try {
+            filterBlockedTopicsUtils.checkIfTopicIsBlocked(topic, item.fullPath)
+        } catch (ex: BlockedTopicException) {
+            blockedTopicFileCounter.labels(item.fileName).inc()
+            throw ex
+        }
 
         val filenameHeader = item.fileName.replace(Regex("""\.txt\.gz$"""), ".json.gz")
 
@@ -66,7 +80,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
 
             it.execute(post).use { response ->
                 when (response.statusLine.statusCode) {
-                    200 -> {
+                    200 -> {                    
+                        successPostFileCounter.labels(item.fileName).inc()
                         logger.info("Successfully posted file",
                                 "database" to database,
                                 "collection" to collection,
@@ -86,6 +101,8 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
                             headers.add(it.name to it.value)
                         }
 
+                        retriedPostFilesCounter.labels(item.fileName).inc()
+
                         logger.warn("Failed to post the provided item",
                                 "file_name" to item.fullPath,
                                 "response" to response.statusLine.statusCode.toString(),
@@ -100,6 +117,14 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
             }
         }
     }
+
+    private fun getDatabaseAndCollection(filename: String) =
+        try {
+            TextParsingUtility.databaseAndCollection(filename)
+        } catch (ex: MetadataException) {
+            rejectedFilesCounter.labels(filename).inc()
+            throw ex
+        }
 
     @Value("\${nifi.url}")
     private lateinit var nifiUrl: String

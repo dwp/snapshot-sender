@@ -1,18 +1,20 @@
 package app.services.impl
 
-import app.services.SendingCompletionStatus
 import app.services.CollectionStatus
 import app.services.ExportStatusService
+import app.services.SendingCompletionStatus
 import app.utils.PropertyUtility.correlationId
 import app.utils.PropertyUtility.topicName
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.dynamodbv2.model.GetItemRequest
-import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -20,14 +22,22 @@ import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
-class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportStatusService {
+class DynamoDBExportStatusService(
+    private val dynamoDB: AmazonDynamoDB,
+    private val sentNonEmptyCollectionCounter: Counter,
+    private val sentEmptyCollectionCounter: Counter,
+    private val filesSentIncrementedCounter: Counter,
+    private val successfulFullRunCounter: Counter,
+    private val failedFullRunCounter: Counter): ExportStatusService {
 
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
             multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+    @PrometheusTimeMethod(name = "snapshot_sender_increment_sent_count_duration", help = "Duration of incrementing sent count")
     override fun incrementSentCount(fileSent: String) {
         val result = dynamoDB.updateItem(incrementFilesSentRequest())
+        filesSentIncrementedCounter.inc()
         logger.info("Incremented files sent",
                 "file_sent" to fileSent,
                 "files_sent" to "${result.attributes["FilesSent"]?.n}")
@@ -37,18 +47,12 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
             multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
-    override fun setSuccessStatus() {
-        dynamoDB.updateItem(setStatusSuccessRequest())
-    }
-
-    @Retryable(value = [Exception::class],
-        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
-        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
-            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+    @PrometheusTimeMethod(name = "snapshot_sender_set_collection_status_duration", help = "Duration of setting collection status")
     override fun setCollectionStatus(): CollectionStatus =
             when (collectionStatus()) {
                 CollectionStatus.SENT -> {
                     val result = dynamoDB.updateItem(setStatusSentRequest())
+                    sentNonEmptyCollectionCounter.inc()
                     logger.info("Collection status after update",
                         "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
                     CollectionStatus.SENT
@@ -56,6 +60,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
                 CollectionStatus.NO_FILES_EXPORTED -> {
                     val result = dynamoDB.updateItem(setStatusReceivedRequest())
+                    sentEmptyCollectionCounter.inc()
                     logger.info("Collection status after update",
                         "collection_status" to "${result.attributes["CollectionStatus"]?.s}")
                     CollectionStatus.NO_FILES_EXPORTED
@@ -70,13 +75,16 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
             multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+        @PrometheusTimeMethod(name = "snapshot_sender_get_completion_status_duration", help = "Duration of getting completion status")
         override fun sendingCompletionStatus(): SendingCompletionStatus =
             exportStatusTable().query(statusQuerySpec()).map(::collectionStatus).run {
                 when {
                     all(::completedSuccessfully) -> {
+                        successfulFullRunCounter.inc()
                         SendingCompletionStatus.COMPLETED_SUCCESSFULLY
                     }
                     any(::completedUnsuccessfully) -> {
+                        failedFullRunCounter.inc()
                         SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY
                     }
                     else -> {
@@ -143,7 +151,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ExportS
 
 
     private fun setStatusSentRequest() = setStatusRequest("Sent")
-    private fun setStatusSuccessRequest() = setStatusRequest("Success")
     private fun setStatusReceivedRequest() = setStatusRequest("Received")
 
     private fun setStatusRequest(status: String) =

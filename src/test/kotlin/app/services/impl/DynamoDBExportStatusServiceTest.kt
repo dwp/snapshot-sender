@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.GetItemResult
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemResult
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -27,7 +28,7 @@ import org.springframework.test.context.junit4.SpringRunner
 @TestPropertySource(properties = [
     "dynamodb.retry.maxAttempts=5",
     "dynamodb.retry.delay=5",
-    "dynamodb.retry.multiplier=1"
+    "dynamodb.retry.multiplier=1",
 ])
 class DynamoDBExportStatusServiceTest {
 
@@ -38,11 +39,35 @@ class DynamoDBExportStatusServiceTest {
     @MockBean
     private lateinit var amazonDynamoDB: AmazonDynamoDB
 
+    @MockBean(name = "successfulCollectionCounter")
+    private lateinit var successfulCollectionCounter: Counter
+
+    @MockBean(name = "sentNonEmptyCollectionCounter")
+    private lateinit var sentNonEmptyCollectionCounter: Counter
+
+    @MockBean(name = "sentEmptyCollectionCounter")
+    private lateinit var sentEmptyCollectionCounter: Counter
+
+    @MockBean(name = "filesSentIncrementedCounter")
+    private lateinit var filesSentIncrementedCounter: Counter
+
+    @MockBean(name = "successfulFullRunCounter")
+    private lateinit var successfulFullRunCounter: Counter
+
+    @MockBean(name = "failedFullRunCounter")
+    private lateinit var failedFullRunCounter: Counter
+
     @Before
     fun before() {
         System.setProperty("correlation_id", "123")
         System.setProperty("topic_name", "topic")
         reset(amazonDynamoDB)
+        reset(successfulCollectionCounter)
+        reset(sentNonEmptyCollectionCounter)
+        reset(sentEmptyCollectionCounter)
+        reset(filesSentIncrementedCounter)
+        reset(successfulFullRunCounter)
+        reset(failedFullRunCounter)
     }
 
     @Test
@@ -53,6 +78,7 @@ class DynamoDBExportStatusServiceTest {
                 .willReturn(mock())
         exportStatusService.incrementSentCount("")
         verify(exportStatusService, times(3)).incrementSentCount("")
+        verify(filesSentIncrementedCounter, times(1)).inc()
     }
 
     @Test
@@ -67,7 +93,6 @@ class DynamoDBExportStatusServiceTest {
 
     @Test
     fun setSentStatusSetsSentStatusIfFinished() {
-
         val status = mock<AttributeValue> {
             on { s } doReturn "Exported"
         }
@@ -93,11 +118,12 @@ class DynamoDBExportStatusServiceTest {
         val newStatus = exportStatusService.setCollectionStatus()
         assertEquals(CollectionStatus.SENT, newStatus)
         verifyUpdateItemRequest("Sent")
+        verify(sentNonEmptyCollectionCounter, times(1)).inc()
+        verifyZeroInteractions(sentEmptyCollectionCounter)
     }
 
     @Test
     fun setSentStatusSetsReceivedStatusIfExportedAndNoFilesExported() {
-
         val status = mock<AttributeValue> {
             on { s } doReturn "Exported"
         }
@@ -123,6 +149,8 @@ class DynamoDBExportStatusServiceTest {
         given(amazonDynamoDB.updateItem(any())).willReturn(mock())
         exportStatusService.setCollectionStatus()
         verifyUpdateItemRequest("Received")
+        verify(sentEmptyCollectionCounter, times(1)).inc()
+        verifyZeroInteractions(sentEmptyCollectionCounter)
     }
 
     @Test
@@ -151,6 +179,8 @@ class DynamoDBExportStatusServiceTest {
         given(amazonDynamoDB.getItem(any())).willReturn(getItemResult)
         exportStatusService.setCollectionStatus()
         verify(amazonDynamoDB, times(0)).updateItem(any())
+        verifyZeroInteractions(sentEmptyCollectionCounter)
+        verifyZeroInteractions(sentNonEmptyCollectionCounter)
     }
 
     @Test
@@ -182,6 +212,8 @@ class DynamoDBExportStatusServiceTest {
         given(amazonDynamoDB.updateItem(any())).willReturn(updateItemResult)
         exportStatusService.setCollectionStatus()
         verify(amazonDynamoDB, times(0)).updateItem(any())
+        verifyZeroInteractions(sentEmptyCollectionCounter)
+        verifyZeroInteractions(sentNonEmptyCollectionCounter)
     }
 
     private fun verifyUpdateItemRequest(status: String) {

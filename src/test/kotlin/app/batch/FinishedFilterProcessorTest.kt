@@ -14,17 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [FinishedFilterProcessor::class, S3Utils::class])
-@TestPropertySource(properties = [
-    "s3.bucket=phoney",
-    "s3.prefix.folder=test/output/",
-    "s3.status.folder=status",
-    "s3.htme.root.folder=test"
-])
 class FinishedFilterProcessorTest {
 
     @MockBean

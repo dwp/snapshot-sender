@@ -4,8 +4,8 @@ services:
   aws:
     image: localstack/localstack:latest
     ports:
-      - '4563-4584:4563-4584'
-      - '8055:8080'
+      - "4563-4584:4563-4584"
+      - "8055:8080"
     container_name: aws
     environment:
       - SERVICES=s3,dynamodb,sqs,sns
@@ -23,9 +23,11 @@ services:
     container_name: snapshot-sender
     depends_on:
       - mock-nifi
+      - pushgateway
     environment:
       - CORRELATION_ID=123
       - TOPIC_NAME=db.core.claimant
+      - DELETE_METRICS=false
 
   snapshot-sender-no-exports:
     image: snapshot-sender
@@ -34,10 +36,12 @@ services:
     container_name: snapshot-sender-no-exports
     depends_on:
       - mock-nifi
+      - pushgateway
     environment:
       - CORRELATION_ID=321
       - TOPIC_NAME=db.database.empty
       - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
+      - DELETE_METRICS=false
 
   snapshot-sender-sent:
     image: snapshot-sender
@@ -46,18 +50,20 @@ services:
     container_name: snapshot-sender-sent
     depends_on:
       - mock-nifi
+      - pushgateway
     command: >-
       --send.success.indicator=true
     environment:
       - CORRELATION_ID=111
       - TOPIC_NAME=db.database.sent
       - ADDITIONAL_SPRING_ACTIVE_PROFILES=noOpReader
+      - DELETE_METRICS=false
 
   dks:
     image: dks
     ports:
-      - 8091:8443
-      - 8101:8080
+      - "8091:8443"
+      - "8101:8080"
     build:
       context: resources/dks
       dockerfile: Dockerfile
@@ -92,6 +98,17 @@ services:
     depends_on:
       - mock-nifi
     command: "gradle --rerun-tasks integration"
+
+  prometheus:
+    build:
+      context: images/prometheus
+    container_name: prometheus
+
+  pushgateway:
+    image: prom/pushgateway
+    ports:
+      - "9091:9091"
+    container_name: pushgateway
 
 volumes:
   shared-volume:

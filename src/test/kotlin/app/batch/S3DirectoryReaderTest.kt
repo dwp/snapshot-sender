@@ -6,46 +6,26 @@ import app.exceptions.DataKeyDecryptionException
 import app.services.ExportStatusService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.*
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.apache.http.client.methods.HttpGet
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.BDDMockito.given
-import org.mockito.BDDMockito.verifyNoMoreInteractions
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "unitTest", "S3SourceData")
-@SpringBootTest
+@SpringBootTest(classes = [S3DirectoryReader::class])
 @TestPropertySource(properties = [
-    "data.key.service.url=dummy.com:8090",
     "s3.bucket=bucket1",
-    "s3.prefix.folder=exporter-output/job01",
-    "s3.status.folder=sender-status",
-    "s3.htme.root.folder=exporter-output",
-    "nifi.url=http://nifi:9090",
-    "export.date=2019-01-01",
-    "snapshot.type=full",
-    "shutdown.flag=false"
 ])
 class S3DirectoryReaderTest {
-
-
     private lateinit var listObjectsV2Result: ListObjectsV2Result
     private lateinit var s3ObjectSummary1: S3ObjectSummary
     private lateinit var s3ObjectSummary2: S3ObjectSummary
@@ -68,6 +48,12 @@ class S3DirectoryReaderTest {
 
     @MockBean
     private lateinit var amazonS3: AmazonS3
+
+    @MockBean(name = "s3ItemsCounter")
+    private lateinit var s3ItemsCounter: Counter
+
+    @MockBean
+    private lateinit var s3ItemsCounterChild: Counter.Child
 
     @Before
     fun setUp() {
@@ -116,9 +102,13 @@ class S3DirectoryReaderTest {
 
         given(s3Utils.objectContents(s3Object1)).willReturn(OBJECT_CONTENT1.toByteArray())
         given(s3Utils.objectContents(s3Object2)).willReturn(OBJECT_CONTENT2.toByteArray())
-
+        given(s3Utils.s3PrefixFolder).willReturn("exporter-output/job01")
         s3DirectorReader.reset()
-        Mockito.reset(amazonS3)
+        reset(amazonS3)
+        reset(s3ItemsCounter)
+
+        given(s3ItemsCounter.labels(any())).willReturn(s3ItemsCounterChild)
+
     }
 
     @Test
@@ -126,10 +116,11 @@ class S3DirectoryReaderTest {
         //given one object on results
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
 
-        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
+        given(amazonS3.listObjectsV2(any<ListObjectsV2Request>())).willReturn(listObjectsV2Result)
         given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
         given(amazonS3.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
         given(amazonS3.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
+
 
         //when it is read
         val encryptedStream1 = s3DirectorReader.read()
@@ -137,9 +128,10 @@ class S3DirectoryReaderTest {
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
 
         //then
-        verify(amazonS3, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(amazonS3, times(1)).listObjectsV2(any<ListObjectsV2Request>())
         verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
         verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
+        verify(s3ItemsCounterChild, times(1)).inc(1.toDouble())
         verifyNoMoreInteractions(amazonS3)
 
         assertObjectMetadata(objectMetadata1, actualMetadata1)
@@ -154,7 +146,7 @@ class S3DirectoryReaderTest {
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary2)
 
-        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
+        given(amazonS3.listObjectsV2(any<ListObjectsV2Request>())).willReturn(listObjectsV2Result)
         given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
         given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY2_FINISHED)).willReturn(false)
         given(amazonS3.getObject(BUCKET_NAME1, KEY1)).willReturn(s3Object1)
@@ -162,16 +154,19 @@ class S3DirectoryReaderTest {
         given(amazonS3.getObjectMetadata(BUCKET_NAME1, KEY1)).willReturn(objectMetadata1)
         given(amazonS3.getObjectMetadata(BUCKET_NAME1, KEY2)).willReturn(objectMetadata2)
 
+        given(s3ItemsCounter.labels(any())).willReturn(s3ItemsCounterChild)
+
         //when read in turn
         val encryptedStream1 = s3DirectorReader.read()
         val encryptedStream2 = s3DirectorReader.read()
 
         //then
-        verify(amazonS3, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(amazonS3, times(1)).listObjectsV2(any<ListObjectsV2Request>())
         verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
         verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY2)
         verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
         verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY2)
+        verify(s3ItemsCounterChild, times(1)).inc(2.toDouble())
         verifyNoMoreInteractions(amazonS3)
 
         val actualMetadata1 = encryptedStream1?.encryptionMetadata
@@ -195,10 +190,11 @@ class S3DirectoryReaderTest {
         //given an object with blank metadata
         listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
 
-        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
+        given(amazonS3.listObjectsV2(any<ListObjectsV2Request>())).willReturn(listObjectsV2Result)
         given(amazonS3.doesObjectExist(BUCKET_NAME1, KEY1_FINISHED)).willReturn(false)
-        given(amazonS3.getObject(anyString(), anyString())).willReturn(s3Object1)
-        given(amazonS3.getObjectMetadata(anyString(), anyString())).willReturn(ObjectMetadata())
+        given(amazonS3.getObject(any<String>(), any())).willReturn(s3Object1)
+        given(amazonS3.getObjectMetadata(any(), any())).willReturn(ObjectMetadata())
+        given(s3ItemsCounter.labels(any())).willReturn(s3ItemsCounterChild)
 
         try {
             //when
@@ -210,10 +206,11 @@ class S3DirectoryReaderTest {
             assertEquals("Couldn't get the metadata for 'exporter-output/job01/file1'", ex.message)
         }
 
-        verify(amazonS3, times(1)).listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(amazonS3, times(1)).listObjectsV2(any<ListObjectsV2Request>())
         verify(amazonS3, times(1)).getObject(BUCKET_NAME1, KEY1)
         verify(amazonS3, times(1)).getObjectMetadata(BUCKET_NAME1, KEY1)
         verifyNoMoreInteractions(amazonS3)
+        verify(s3ItemsCounterChild, times(1)).inc(1.toDouble())
     }
 
     @Test
@@ -243,7 +240,7 @@ class S3DirectoryReaderTest {
             on { isTruncated } doReturn false
         }
 
-        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
+        given(amazonS3.listObjectsV2(any<ListObjectsV2Request>()))
             .willReturn(resultsPage1)
             .willReturn(resultsPage2)
 
@@ -263,15 +260,13 @@ class S3DirectoryReaderTest {
                 "cipherText" to "CIPHER_TEXT")
         }
 
-        given(amazonS3.getObjectMetadata(anyString(), anyString()))
-            .willReturn(objectMetadata)
+        given(amazonS3.getObjectMetadata(any(), any())).willReturn(objectMetadata)
 
         given(s3Utils.objectContents(any())).willReturn("TEXT".toByteArray())
 
         s3DirectorReader.read()
 
-        verify(amazonS3, times(2))
-            .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+        verify(amazonS3, times(2)).listObjectsV2(any<ListObjectsV2Request>())
 
     }
 
@@ -291,8 +286,7 @@ class S3DirectoryReaderTest {
         }
 
 
-        given(amazonS3.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
-            .willReturn(resultsPage1)
+        given(amazonS3.listObjectsV2(any<ListObjectsV2Request>())).willReturn(resultsPage1)
 
         val page1Object1 = mockS3Object()
         val page1Object2 = mockS3Object()
@@ -306,16 +300,10 @@ class S3DirectoryReaderTest {
                 "cipherText" to "CIPHER_TEXT")
         }
 
-        given(amazonS3.getObjectMetadata(anyString(), anyString()))
-            .willReturn(objectMetadata)
-
+        given(amazonS3.getObjectMetadata(any(), any())).willReturn(objectMetadata)
         given(s3Utils.objectContents(any())).willReturn("TEXT".toByteArray())
-
         s3DirectorReader.read()
-
-        verify(amazonS3, times(1))
-            .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-
+        verify(amazonS3, times(1)).listObjectsV2(any<ListObjectsV2Request>())
     }
 
     private fun mockS3Object(): S3Object {
