@@ -151,7 +151,6 @@ class DynamoDBExportStatusService(
 
 
     private fun setStatusSentRequest() = setStatusRequest("Sent")
-    private fun setStatusSuccessRequest() = setStatusRequest("Success")
     private fun setStatusReceivedRequest() = setStatusRequest("Received")
 
     private fun setStatusRequest(status: String) =
