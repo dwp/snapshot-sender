@@ -7,6 +7,8 @@ import app.services.SuccessService
 import app.utils.NiFiUtility
 import app.utils.PropertyUtility.correlationId
 import app.utils.PropertyUtility.topicName
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -18,8 +20,6 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
-import io.prometheus.client.Counter
-import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Component
 class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, 

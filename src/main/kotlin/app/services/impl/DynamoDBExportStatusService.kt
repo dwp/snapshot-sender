@@ -1,30 +1,29 @@
 package app.services.impl
 
-import app.services.SendingCompletionStatus
 import app.services.CollectionStatus
 import app.services.ExportStatusService
+import app.services.SendingCompletionStatus
 import app.utils.PropertyUtility.correlationId
 import app.utils.PropertyUtility.topicName
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.dynamodbv2.model.GetItemRequest
-import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import io.prometheus.client.Counter
-import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Service
 class DynamoDBExportStatusService(
     private val dynamoDB: AmazonDynamoDB,
-    private val successfulCollectionCounter: Counter,
     private val sentNonEmptyCollectionCounter: Counter,
     private val sentEmptyCollectionCounter: Counter,
     private val filesSentIncrementedCounter: Counter,
@@ -42,16 +41,6 @@ class DynamoDBExportStatusService(
         logger.info("Incremented files sent",
                 "file_sent" to fileSent,
                 "files_sent" to "${result.attributes["FilesSent"]?.n}")
-    }
-
-    @Retryable(value = [Exception::class],
-        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
-        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
-            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
-    @PrometheusTimeMethod(name = "snapshot_sender_set_success_status_duration", help = "Duration of setting success status")
-    override fun setSuccessStatus() {
-        dynamoDB.updateItem(setStatusSuccessRequest())
-        successfulCollectionCounter.inc()
     }
 
     @Retryable(value = [Exception::class],

@@ -36,6 +36,7 @@ service-aws: ## bring up aws and prepare the services.
 			sleep 2; \
 		done; \
 	}
+	docker-compose up aws-init
 
 service-dks:
 	docker-compose up -d dks ;
@@ -43,16 +44,13 @@ service-dks:
 service-mock-nifi:
 	docker-compose up -d mock-nifi
 
-service-aws-init:
-	docker-compose up -d aws-init
-
 service-pushgateway:
 	docker-compose up -d pushgateway
 
 service-prometheus:
 	docker-compose up -d prometheus
 
-services: service-dks service-aws service-mock-nifi service-pushgateway service-prometheus service-aws-init
+services: service-dks service-aws service-mock-nifi service-pushgateway service-prometheus
 
 .PHONY: up
 up: services ## Run the ecosystem of containers
@@ -61,3 +59,9 @@ up: services ## Run the ecosystem of containers
 .PHONY: integration-tests
 integration-tests: ## Run the integration tests
 	docker-compose run sender-integration-test
+
+restart-metrics:
+	docker stop prometheus pushgateway
+	docker rm prometheus pushgateway
+	docker-compose build prometheus pushgateway
+	docker-compose up -d prometheus pushgateway
