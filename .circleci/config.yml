@@ -4,8 +4,8 @@
 #
 version: 2.1
 
-orbs:
-  snyk: snyk/snyk@0.0.8
+#orbs:
+#  snyk: snyk/snyk@0.0.8
 
 jobs:
   build:
@@ -32,11 +32,12 @@ jobs:
       - run:
           name: run gradle
           command: |
-            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-            sed -i s/version=.*/version=$VERSION/ gradle.properties
             gradle build
+#            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+#            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+#            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+#            sed -i s/version=.*/version=$VERSION/ gradle.properties
+#            gradle build
 
 
       - save_cache:
@@ -80,74 +81,75 @@ jobs:
             make up
             make integration-tests
 
-  snyk-pr:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - snyk/scan:
-          organization: dwp-dataworks
-          severity-threshold: high
-          target-file: build.gradle.kts
-          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
-
-  snyk-master:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - snyk/scan:
-          organization: dwp-dataworks
-          severity-threshold: high
-          target-file: build.gradle.kts
-          project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
-
-
-  publish-github-release:
-    docker:
-      - image: cibuilds/github:0.10
-    steps:
-      - attach_workspace:
-          at: ./artifacts
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            set -u
-            set -o pipefail
-            ls -l ./artifacts
-            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-            ghr \
-              -t ${GITHUB_TOKEN} \
-              -u ${CIRCLE_PROJECT_USERNAME} \
-              -r ${CIRCLE_PROJECT_REPONAME} \
-              -c ${CIRCLE_SHA1} -delete \
-              ${VERSION} ./artifacts/
+#  snyk-pr:
+#    docker:
+#      - image: circleci/openjdk:8-jdk
+#    steps:
+#      - checkout
+#      - snyk/scan:
+#          organization: dwp-dataworks
+#          severity-threshold: high
+#          target-file: build.gradle.kts
+#          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
+#
+#  snyk-master:
+#    docker:
+#      - image: circleci/openjdk:8-jdk
+#    steps:
+#      - checkout
+#      - snyk/scan:
+#          organization: dwp-dataworks
+#          severity-threshold: high
+#          target-file: build.gradle.kts
+#          project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
+#
+#
+#  publish-github-release:
+#    docker:
+#      - image: cibuilds/github:0.10
+#    steps:
+#      - attach_workspace:
+#          at: ./artifacts
+#      - run:
+#          name: "Publish Release on GitHub"
+#          command: |
+#            set -u
+#            set -o pipefail
+#            ls -l ./artifacts
+#            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+#            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+#            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+#            ghr \
+#              -t ${GITHUB_TOKEN} \
+#              -u ${CIRCLE_PROJECT_USERNAME} \
+#              -r ${CIRCLE_PROJECT_REPONAME} \
+#              -c ${CIRCLE_SHA1} -delete \
+#              ${VERSION} ./artifacts/
 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - build
-      - snyk-pr:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: master
-      - snyk-master:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
-      - integration-test:
-          requires:
-            - build
-      - publish-github-release:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+      - integration-test
+#      - build
+#      - snyk-pr:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              ignore: master
+#      - snyk-master:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only: master
+#      - integration-test:
+#          requires:
+#            - build
+#      - publish-github-release:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only: master
