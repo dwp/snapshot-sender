@@ -26,10 +26,6 @@ import io.prometheus.client.spring.web.PrometheusTimeMethod
 @Service
 class DynamoDBExportStatusService(
     private val dynamoDB: AmazonDynamoDB,
-<<<<<<< HEAD
-    private val successfulCollectionCounter: Counter,
-=======
->>>>>>> master
     private val sentNonEmptyCollectionCounter: Counter,
     private val sentEmptyCollectionCounter: Counter,
     private val filesSentIncrementedCounter: Counter,
@@ -53,19 +49,6 @@ class DynamoDBExportStatusService(
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
             multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
-<<<<<<< HEAD
-    @PrometheusTimeMethod(name = "snapshot_sender_set_success_status_duration", help = "Duration of setting success status")
-    override fun setSuccessStatus() {
-        dynamoDB.updateItem(setStatusSuccessRequest())
-        successfulCollectionCounter.inc()
-    }
-
-    @Retryable(value = [Exception::class],
-        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
-        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
-            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
-=======
->>>>>>> master
     @PrometheusTimeMethod(name = "snapshot_sender_set_collection_status_duration", help = "Duration of setting collection status")
     override fun setCollectionStatus(): CollectionStatus =
             when (collectionStatus()) {

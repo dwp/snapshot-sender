@@ -48,10 +48,6 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     private fun postItem(item: DecryptedStream) {
 
         logger.info("Checking item to write", "file_name" to item.fileName, "full_path" to item.fullPath)
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         val (database, collection) = getDatabaseAndCollection(item.fileName)
         val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
         val topic = "$topicPrefix$database.$collection"

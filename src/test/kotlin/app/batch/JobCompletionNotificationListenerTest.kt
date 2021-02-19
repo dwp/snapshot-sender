@@ -171,7 +171,6 @@ class JobCompletionNotificationListenerTest {
         verifyNoMoreInteractions(pushgatewayService)
     }
 
-<<<<<<< HEAD
     @Test
     fun willNotSendSnsMonitoringMessageForNifiHeartbeat() {
         val exportStatusService = mock<ExportStatusService> {
@@ -198,13 +197,6 @@ class JobCompletionNotificationListenerTest {
         snsService, pushgatewayService).apply {
             ReflectionTestUtils.setField(this, "sendSuccessIndicator", sendSuccessIndicator)
             ReflectionTestUtils.setField(this, "exportDate", exportDate)
-=======
-    private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
-    sendSuccessIndicator: String = "false"): JobCompletionNotificationListener =
-        JobCompletionNotificationListener(successService, exportStatusService,
-        snsService, pushgatewayService).apply {
-            ReflectionTestUtils.setField(this, "sendSuccessIndicator", sendSuccessIndicator)
->>>>>>> master
         }
 
     private val successService = mock<SuccessService>()

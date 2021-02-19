@@ -17,12 +17,7 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
         JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-<<<<<<< HEAD
-        try
-        {
-=======
         try {
->>>>>>> master
             if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
                 if (sendSuccessIndicator.toBoolean()) {
                     successService.postSuccessIndicator()
