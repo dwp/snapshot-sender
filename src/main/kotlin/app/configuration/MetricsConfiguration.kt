@@ -36,10 +36,13 @@ class MetricsConfiguration {
         counter("snapshot_sender_items_read_from_s3", "Number of items read from s3 for incoming prefix.", "s3_prefix")
 
     @Bean
+<<<<<<< HEAD
     fun successfulCollectionCounter(): Counter =
         counter("snapshot_sender_successful_collections", "Number of collections set to success.", "split")
 
     @Bean
+=======
+>>>>>>> master
     fun sentNonEmptyCollectionCounter(): Counter =
         counter("snapshot_sender_completed_non_empty_collections", "Number of completed collections with files to send.")
 
@@ -53,7 +56,11 @@ class MetricsConfiguration {
 
     @Bean
     fun successfulFullRunCounter(): Counter =
+<<<<<<< HEAD
         counter("snapshot_sender_succcessful_runs", "Number of failed full successful runs.")
+=======
+        counter("snapshot_sender_successful_runs", "Number of failed full successful runs.")
+>>>>>>> master
 
     @Bean
     fun failedFullRunCounter(): Counter =

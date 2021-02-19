@@ -3,11 +3,15 @@ package app.batch
 import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
 import app.domain.NifiHeaders
+import app.exceptions.BlockedTopicException
+import app.exceptions.MetadataException
 import app.exceptions.WriterException
 import app.services.ExportStatusService
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.NiFiUtility
 import app.utils.TextParsingUtility
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.InputStreamEntity
@@ -44,7 +48,10 @@ class HttpWriter(private val httpClientProvider: HttpClientProvider,
     private fun postItem(item: DecryptedStream) {
 
         logger.info("Checking item to write", "file_name" to item.fileName, "full_path" to item.fullPath)
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
         val (database, collection) = getDatabaseAndCollection(item.fileName)
         val topicPrefix = if (item.fileName.startsWith("db.")) "db." else ""
         val topic = "$topicPrefix$database.$collection"
