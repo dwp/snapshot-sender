@@ -38,18 +38,26 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
     }
 
     private fun sendMonitoringSnsMessage() {
-        when (val completionStatus = exportStatusService.sendingCompletionStatus()) {
-            SendingCompletionStatus.COMPLETED_SUCCESSFULLY -> {
-                snsService.sendMonitoringMessage(completionStatus)
-            }
-            SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
-                snsService.sendMonitoringMessage(completionStatus)
+        if (exportDate == "NIFI_HEARTBEAT") {
+            logger.info("Not sending monitoring message for nifi heartbeat",
+                    "export_date" to exportDate)
+        } else {
+            when (val completionStatus = exportStatusService.sendingCompletionStatus()) {
+                SendingCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+                    snsService.sendMonitoringMessage(completionStatus)
+                }
+                SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
+                    snsService.sendMonitoringMessage(completionStatus)
+                }
             }
         }
     }
 
     @Value("\${send.success.indicator:false}")
     private lateinit var sendSuccessIndicator: String
+
+    @Value("\${export.date}")
+    private lateinit var exportDate: String
 
     companion object {
         val logger = DataworksLogger.getLogger(JobCompletionNotificationListener::class.toString())
