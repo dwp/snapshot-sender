@@ -20,8 +20,6 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
-import io.prometheus.client.Counter
-import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Component
 class SuccessServiceImpl(private val httpClientProvider: HttpClientProvider, 

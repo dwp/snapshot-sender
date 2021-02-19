@@ -20,8 +20,6 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import io.prometheus.client.Counter
-import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Service
 class DynamoDBExportStatusService(

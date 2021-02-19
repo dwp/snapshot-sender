@@ -20,10 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import io.prometheus.client.Counter
-import app.exceptions.MetadataException
-import app.exceptions.BlockedTopicException
-import io.prometheus.client.spring.web.PrometheusTimeMethod
 
 @Component
 class HttpWriter(private val httpClientProvider: HttpClientProvider,

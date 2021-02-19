@@ -7,7 +7,6 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import io.prometheus.client.Counter
 
 @Component
 class JobCompletionNotificationListener(private val successService: SuccessService,
