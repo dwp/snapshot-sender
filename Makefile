@@ -58,23 +58,6 @@ service-prometheus:
 
 services: service-dks service-aws service-mock-nifi service-pushgateway service-prometheus
 
-service-dks:
-	docker-compose up -d dks ;
-
-service-mock-nifi:
-	docker-compose up -d mock-nifi
-
-service-aws-init:
-	docker-compose up -d aws-init
-
-service-pushgateway:
-	docker-compose up -d pushgateway
-
-service-prometheus:
-	docker-compose up -d prometheus
-
-services: service-dks service-aws service-mock-nifi service-pushgateway service-prometheus service-aws-init
-
 .PHONY: up
 up: services ## Run the ecosystem of containers
 	docker-compose up snapshot-sender snapshot-sender-no-exports snapshot-sender-sent
