@@ -185,7 +185,6 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
-        verify(exportStatusService, times(1)).sendingCompletionStatus()
         verifyZeroInteractions(snsService)
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(pushgatewayService)
