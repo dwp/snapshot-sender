@@ -78,7 +78,11 @@ class MetricsConfiguration {
 
     @Bean
     fun runningApplicationsGuage(): Gauge =
-        gauge("snapshot_sender_running_applications", "Number of running applications.")
+        with (Gauge.build()) {
+            name("snapshot_sender_running_applications")
+            help("Number of running applications.")
+            register()
+        }
 
     @Bean
     fun pushGateway(): PushGateway = PushGateway("$pushgatewayHost:$pushgatewayPort")
@@ -92,15 +96,6 @@ class MetricsConfiguration {
     @Synchronized
     private fun counter(name: String, help: String, vararg labels: String): Counter =
             with (Counter.build()) {
-                name(name)
-                labelNames(*labels)
-                help(help)
-                register()
-            }
-
-    @Synchronized
-    private fun guage(name: String, help: String, vararg labels: String): Gauge =
-            with (Gauge.build()) {
                 name(name)
                 labelNames(*labels)
                 help(help)
