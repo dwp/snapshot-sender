@@ -168,7 +168,8 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 "snapshot_sender_set_collection_status_duration",
                 "snapshot_sender_success_file_sending_retries",
                 "snapshot_sender_success_files_sent",
-                "snapshot_sender_successful_runs")
+                "snapshot_sender_successful_runs",
+                "snapshot_sender_running_applications")
         }
 
         "It should have pushed correct records post metrics " {
