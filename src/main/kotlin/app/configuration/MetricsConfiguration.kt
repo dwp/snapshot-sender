@@ -77,12 +77,8 @@ class MetricsConfiguration {
         counter("snapshot_sender_success_file_sending_retries", "Number of success file sends retried.")
 
     @Bean
-    fun runningApplicationsGuage(): Gauge =
-        with (Gauge.build()) {
-            name("snapshot_sender_running_applications")
-            help("Number of running applications.")
-            register()
-        }
+    fun runningApplicationsGauge(): Gauge =
+        gauge("snapshot_sender_running_applications", "Number of running applications.")
 
     @Bean
     fun pushGateway(): PushGateway = PushGateway("$pushgatewayHost:$pushgatewayPort")
@@ -95,6 +91,15 @@ class MetricsConfiguration {
     @Synchronized
     private fun counter(name: String, help: String, vararg labels: String): Counter =
             with (Counter.build()) {
+                name(name)
+                labelNames(*labels)
+                help(help)
+                register()
+            }
+
+    @Synchronized
+    private fun gauge(name: String, help: String, vararg labels: String): Gauge =
+            with (Gauge.build()) {
                 name(name)
                 labelNames(*labels)
                 help(help)

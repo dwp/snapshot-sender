@@ -14,11 +14,11 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
                                         private val exportStatusService: ExportStatusService,
                                         private val snsService: SnsService,
                                         private val pushGatewayService: PushGatewayService,
-                                        private val runningApplicationsGuage: Gauge):
+                                        private val runningApplicationsGauge: Gauge):
         JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
-        runningApplicationsGuage.inc()
+        runningApplicationsGauge.inc()
         pushGatewayService.pushMetrics()
     }
 
@@ -40,7 +40,7 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
                         "job_exit_status" to "${jobExecution.exitStatus}")
             }
         } finally {
-            runningApplicationsGuage.dec()
+            runningApplicationsGauge.dec()
             pushGatewayService.pushFinalMetrics()
         }
     }
