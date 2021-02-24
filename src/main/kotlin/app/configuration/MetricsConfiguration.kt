@@ -6,6 +6,7 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.PushGateway
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -76,6 +77,10 @@ class MetricsConfiguration {
         counter("snapshot_sender_success_file_sending_retries", "Number of success file sends retried.")
 
     @Bean
+    fun runningApplicationsGuage(): Gauge =
+        gauge("snapshot_sender_running_applications", "Number of running applications.")
+
+    @Bean
     fun pushGateway(): PushGateway = PushGateway("$pushgatewayHost:$pushgatewayPort")
 
 
@@ -87,6 +92,15 @@ class MetricsConfiguration {
     @Synchronized
     private fun counter(name: String, help: String, vararg labels: String): Counter =
             with (Counter.build()) {
+                name(name)
+                labelNames(*labels)
+                help(help)
+                register()
+            }
+
+    @Synchronized
+    private fun guage(name: String, help: String, vararg labels: String): Gauge =
+            with (Gauge.build()) {
                 name(name)
                 labelNames(*labels)
                 help(help)
