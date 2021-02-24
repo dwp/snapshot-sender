@@ -87,7 +87,6 @@ class MetricsConfiguration {
     @Bean
     fun pushGateway(): PushGateway = PushGateway("$pushgatewayHost:$pushgatewayPort")
 
-
     @PostConstruct
     fun init() {
         Metrics.globalRegistry.add(PrometheusMeterRegistry(PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry, Clock.SYSTEM))
