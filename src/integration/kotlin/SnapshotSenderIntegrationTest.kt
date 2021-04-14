@@ -105,7 +105,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
             validateQueueMessage(monitoringQueueUrl, """{
                     "severity": "Critical",
                     "notification_type": "Information",
-                    "slack_username": "Crown Export Poller",
+                    "slack_username": "Snapshot Sender",
                     "title_text": "Full - All files sent - success",
                     "custom_elements":[
                         {
@@ -120,7 +120,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 }""", """{
                     "severity": "Critical",
                     "notification_type": "Information",
-                    "slack_username": "Crown Export Poller",
+                    "slack_username": "Snapshot Sender",
                     "title_text": "Full - All files sent - success",
                     "custom_elements":[
                         {

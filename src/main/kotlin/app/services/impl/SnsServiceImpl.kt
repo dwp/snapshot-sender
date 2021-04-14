@@ -42,7 +42,7 @@ class SnsServiceImpl(private val amazonSns: AmazonSNS,
             """{
                 "severity": "${severity(sendingCompletionStatus)}",
                 "notification_type": "${notificationType(sendingCompletionStatus)}",
-                "slack_username": "Crown Export Poller",
+                "slack_username": "Snapshot Sender",
                 "title_text": "${snapshotType.capitalize()} - All files sent - ${sendingCompletionStatus.description}",
                 "custom_elements": [
                     { "key": "Export date", "value": "$exportDate" },

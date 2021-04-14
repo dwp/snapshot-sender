@@ -67,7 +67,7 @@ class SnsServiceImplTest {
             assertEquals("""{
                 "severity": "Critical",
                 "notification_type": "Information",
-                "slack_username": "Crown Export Poller",
+                "slack_username": "Snapshot Sender",
                 "title_text": "Full - All files sent - success",
                 "custom_elements": [
                     { "key": "Export date", "value": "2020-01-01" },
@@ -92,7 +92,7 @@ class SnsServiceImplTest {
             assertEquals("""{
                 "severity": "High",
                 "notification_type": "Error",
-                "slack_username": "Crown Export Poller",
+                "slack_username": "Snapshot Sender",
                 "title_text": "Full - All files sent - failed",
                 "custom_elements": [
                     { "key": "Export date", "value": "2020-01-01" },
