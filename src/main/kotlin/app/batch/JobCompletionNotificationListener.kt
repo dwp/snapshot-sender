@@ -44,7 +44,7 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
                         "job_exit_status" to "${jobExecution.exitStatus}")
 
                 if (sendSuccessIndicator.toBoolean()) {
-                    failedSuccessFilesCounter.inc()
+                    failedSuccessFilesCounter.inc() 
                 } else {
                     failedFilesCounter.inc()
                 }
