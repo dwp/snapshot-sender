@@ -130,18 +130,18 @@ workflows:
   build-and-deploy:
     jobs:
       - build
-      - snyk-pr:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: master
-      - snyk-master:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+      # - snyk-pr:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - snyk-master:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: master
       - integration-test:
           requires:
             - build
