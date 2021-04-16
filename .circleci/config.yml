@@ -80,27 +80,27 @@ jobs:
             make up
             make integration-tests
 
-  snyk-pr:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - snyk/scan:
-          organization: dwp-dataworks
-          severity-threshold: high
-          target-file: build.gradle.kts
-          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
+  # snyk-pr:
+  #   docker:
+  #     - image: circleci/openjdk:8-jdk
+  #   steps:
+  #     - checkout
+  #     - snyk/scan:
+  #         organization: dwp-dataworks
+  #         severity-threshold: high
+  #         target-file: build.gradle.kts
+  #         project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
 
-  snyk-master:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - snyk/scan:
-          organization: dwp-dataworks
-          severity-threshold: high
-          target-file: build.gradle.kts
-          project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
+  # snyk-master:
+  #   docker:
+  #     - image: circleci/openjdk:8-jdk
+  #   steps:
+  #     - checkout
+  #     - snyk/scan:
+  #         organization: dwp-dataworks
+  #         severity-threshold: high
+  #         target-file: build.gradle.kts
+  #         project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
 
 
   publish-github-release:
