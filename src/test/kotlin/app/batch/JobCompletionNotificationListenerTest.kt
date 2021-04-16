@@ -9,6 +9,7 @@ import org.springframework.batch.core.JobExecution
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor
 import org.springframework.test.util.ReflectionTestUtils
 import io.prometheus.client.Gauge
+import io.prometheus.client.Counter
 
 class JobCompletionNotificationListenerTest {
 
