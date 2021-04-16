@@ -129,6 +129,25 @@ class JobCompletionNotificationListenerTest {
         verifyZeroInteractions(exportStatusService)
         verifyZeroInteractions(snsService)
         verify(runningApplicationsGauge, times(1)).dec()
+        verify(failedFilesCounter, times(1)).inc()
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(runningApplicationsGauge)
+        verifyNoMoreInteractions(pushgatewayService)
+    }
+
+    @Test
+    fun willUpdateFailedSuccessFilesCounterOnUnsuccessfulSuccessFileCompletion() {
+        val exportStatusService = mock<ExportStatusService>()
+        val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService, "true")
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.FAILED
+        }
+        jobCompletionNotificationListener.afterJob(jobExecution)
+        verifyZeroInteractions(successService)
+        verifyZeroInteractions(exportStatusService)
+        verifyZeroInteractions(snsService)
+        verify(runningApplicationsGauge, times(1)).dec()
+        verify(failedSuccessFilesCounter, times(1)).inc()
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(runningApplicationsGauge)
         verifyNoMoreInteractions(pushgatewayService)
@@ -166,6 +185,7 @@ class JobCompletionNotificationListenerTest {
         verify(exportStatusService, times(1)).sendingCompletionStatus()
         verify(snsService, times(1)).sendMonitoringMessage(SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY)
         verifyNoMoreInteractions(snsService)
+        verify(failedCollectionsCounter, times(1)).inc()
         verify(runningApplicationsGauge, times(1)).dec()
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(runningApplicationsGauge)
@@ -230,8 +250,8 @@ class JobCompletionNotificationListenerTest {
 
     private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
     sendSuccessIndicator: String = "false", exportDate: String = "2020-25-12"): JobCompletionNotificationListener =
-        JobCompletionNotificationListener(successService, exportStatusService,
-        snsService, pushgatewayService, runningApplicationsGauge).apply {
+        JobCompletionNotificationListener(successService, exportStatusService, snsService, pushgatewayService,
+        runningApplicationsGauge, failedFilesCounter, failedSuccessFilesCounter, failedCollectionsCounter).apply {
             ReflectionTestUtils.setField(this, "sendSuccessIndicator", sendSuccessIndicator)
             ReflectionTestUtils.setField(this, "exportDate", exportDate)
         }
@@ -242,4 +262,7 @@ class JobCompletionNotificationListenerTest {
     private val pushgatewayService = mock<PushGatewayService>()
     private val postProcessor = mock<ScheduledAnnotationBeanPostProcessor>()
     private val runningApplicationsGauge = mock<Gauge>()
+    private val failedFilesCounter = mock<Counter>()
+    private val failedSuccessFilesCounter = mock<Counter>()
+    private val failedCollectionsCounter = mock<Counter>()
 }

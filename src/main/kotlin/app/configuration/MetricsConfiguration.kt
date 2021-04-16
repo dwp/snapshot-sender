@@ -77,6 +77,18 @@ class MetricsConfiguration {
         counter("snapshot_sender_success_file_sending_retries", "Number of success file sends retried.")
 
     @Bean
+    fun failedFilesCounter(): Counter =
+        counter("snapshot_sender_failed_files", "Number of files failed to send after retries.")
+
+    @Bean
+    fun failedSuccessFilesCounter(): Counter =
+        counter("snapshot_sender_failed_success_files", "Number of success file failed to send after retries.")
+
+    @Bean
+    fun failedCollectionsCounter(): Counter =
+        counter("snapshot_sender_failed_collections", "Number of collections with one or more failed files.")
+
+    @Bean
     fun runningApplicationsGauge(): Gauge =
         gauge("snapshot_sender_running_applications", "Number of running applications.")
 

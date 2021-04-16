@@ -8,13 +8,17 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import io.prometheus.client.Gauge
+import io.prometheus.client.Counter
 
 @Component
 class JobCompletionNotificationListener(private val successService: SuccessService,
                                         private val exportStatusService: ExportStatusService,
                                         private val snsService: SnsService,
                                         private val pushGatewayService: PushGatewayService,
-                                        private val runningApplicationsGauge: Gauge):
+                                        private val runningApplicationsGauge: Gauge,
+                                        private val failedFilesCounter: Counter,
+                                        private val failedSuccessFilesCounter: Counter,
+                                        private val failedCollectionsCounter: Counter):
         JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
@@ -38,6 +42,12 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
             else {
                 logger.error("Not setting status or sending success indicator",
                         "job_exit_status" to "${jobExecution.exitStatus}")
+
+                if (sendSuccessIndicator.toBoolean()) {
+                    failedSuccessFilesCounter.inc()
+                } else {
+                    failedFilesCounter.inc()
+                }
             }
         } finally {
             runningApplicationsGauge.dec()
@@ -56,6 +66,7 @@ class JobCompletionNotificationListener(private val successService: SuccessServi
                 }
                 SendingCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
                     snsService.sendMonitoringMessage(completionStatus)
+                    failedCollectionsCounter.inc()
                 }
             }
         }
