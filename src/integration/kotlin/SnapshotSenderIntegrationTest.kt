@@ -169,6 +169,9 @@ class SnapshotSenderIntegrationTest : StringSpec() {
                 "snapshot_sender_success_file_sending_retries",
                 "snapshot_sender_success_files_sent",
                 "snapshot_sender_successful_runs",
+                "snapshot_sender_failed_collections",
+                "snapshot_sender_failed_files",
+                "snapshot_sender_failed_success_files",
                 "snapshot_sender_running_applications")
         }
 
