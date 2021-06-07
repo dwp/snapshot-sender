@@ -15,7 +15,7 @@ class NiFiUtility {
         httpPost.setHeader("export_date", exportDate)
         httpPost.setHeader("database", headers.database)
         httpPost.setHeader("collection", headers.collection)
-        httpPost.setHeader("snapshot_type", snapshotType)
+        httpPost.setHeader("snapshot_type", getSnapshotTypeHeader())
         httpPost.setHeader("topic", topicName())
         httpPost.setHeader("status_table_name", statusTableName)
         httpPost.setHeader("correlation_id", PropertyUtility.correlationId())
@@ -23,6 +23,13 @@ class NiFiUtility {
         httpPost.setHeader("shutdown_flag", shutdownFlag)
         httpPost.setHeader("reprocess_files", reprocessFiles)
     }
+
+    fun getSnapshotTypeHeader(): String = 
+        if (snapshotType.toLowerCase() == "drift_testing_incremental") {
+            "incremental"
+        } else {
+            snapshotType
+        }
 
     @Value("\${export.date}")
     private lateinit var exportDate: String

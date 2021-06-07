@@ -107,7 +107,6 @@ class SuccessServiceImplTest {
         assertEquals("toDo", collectionHeader)
         assertEquals("db.core.toDo", topicHeader)
         assertEquals("incremental", snapshotTypeHeader)
-        assertEquals("incremental", snapshotTypeHeader)
         assertEquals("test_table", statusTableNameHeader)
         assertEquals("123", correlationIdHeader)
 
