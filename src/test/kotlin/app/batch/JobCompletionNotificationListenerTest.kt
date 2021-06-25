@@ -255,6 +255,7 @@ class JobCompletionNotificationListenerTest {
         runningApplicationsGauge, failedFilesCounter, failedSuccessFilesCounter, failedCollectionsCounter).apply {
             ReflectionTestUtils.setField(this, "sendSuccessIndicator", sendSuccessIndicator)
             ReflectionTestUtils.setField(this, "exportDate", exportDate)
+            ReflectionTestUtils.setField(this, "s3PrefixFolder", "s3://prefix")
         }
 
     private val successService = mock<SuccessService>()
