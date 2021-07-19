@@ -53,12 +53,12 @@ create_sns_monitoring_topic() {
 }
 
 create_sqs_monitoring_queue() {
-    aws_local sqs create-queue --queue-name "monitoring-queue"
+    aws_local sqs create-queue --queue-name "monitoring-queue.fifo" --attributes '{"FifoQueue":"true","ContentBasedDeduplication":"true"}'
 }
 
 subscribe_sns_to_sqs() {
     aws_local sns subscribe --topic-arn "arn:aws:sns:us-east-1:000000000000:monitoring-topic" \
-     --protocol "sqs" --notification-endpoint "http://localhost:4566/000000000000/monitoring-queue"
+     --protocol "sqs" --notification-endpoint "http://localhost:4566/000000000000/monitoring-queue.fifo"
 }
 
 add_status_item() {
