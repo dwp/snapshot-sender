@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    needs: [get-publish-version]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,15 +26,6 @@ jobs:
 
       - name: Build
         run: |
-          set -u
-          set +o pipefail
-          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-          set -o pipefail
-          [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-          VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-          VERSION_NUMBER=$(echo $VERSION | sed 's/^v\(.*\)$/\1/')
-          sed -i -e "s/version = \"0.0.0\"/version = \"$VERSION\"/" build.gradle.kts
-
           mkdir artifacts
           gradle build --stacktrace
           cp build/libs/snapshot-sender-*.jar ./artifacts/
