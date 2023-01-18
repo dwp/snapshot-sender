@@ -24,6 +24,14 @@ jobs:
 
       - name: Build
         run: |
+          set -u
+          set +o pipefail
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          set -o pipefail
+          [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+          VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+          VERSION_NUMBER=$(echo $VERSION | sed 's/^v\(.*\)$/\1/')
+          sed -i -e "s/version = \"0.0.0\"/version = \"$VERSION\"/" gradle.properties
           mkdir artifacts
           gradle build --stacktrace
           cp build/libs/snapshot-sender-*.jar ./artifacts/
