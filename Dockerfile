@@ -1,5 +1,11 @@
 FROM centos:latest
 
+## Fix for "Error: Failed to download metadata for repo 'appstream': Cannot prepare internal mirrorlist: No URLs in mirrorlist"
+RUN cd /etc/yum.repos.d/
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+##
+
 RUN mkdir -p /opt/snapshot-sender/data
 
 RUN yum -y upgrade
