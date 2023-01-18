@@ -88,7 +88,7 @@ services:
       TLS_CACERT_ID: mock-nifi
 
   sender-integration-test:
-    image: sender-integration-test:latest
+    image: sender-integration-test
     build:
       context: .
       dockerfile: resources/tests/Dockerfile
