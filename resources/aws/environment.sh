@@ -49,7 +49,7 @@ create_uc_ecc_table() {
 }
 
 create_sns_monitoring_topic() {
-    aws_local sns create-topic --name "monitoring-topic"
+    aws_local sns create-topic --name "monitoring-topic.fifo" --attributes FifoTopic=true
 }
 
 create_sqs_monitoring_queue() {
@@ -57,8 +57,8 @@ create_sqs_monitoring_queue() {
 }
 
 subscribe_sns_to_sqs() {
-    aws_local sns subscribe --topic-arn "arn:aws:sns:eu-west-2:000000000000:monitoring-topic" \
-     --protocol "sqs" --notification-endpoint "arn:aws:sqs:eu-west-2:000000000000:monitoring-queue.fifo" ##"http://aws:4566/000000000000/monitoring-queue.fifo"
+    aws_local sns subscribe --topic-arn "arn:aws:sns:eu-west-2:000000000000:monitoring-topic.fifo" \
+     --protocol "sqs" --notification-endpoint "http://aws:4566/000000000000/monitoring-queue.fifo"
 }
 
 add_status_item() {
