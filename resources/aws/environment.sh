@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 aws_local() {
-  aws --endpoint-url http://aws:4566 --region=eu-west-2 "$@"
+  aws --endpoint-url=http://aws:4566 --region=eu-west-2 "$@"
 }
 
 init() {
@@ -49,7 +49,7 @@ create_uc_ecc_table() {
 }
 
 create_sns_monitoring_topic() {
-    aws_local sns create-topic --name "monitoring-topic.fifo" --attributes FifoTopic=true
+    aws_local sns create-topic --name "monitoring-topic.fifo" --attributes "FifoTopic=true"
 }
 
 create_sqs_monitoring_queue() {
