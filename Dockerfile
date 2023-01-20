@@ -17,7 +17,7 @@ RUN chmod a+rwx -R /opt/snapshot-sender/ /opt/snapshot-sender/data
 
 WORKDIR /opt/snapshot-sender
 
-COPY build/libs/snapshot-sender-0.0.1.jar ./snapshot-sender-latest.jar
+COPY build/libs/snapshot-sender-0.0.0.jar ./snapshot-sender-latest.jar
 
 COPY resources/snapshot-sender*.jks ./
 COPY resources/snapshot-sender*.crt ./
