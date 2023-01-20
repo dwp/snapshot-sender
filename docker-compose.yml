@@ -9,7 +9,10 @@ services:
     container_name: aws
     environment:
       - SERVICES=s3,dynamodb,sqs,sns
-
+      - EDGE_PORT=4566
+      - AWS_DEFAULT_REGION=eu-west-2
+      - DEFAULT_REGION=eu-west-2
+      
   aws-init:
     image: aws-init
     build:
@@ -88,7 +91,7 @@ services:
       TLS_CACERT_ID: mock-nifi
 
   sender-integration-test:
-    image: sender-integration-test:latest
+    image: sender-integration-test
     build:
       context: .
       dockerfile: resources/tests/Dockerfile
