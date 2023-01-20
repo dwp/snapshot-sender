@@ -62,7 +62,7 @@ sqs_list_queues() {
 
 subscribe_sns_to_sqs() {    
     aws_local sns subscribe --region us-east-1 --topic-arn "arn:aws:sns:us-east-1:000000000000:monitoring-topic" \
-     --protocol "sqs" --notification-endpoint "http://aws:4566/000000000000/monitoring-queue.fifo" --debug
+     --protocol "sqs" --notification-endpoint "arn:aws:sqs:us-east-1:000000000000:monitoring-queue.fifo"
 }
 
 add_status_item() {
