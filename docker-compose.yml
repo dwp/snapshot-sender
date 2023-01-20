@@ -11,6 +11,7 @@ services:
       - SERVICES=s3,dynamodb,sqs,sns
       - EDGE_PORT=4566
       - AWS_DEFAULT_REGION=eu-west-2
+      - DEFAULT_REGION=eu-west-2
       
   aws-init:
     image: aws-init
