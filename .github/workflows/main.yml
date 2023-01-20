@@ -72,7 +72,7 @@ jobs:
           VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
           VERSION_NUMBER=$(echo $VERSION | sed 's/^v\(.*\)$/\1/')
           sed -i -e "s/version = \"0.0.0\"/version = \"$VERSION\"/" build.gradle.kts
-
+          sed -i -e "s/version = \"0.0.0\"/version = \"$VERSION\"/" gradle.properties
           mkdir artifacts
           gradle build
           cp build/libs/snapshot-sender-*.jar ./artifacts/
