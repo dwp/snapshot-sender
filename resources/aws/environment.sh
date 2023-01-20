@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 aws_local() {
-  aws --endpoint-url http://aws:4566 --region=eu-west-2 "$@"
+  aws --endpoint-url=http://aws:4566 --region=eu-west-2 "$@"
 }
 
 init() {
@@ -53,12 +53,16 @@ create_sns_monitoring_topic() {
 }
 
 create_sqs_monitoring_queue() {
-    aws_local sqs create-queue --queue-name "monitoring-queue.fifo" --attributes '{"FifoQueue":"true","ContentBasedDeduplication":"true"}'
+    aws_local sqs create-queue --queue-name "monitoring-queue" --attributes '{"ContentBasedDeduplication":"true"}'
 }
 
-subscribe_sns_to_sqs() {
-    aws_local sns subscribe --topic-arn "arn:aws:sns:us-east-1:000000000000:monitoring-topic" \
-     --protocol "sqs" --notification-endpoint "http://localhost:4566/000000000000/monitoring-queue.fifo"
+sqs_list_queues() {
+    aws_local sqs list-queues
+}
+
+subscribe_sns_to_sqs() {    
+    aws_local sns subscribe --topic-arn "arn:aws:sns:eu-west-2:000000000000:monitoring-topic" \
+     --protocol "sqs" --notification-endpoint "arn:aws:sqs:eu-west-2:000000000000:monitoring-queue"
 }
 
 add_status_item() {

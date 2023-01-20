@@ -112,6 +112,8 @@ extract_pems() {
         export pwd
 
         openssl pkcs12 \
+                -provider default \
+                -provider legacy \
                 -in $intermediate_store \
                 -nodes \
                 -nocerts \
@@ -119,6 +121,8 @@ extract_pems() {
                 -out $key
 
         openssl pkcs12 \
+                -provider default \
+                -provider legacy \
                 -in $intermediate_store \
                 -nokeys \
                 -out $certificate \
