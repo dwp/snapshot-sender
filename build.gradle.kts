@@ -11,7 +11,7 @@ plugins {
 
 group = "snapshot-sender"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
-version= "0.0.1"
+version= "0.0.0"
 
 repositories {
     mavenCentral()
