@@ -289,7 +289,7 @@ class SnapshotSenderIntegrationTest : StringSpec() {
         private const val ACCESS_KEY = "accessKey"
         private const val SECRET_KEY = "secretKey"
 
-        private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-queue"
+        private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-queue.fifo"
 
         val client = HttpClient {
             install(JsonFeature) {
