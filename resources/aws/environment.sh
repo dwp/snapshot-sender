@@ -53,7 +53,7 @@ create_sns_monitoring_topic() {
 }
 
 create_sqs_monitoring_queue() {
-    aws_local sqs create-queue --queue-name "monitoring-queue.fifo" --attributes '{"FifoQueue":"true","ContentBasedDeduplication":"true"}'
+    aws_local sqs create-queue --queue-name "monitoring-queue.fifo" --attributes '{"FifoQueue":"true","ContentBasedDeduplication":"true"}' --region=eu-west-2
 }
 
 subscribe_sns_to_sqs() {
