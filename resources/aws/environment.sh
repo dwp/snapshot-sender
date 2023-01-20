@@ -49,11 +49,11 @@ create_uc_ecc_table() {
 }
 
 create_sns_monitoring_topic() {
-    aws_local sns create-topic --name "monitoring-topic.fifo" --attributes "FifoTopic=true"
+    aws_local sns create-topic --region eu-west-2 --name "monitoring-topic.fifo" --attributes "FifoTopic=true"
 }
 
 create_sqs_monitoring_queue() {
-    aws_local sqs create-queue --queue-name "monitoring-queue.fifo" --attributes '{"FifoQueue":"true","ContentBasedDeduplication":"true"}' --region=eu-west-2
+    aws_local sqs create-queue --region=eu-west-2 --queue-name "monitoring-queue.fifo" --attributes '{"FifoQueue":"true","ContentBasedDeduplication":"true"}'
 }
 
 subscribe_sns_to_sqs() {
