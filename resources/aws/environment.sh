@@ -53,7 +53,7 @@ create_sns_monitoring_topic() {
 }
 
 create_sqs_monitoring_queue() {
-    aws_local sqs create-queue --region us-east-1 --queue-name "monitoring-queue.fifo" --attributes '{"FifoQueue":"true","ContentBasedDeduplication":"true"}'
+    aws_local sqs create-queue --region us-east-1 --queue-name "monitoring-queue" --attributes '{"ContentBasedDeduplication":"true"}'
 }
 
 sqs_list_queues() {
@@ -62,7 +62,7 @@ sqs_list_queues() {
 
 subscribe_sns_to_sqs() {    
     aws_local sns subscribe --region us-east-1 --topic-arn "arn:aws:sns:us-east-1:000000000000:monitoring-topic" \
-     --protocol "sqs" --notification-endpoint "arn:aws:sqs:us-east-1:000000000000:monitoring-queue.fifo"
+     --protocol "sqs" --notification-endpoint "arn:aws:sqs:us-east-1:000000000000:monitoring-queue"
 }
 
 add_status_item() {
